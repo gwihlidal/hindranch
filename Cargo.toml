@@ -14,6 +14,7 @@ ggez = { git = "https://github.com/gwihlidal/ggez", rev = "29a985aea6bcb62e61c82
 rand = "0.6.4"
 nphysics2d = "0.9"
 ncollide2d = "0.17"
+tiled = "0.8"
 
 [build-dependencies]
 restson = "0.5.1"

@@ -11,7 +11,7 @@ use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
 use std::env;
-use std::path;
+use std::path::{self, Path};
 
 #[allow(dead_code)]
 type Point2 = na::Point2<f32>;
@@ -73,7 +73,8 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        //ctx.print_resource_stats();
+        let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
+        println!("{:?}", map);
 
         let mut world = World::new();
         world.set_timestep(1.0 / 60.0);
