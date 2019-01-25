@@ -14,8 +14,6 @@ use std::process::Command;
 
 use restson::{Error, RestClient, RestPath};
 
-const API_KEY: &'static str = "AIzaSyA-01URAWhbFaBJ4mWicfKNgwgovY2Igtc";
-
 #[derive(Clone, Debug, Deserialize)]
 struct VoiceLine {
     name: String,
@@ -89,6 +87,7 @@ impl RestPath<String> for SynthesizeRequest {
 }
 
 fn synthesize_voice(
+    api_key: &str,
     text: &str,
     pitch: f32,
     gain: f32,
@@ -96,7 +95,7 @@ fn synthesize_voice(
     female: bool,
 ) -> Vec<u8> {
     // https://cloud.google.com/storage/docs/json_api/v1/how-tos/authorizing
-    let params = vec![("key", API_KEY)];
+    let params = vec![("key", api_key)];
 
     let language = "en-US";
 
@@ -213,9 +212,15 @@ fn load_lines() -> Vec<VoiceLine> {
 fn main() {
     //println!("cargo:rerun-if-changed=./resources/voice");
 
+    let mut key_file = File::open("./api_key.txt").expect("failed to open api_key.txt");
+    let mut key_str = String::new();
+    key_file.read_to_string(&mut key_str)
+        .expect("failed to load api_key.txt");
+
     let lines = load_lines();
     for line in &lines {
         let data = synthesize_voice(
+            &key_str,
             &line.text,
             line.pitch.unwrap_or(0f32),
             line.gain.unwrap_or(0f32),

@@ -13,3 +13,6 @@ Cargo.lock
 
 resources/voice/*.wav
 resources/voice/lines_cache.toml
+
+# Google API Key
+api_key.txt
