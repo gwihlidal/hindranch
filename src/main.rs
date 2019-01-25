@@ -2,6 +2,7 @@ extern crate ggez;
 extern crate rand;
 
 use ggez::audio;
+use ggez::conf::WindowSetup;
 use ggez::event;
 use ggez::graphics;
 #[allow(unused_imports)]
@@ -246,7 +247,13 @@ pub fn main() -> GameResult {
         path::PathBuf::from("./resources")
     };
 
-    let cb = ggez::ContextBuilder::new("Hindranch v 3.74b", "ggez").add_resource_path(resource_dir);
+    let cb = ggez::ContextBuilder::new("hindranch", "ggez")
+        .add_resource_path(resource_dir)
+        .window_setup(WindowSetup {
+            title: "Hindranch v 3.74b".to_owned(),
+            srgb: true,
+            ..Default::default()
+        });
     let (ctx, event_loop) = &mut cb.build()?;
 
     let state = &mut MainState::new(ctx)?;
