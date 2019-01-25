@@ -18,11 +18,37 @@ type Vector2 = na::Vector2<f32>;
 type Vector3 = na::Vector3<f32>;
 type Matrix4 = na::Matrix4<f32>;
 
+use na::Isometry2;
+use ncollide2d::shape::{Cuboid, ShapeHandle};
+use nphysics2d::algebra::Force2;
+use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
+use nphysics2d::object::{BodyHandle, Material};
+use nphysics2d::volumetric::Volumetric;
+use nphysics2d::world::World;
+
+const COLLIDER_MARGIN: f32 = 0.01;
+
+struct Positional {
+    position: Point2,
+    rotation: f32,
+}
+
+impl Default for Positional {
+    fn default() -> Self {
+        Self {
+            position: Point2::origin(),
+            rotation: 0.0,
+        }
+    }
+}
+
 struct MainState {
     a: i32,
     direction: i32,
     dragon: graphics::Image,
     dozer: graphics::Image,
+    dozer_rb: BodyHandle,
+    dozer_pos: Positional,
     //text: graphics::Text,
     //bmptext: graphics::Text,
     //pixel_sized_text: graphics::Text,
@@ -33,12 +59,27 @@ struct MainState {
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
 
-    derp_rot: f32,
+    world: World<f32>,
 }
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         //ctx.print_resource_stats();
+
+        let mut world = World::new();
+        world.set_timestep(1.0 / 60.0);
+
+        let dozer_rb;
+        {
+            let rad = 0.2;
+
+            let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
+            let inertia = geom.inertia(1.0);
+            let center_of_mass = geom.center_of_mass();
+
+            let pos = Isometry2::new(Vector2::x() * 1.0 * rad * 3.0, na::zero());
+            dozer_rb = world.add_rigid_body(pos, inertia, center_of_mass);
+        }
 
         let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
         let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
@@ -61,6 +102,8 @@ impl MainState {
             direction: 1,
             dragon,
             dozer,
+            dozer_rb,
+            dozer_pos: Positional::default(),
             //text,
             //bmptext,
             //pixel_sized_text,
@@ -72,7 +115,7 @@ impl MainState {
             sound,
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
-            derp_rot: 0.0,
+            world,
         };
 
         Ok(s)
@@ -143,7 +186,16 @@ impl event::EventHandler for MainState {
             }
         }
 
-        self.derp_rot += dt;
+        {
+            let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
+            let pos = rigid_body.position();
+            self.dozer_pos.position = pos.translation.vector.into();
+            self.dozer_pos.rotation = pos.rotation.angle();
+
+            rigid_body.apply_force(&Force2::linear(Vector2::new(0.0, 0.1)));
+        }
+
+        self.world.step();
 
         Ok(())
     }
@@ -155,8 +207,14 @@ impl event::EventHandler for MainState {
         //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
-        Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, self.derp_rot);
-        Self::draw_single_image(ctx, &self.dozer, Point2::new(0.9, 0.0), 0.5, 0.0);
+        Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
+        Self::draw_single_image(
+            ctx,
+            &self.dozer,
+            self.dozer_pos.position,
+            0.5,
+            self.dozer_pos.rotation,
+        );
 
         /*graphics::draw(ctx, &self.text, dest_point, 0.0)?;
         let dest_point = graphics::Point2::new(100.0, 50.0);
