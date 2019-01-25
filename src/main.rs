@@ -22,7 +22,7 @@ type Matrix4 = na::Matrix4<f32>;
 use na::Isometry2;
 use ncollide2d::shape::{Cuboid, ShapeHandle};
 use nphysics2d::algebra::Force2;
-use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
+//use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
 use nphysics2d::object::{BodyHandle, Material, RigidBody};
 use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
@@ -210,10 +210,11 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let dt = 1.0 / 60.0;
         self.calculate_view_transform(&ctx, Point2::origin(), 1.0);
 
         const DESIRED_FPS: u32 = 60;
+        //let dt = 1.0 / (DESIRED_FPS as f32);
+
         while timer::check_update_time(ctx, DESIRED_FPS) {
             self.a += self.direction;
             if self.a > 250 || self.a <= 0 {
@@ -222,15 +223,15 @@ impl event::EventHandler for MainState {
                 println!("Delta frame time: {:?} ", timer::delta(ctx));
                 println!("Average FPS: {}", timer::fps(ctx));
             }
-        }
 
-        {
-            let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
-            self.dozer_pos.set_from_physics(rigid_body);
-            rigid_body.apply_force(&Force2::linear(Vector2::new(0.0, 0.1)));
-        }
+            {
+                let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
+                self.dozer_pos.set_from_physics(rigid_body);
+                rigid_body.apply_force(&Force2::linear(Vector2::new(0.0, 0.1)));
+            }
 
-        self.world.step();
+            self.world.step();
+        }
 
         Ok(())
     }
