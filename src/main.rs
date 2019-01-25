@@ -20,7 +20,8 @@ type Matrix4 = na::Matrix4<f32>;
 struct MainState {
     a: i32,
     direction: i32,
-    image: graphics::Image,
+    dragon: graphics::Image,
+    dozer: graphics::Image,
     text: graphics::Text,
     bmptext: graphics::Text,
     pixel_sized_text: graphics::Text,
@@ -38,7 +39,8 @@ impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         ctx.print_resource_stats();
 
-        let image = graphics::Image::new(ctx, "/dragon1.png").unwrap();
+        let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
+        let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
 
         let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf", 48).unwrap();
         let text = graphics::Text::new(ctx, "Hello world!", &font).unwrap();
@@ -56,7 +58,8 @@ impl MainState {
         let s = MainState {
             a: 0,
             direction: 1,
-            image,
+            dragon,
+            dozer,
             text,
             bmptext,
             pixel_sized_text,
@@ -100,10 +103,16 @@ impl MainState {
         graphics::apply_transformations(ctx).unwrap();
     }
 
-    fn draw_single_image(ctx: &mut Context, image: &graphics::Image, pos: Point2, rotation: f32) {
+    fn draw_single_image(
+        ctx: &mut Context,
+        image: &graphics::Image,
+        pos: Point2,
+        scale: f32,
+        rotation: f32,
+    ) {
         let min_extent = image.width().min(image.height());
-        let half_w = 0.5 / min_extent as f32;
-        let half_h = 0.5 / min_extent as f32;
+        let half_w = 0.5 * scale / min_extent as f32;
+        let half_h = 0.5 * scale / min_extent as f32;
         graphics::draw_ex(
             ctx,
             image,
@@ -144,10 +153,11 @@ impl event::EventHandler for MainState {
         self.apply_view_transform(ctx);
 
         let c = self.a as u8;
-        graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
+        //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx);
 
-        Self::draw_single_image(ctx, &self.image, Point2::new(0.0, 0.0), self.derp_rot);
+        Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, self.derp_rot);
+        Self::draw_single_image(ctx, &self.dozer, Point2::new(0.9, 0.0), 0.5, 0.0);
 
         /*graphics::draw(ctx, &self.text, dest_point, 0.0)?;
         let dest_point = graphics::Point2::new(100.0, 50.0);
