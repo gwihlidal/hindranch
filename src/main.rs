@@ -51,7 +51,7 @@ impl MainState {
         let pixel_sized_text =
             graphics::Text::new(ctx, "This text is 32 pixels high", &pixel_font).unwrap();
 
-        let _ = sound.play();
+        //let _ = sound.play();
 
         let s = MainState {
             a: 0,
