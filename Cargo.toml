@@ -1,0 +1,13 @@
+[package]
+name = "hindranch"
+version = "0.1.0"
+authors = ["Graham Wihlidal <graham@wihlidal.ca>", "Tomasz Stachowiak <h3@h3.gd>"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+build = "build.rs"
+
+[dependencies]
+cgmath = "0.17.0"
+nalgebra-glm = "0.2.1"
+ggez = "0.4.4"
+rand = "0.6.4"
