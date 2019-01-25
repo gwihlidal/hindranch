@@ -8,6 +8,7 @@ build = "build.rs"
 
 [dependencies]
 cgmath = "0.17.0"
-nalgebra-glm = "0.2.1"
+nalgebra = "0.14.4"
+#nalgebra-glm = "0.2.1"
 ggez = "0.4.4"
 rand = "0.6.4"

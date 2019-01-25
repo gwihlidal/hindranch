@@ -5,11 +5,17 @@ use ggez::audio;
 use ggez::conf;
 use ggez::event;
 use ggez::graphics;
-use ggez::graphics::Color;
+#[allow(unused_imports)]
+use ggez::graphics::{Color, Point2, Vector2};
 use ggez::timer;
 use ggez::{Context, GameResult};
+use nalgebra as na;
 use std::env;
 use std::path;
+
+#[allow(dead_code)]
+type Vector3 = na::Vector3<f32>;
+type Matrix4 = na::Matrix4<f32>;
 
 struct MainState {
     a: i32,
@@ -21,32 +27,14 @@ struct MainState {
     // Not actually dead, see BUGGO below
     #[allow(dead_code)]
     sound: audio::Source,
+
+    world_to_screen: Matrix4,
+    screen_to_world: Matrix4,
+
+    derp_rot: f32,
 }
 
 impl MainState {
-    fn draw_crazy_lines(&self, ctx: &mut Context) -> GameResult<()> {
-        let num_lines = 100;
-        let mut colors = Vec::new();
-        for _ in 0..num_lines {
-            let r: u8 = rand::random();
-            let g: u8 = rand::random();
-            let b: u8 = rand::random();
-            colors.push(Color::from((r, g, b, 255)));
-        }
-
-        let mut last_point = graphics::Point2::new(400.0, 300.0);
-        for color in colors {
-            let x = (rand::random::<i32>() % 50) as f32;
-            let y = (rand::random::<i32>() % 50) as f32;
-            let point = graphics::Point2::new(last_point.x + x, last_point.y + y);
-            graphics::set_color(ctx, color)?;
-            graphics::line(ctx, &[last_point, point], 3.0)?;
-            last_point = point;
-        }
-
-        Ok(())
-    }
-
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         ctx.print_resource_stats();
 
@@ -78,14 +66,46 @@ impl MainState {
             // since play() has "no side effects" and free it.
             // Or something.
             sound,
+            world_to_screen: Matrix4::identity(),
+            screen_to_world: Matrix4::identity(),
+            derp_rot: 0.0,
         };
 
         Ok(s)
+    }
+
+    pub fn calculate_view_transform(&mut self, ctx: &Context, origin: Point2, scale: f32) {
+        let window_size = graphics::get_size(ctx);
+
+        let viewport_transform = Matrix4::new_translation(&Vector3::new(
+            window_size.0 as f32 * 0.5,
+            window_size.1 as f32 * 0.5,
+            0.0,
+        )) * Matrix4::new_nonuniform_scaling(&Vector3::new(
+            window_size.1 as f32 * 0.5,
+            window_size.1 as f32 * 0.5,
+            1.0,
+        ));
+
+        self.world_to_screen = viewport_transform
+            * Matrix4::new_nonuniform_scaling(&Vector3::new(scale, -scale, 1.0))
+            * Matrix4::new_translation(&Vector3::new(-origin.x, -origin.y, 0.0));
+
+        self.screen_to_world = self.world_to_screen.try_inverse().unwrap();
+    }
+
+    /// Apply the calculated view transform to the current graphics context
+    pub fn apply_view_transform(&self, ctx: &mut Context) {
+        graphics::set_transform(ctx, self.world_to_screen);
+        graphics::apply_transformations(ctx).unwrap();
     }
 }
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let dt = 1.0 / 60.0;
+        self.calculate_view_transform(&ctx, Point2::origin(), 1.0);
+
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
             self.a += self.direction;
@@ -96,17 +116,35 @@ impl event::EventHandler for MainState {
                 println!("Average FPS: {}", timer::get_fps(ctx));
             }
         }
+
+        self.derp_rot += dt;
+
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        self.apply_view_transform(ctx);
+
         let c = self.a as u8;
         graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx);
 
         let dest_point = graphics::Point2::new(0.0, 0.0);
-        graphics::draw(ctx, &self.image, dest_point, 0.0)?;
-        graphics::draw(ctx, &self.text, dest_point, 0.0)?;
+        let half_w = 0.5 / self.image.width() as f32;
+        let half_h = 0.5 / self.image.height() as f32;
+        graphics::draw_ex(
+            ctx,
+            &self.image,
+            graphics::DrawParam {
+                dest: dest_point - Vector2::new(0.5, 0.5),
+                scale: graphics::Point2::new(half_w * 2.0, half_h * -2.0),
+                offset: Point2::new(0.5, 0.5),
+                rotation: self.derp_rot,
+                ..Default::default()
+            },
+        )?;
+
+        /*graphics::draw(ctx, &self.text, dest_point, 0.0)?;
         let dest_point = graphics::Point2::new(100.0, 50.0);
         graphics::draw(ctx, &self.bmptext, dest_point, 0.0)?;
 
@@ -118,9 +156,8 @@ impl event::EventHandler for MainState {
             graphics::Rect::new(0.0, 256.0, 500.0, 32.0),
         )?;
         graphics::set_color(ctx, Color::from((255, 255, 255, 255)))?;
-        graphics::draw(ctx, &self.pixel_sized_text, dest_point2, 0.0)?;
+        graphics::draw(ctx, &self.pixel_sized_text, dest_point2, 0.0)?;*/
 
-        self.draw_crazy_lines(ctx)?;
         graphics::present(ctx);
 
         timer::yield_now();
@@ -128,10 +165,6 @@ impl event::EventHandler for MainState {
     }
 }
 
-// Creating a gamestate depends on having an SDL context to load resources.
-// Creating a context depends on loading a config file.
-// Loading a config file depends on having FS (or we can just fake our way around it
-// by creating an FS and then throwing it away; the costs are not huge.)
 pub fn main() {
     let c = conf::Conf::new();
     println!("Starting with default config: {:#?}", c);
