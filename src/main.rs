@@ -13,6 +13,8 @@ use nalgebra as na;
 use std::env;
 use std::path::{self, Path};
 
+mod voice;
+
 #[allow(dead_code)]
 type Point2 = na::Point2<f32>;
 type Vector2 = na::Vector2<f32>;
@@ -61,9 +63,7 @@ struct MainState {
     //text: graphics::Text,
     //bmptext: graphics::Text,
     //pixel_sized_text: graphics::Text,
-    // Not actually dead, see BUGGO below
-    #[allow(dead_code)]
-    sound: audio::Source,
+    voice_queue: voice::VoiceQueue,
 
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
@@ -133,13 +133,14 @@ impl MainState {
         let bmpfont =
             graphics::Font::new_bitmap(ctx, "/arial.png", "ABCDEFGHIJKLMNOPQRSTUVWXYZ").unwrap();
         let bmptext = graphics::Text::new(ctx, "ZYXWVYTSRQPONMLKJIHGFEDCBA", &bmpfont).unwrap();*/
-        let sound = audio::Source::new(ctx, "/sound.ogg").unwrap();
 
         /*let pixel_font = graphics::Font::new_px(ctx, "/DejaVuSerif.ttf", 32).unwrap();
         let pixel_sized_text =
             graphics::Text::new(ctx, "This text is 32 pixels high", &pixel_font).unwrap();*/
 
-        //let _ = sound.play();
+        let mut voice_queue = voice::VoiceQueue::new();
+        voice_queue.enqueue("shout", ctx);
+        voice_queue.enqueue("defiance", ctx);
 
         let s = MainState {
             a: 0,
@@ -151,12 +152,8 @@ impl MainState {
             //text,
             //bmptext,
             //pixel_sized_text,
-            // BUGGO: We never use sound again,
-            // but we have to hang on to it, Or Else!
-            // The optimizer will decide we don't need it
-            // since play() has "no side effects" and free it.
-            // Or something.
-            sound,
+            voice_queue,
+
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
             world,
@@ -282,6 +279,8 @@ impl event::EventHandler for MainState {
 
         const DESIRED_FPS: u32 = 60;
         //let dt = 1.0 / (DESIRED_FPS as f32);
+
+        self.voice_queue.process();
 
         while timer::check_update_time(ctx, DESIRED_FPS) {
             self.a += self.direction;

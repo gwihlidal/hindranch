@@ -214,7 +214,8 @@ fn main() {
 
     let mut key_file = File::open("./api_key.txt").expect("failed to open api_key.txt");
     let mut key_str = String::new();
-    key_file.read_to_string(&mut key_str)
+    key_file
+        .read_to_string(&mut key_str)
         .expect("failed to load api_key.txt");
 
     let lines = load_lines();
