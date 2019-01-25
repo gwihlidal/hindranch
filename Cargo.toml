@@ -10,7 +10,7 @@ build = "build.rs"
 cgmath = "0.17.0"
 nalgebra = "0.16.3"
 #nalgebra-glm = "0.2.1"
-ggez = { git = "https://github.com/ggez/ggez", rev = "9bcca91c4beda7468f294b32d0bcd25c6a25242f" }
+ggez = { git = "https://github.com/gwihlidal/ggez", rev = "29a985aea6bcb62e61c823487101213b6d8eeaf5" }
 rand = "0.6.4"
 nphysics2d = "0.9"
 ncollide2d = "0.17"
