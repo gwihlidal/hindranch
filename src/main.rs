@@ -86,7 +86,7 @@ impl MainState {
             let inertia = geom.inertia(1.0);
             let center_of_mass = geom.center_of_mass();
 
-            let pos = Isometry2::new(Vector2::new(0.5, 0.0), na::zero());
+            let pos = Isometry2::new(Vector2::new(0.5, -0.8), na::zero());
             let rb = world.add_rigid_body(pos, inertia, center_of_mass);
 
             world.add_collider(
@@ -94,7 +94,7 @@ impl MainState {
                 geom.clone(),
                 rb,
                 Isometry2::identity(),
-                Material::default(),
+                Material::new(0.3, 0.5),
             );
 
             dozer_rb = rb;
@@ -104,10 +104,10 @@ impl MainState {
             let rad = 0.2;
 
             let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
-            let inertia = geom.inertia(10.0);
+            let inertia = geom.inertia(1000.0);
             let center_of_mass = geom.center_of_mass();
 
-            let pos = Isometry2::new(Vector2::new(0.55, 0.5), na::zero());
+            let pos = Isometry2::new(Vector2::new(0.68, 0.8), na::zero());
             let rb = world.add_rigid_body(pos, inertia, center_of_mass);
 
             world.add_collider(
@@ -115,7 +115,7 @@ impl MainState {
                 geom.clone(),
                 rb,
                 Isometry2::identity(),
-                Material::default(),
+                Material::new(0.3, 0.5),
             );
         }
 
