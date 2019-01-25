@@ -99,6 +99,24 @@ impl MainState {
         graphics::set_transform(ctx, self.world_to_screen);
         graphics::apply_transformations(ctx).unwrap();
     }
+
+    fn draw_single_image(ctx: &mut Context, image: &graphics::Image, pos: Point2, rotation: f32) {
+        let min_extent = image.width().min(image.height());
+        let half_w = 0.5 / min_extent as f32;
+        let half_h = 0.5 / min_extent as f32;
+        graphics::draw_ex(
+            ctx,
+            image,
+            graphics::DrawParam {
+                dest: pos - Vector2::new(0.5, 0.5),
+                scale: graphics::Point2::new(half_w * 2.0, half_h * -2.0),
+                offset: Point2::new(0.5, 0.5),
+                rotation,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    }
 }
 
 impl event::EventHandler for MainState {
@@ -129,20 +147,7 @@ impl event::EventHandler for MainState {
         graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx);
 
-        let dest_point = graphics::Point2::new(0.0, 0.0);
-        let half_w = 0.5 / self.image.width() as f32;
-        let half_h = 0.5 / self.image.height() as f32;
-        graphics::draw_ex(
-            ctx,
-            &self.image,
-            graphics::DrawParam {
-                dest: dest_point - Vector2::new(0.5, 0.5),
-                scale: graphics::Point2::new(half_w * 2.0, half_h * -2.0),
-                offset: Point2::new(0.5, 0.5),
-                rotation: self.derp_rot,
-                ..Default::default()
-            },
-        )?;
+        Self::draw_single_image(ctx, &self.image, Point2::new(0.0, 0.0), self.derp_rot);
 
         /*graphics::draw(ctx, &self.text, dest_point, 0.0)?;
         let dest_point = graphics::Point2::new(100.0, 50.0);
