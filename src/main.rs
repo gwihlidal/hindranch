@@ -23,7 +23,7 @@ use na::Isometry2;
 use ncollide2d::shape::{Cuboid, ShapeHandle};
 use nphysics2d::algebra::Force2;
 use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
-use nphysics2d::object::{BodyHandle, Material};
+use nphysics2d::object::{BodyHandle, Material, RigidBody};
 use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
 
@@ -32,6 +32,14 @@ const COLLIDER_MARGIN: f32 = 0.01;
 struct Positional {
     position: Point2,
     rotation: f32,
+}
+
+impl Positional {
+    fn set_from_physics(&mut self, rigid_body: &RigidBody<f32>) {
+        let pos = rigid_body.position();
+        self.position = pos.translation.vector.into();
+        self.rotation = pos.rotation.angle();
+    }
 }
 
 impl Default for Positional {
@@ -189,10 +197,7 @@ impl event::EventHandler for MainState {
 
         {
             let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
-            let pos = rigid_body.position();
-            self.dozer_pos.position = pos.translation.vector.into();
-            self.dozer_pos.rotation = pos.rotation.angle();
-
+            self.dozer_pos.set_from_physics(rigid_body);
             rigid_body.apply_force(&Force2::linear(Vector2::new(0.0, 0.1)));
         }
 
