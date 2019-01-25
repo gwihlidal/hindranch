@@ -1,0 +1,23 @@
+[[lines]]
+name = "test1"
+text = "This is a test using a toml data file"
+female = true
+
+[[lines]]
+name = "test2"
+text = "This is another test"
+female = false
+
+[[lines]]
+name = "shout"
+text = "This is the police, get the fuck outside so we can take your ranch"
+female = false
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "defiance"
+text = "Try and take it from me, pigs"
+female = true
+pitch = -10.0
+rate = 0.9
