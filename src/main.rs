@@ -86,8 +86,37 @@ impl MainState {
             let inertia = geom.inertia(1.0);
             let center_of_mass = geom.center_of_mass();
 
-            let pos = Isometry2::new(Vector2::x() * 1.0 * rad * 3.0, na::zero());
-            dozer_rb = world.add_rigid_body(pos, inertia, center_of_mass);
+            let pos = Isometry2::new(Vector2::new(0.5, 0.0), na::zero());
+            let rb = world.add_rigid_body(pos, inertia, center_of_mass);
+
+            world.add_collider(
+                COLLIDER_MARGIN,
+                geom.clone(),
+                rb,
+                Isometry2::identity(),
+                Material::default(),
+            );
+
+            dozer_rb = rb;
+        }
+
+        {
+            let rad = 0.2;
+
+            let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
+            let inertia = geom.inertia(10.0);
+            let center_of_mass = geom.center_of_mass();
+
+            let pos = Isometry2::new(Vector2::new(0.55, 0.5), na::zero());
+            let rb = world.add_rigid_body(pos, inertia, center_of_mass);
+
+            world.add_collider(
+                COLLIDER_MARGIN,
+                geom.clone(),
+                rb,
+                Isometry2::identity(),
+                Material::default(),
+            );
         }
 
         let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
