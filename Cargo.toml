@@ -8,7 +8,9 @@ build = "build.rs"
 
 [dependencies]
 cgmath = "0.17.0"
-nalgebra = "0.14.4"
+nalgebra = "0.16.3"
 #nalgebra-glm = "0.2.1"
-ggez = "0.4.4"
+ggez = { git = "https://github.com/ggez/ggez", rev = "9bcca91c4beda7468f294b32d0bcd25c6a25242f" }
 rand = "0.6.4"
+nphysics2d = "0.9"
+ncollide2d = "0.17"

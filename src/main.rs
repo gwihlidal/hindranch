@@ -2,11 +2,10 @@ extern crate ggez;
 extern crate rand;
 
 use ggez::audio;
-use ggez::conf;
 use ggez::event;
 use ggez::graphics;
 #[allow(unused_imports)]
-use ggez::graphics::{Color, Point2, Vector2};
+use ggez::graphics::{Color, Scale};
 use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
@@ -14,6 +13,8 @@ use std::env;
 use std::path;
 
 #[allow(dead_code)]
+type Point2 = na::Point2<f32>;
+type Vector2 = na::Vector2<f32>;
 type Vector3 = na::Vector3<f32>;
 type Matrix4 = na::Matrix4<f32>;
 
@@ -22,9 +23,9 @@ struct MainState {
     direction: i32,
     dragon: graphics::Image,
     dozer: graphics::Image,
-    text: graphics::Text,
-    bmptext: graphics::Text,
-    pixel_sized_text: graphics::Text,
+    //text: graphics::Text,
+    //bmptext: graphics::Text,
+    //pixel_sized_text: graphics::Text,
     // Not actually dead, see BUGGO below
     #[allow(dead_code)]
     sound: audio::Source,
@@ -37,21 +38,21 @@ struct MainState {
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
-        ctx.print_resource_stats();
+        //ctx.print_resource_stats();
 
         let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
         let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
 
-        let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf", 48).unwrap();
+        /*let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf", 48).unwrap();
         let text = graphics::Text::new(ctx, "Hello world!", &font).unwrap();
         let bmpfont =
             graphics::Font::new_bitmap(ctx, "/arial.png", "ABCDEFGHIJKLMNOPQRSTUVWXYZ").unwrap();
-        let bmptext = graphics::Text::new(ctx, "ZYXWVYTSRQPONMLKJIHGFEDCBA", &bmpfont).unwrap();
+        let bmptext = graphics::Text::new(ctx, "ZYXWVYTSRQPONMLKJIHGFEDCBA", &bmpfont).unwrap();*/
         let sound = audio::Source::new(ctx, "/sound.ogg").unwrap();
 
-        let pixel_font = graphics::Font::new_px(ctx, "/DejaVuSerif.ttf", 32).unwrap();
+        /*let pixel_font = graphics::Font::new_px(ctx, "/DejaVuSerif.ttf", 32).unwrap();
         let pixel_sized_text =
-            graphics::Text::new(ctx, "This text is 32 pixels high", &pixel_font).unwrap();
+            graphics::Text::new(ctx, "This text is 32 pixels high", &pixel_font).unwrap();*/
 
         //let _ = sound.play();
 
@@ -60,9 +61,9 @@ impl MainState {
             direction: 1,
             dragon,
             dozer,
-            text,
-            bmptext,
-            pixel_sized_text,
+            //text,
+            //bmptext,
+            //pixel_sized_text,
             // BUGGO: We never use sound again,
             // but we have to hang on to it, Or Else!
             // The optimizer will decide we don't need it
@@ -78,7 +79,7 @@ impl MainState {
     }
 
     pub fn calculate_view_transform(&mut self, ctx: &Context, origin: Point2, scale: f32) {
-        let window_size = graphics::get_size(ctx);
+        let window_size = graphics::drawable_size(ctx);
 
         let viewport_transform = Matrix4::new_translation(&Vector3::new(
             window_size.0 as f32 * 0.5,
@@ -113,16 +114,14 @@ impl MainState {
         let min_extent = image.width().min(image.height());
         let half_w = 0.5 * scale / min_extent as f32;
         let half_h = 0.5 * scale / min_extent as f32;
-        graphics::draw_ex(
+        graphics::draw(
             ctx,
             image,
-            graphics::DrawParam {
-                dest: pos - Vector2::new(0.5, 0.5),
-                scale: graphics::Point2::new(half_w * 2.0, half_h * -2.0),
-                offset: Point2::new(0.5, 0.5),
-                rotation,
-                ..Default::default()
-            },
+            graphics::DrawParam::new()
+                .dest(pos - Vector2::new(0.5, 0.5))
+                .scale(Vector2::new(half_w * 2.0, half_h * -2.0))
+                .offset(Point2::new(0.5, 0.5))
+                .rotation(rotation),
         )
         .unwrap();
     }
@@ -139,8 +138,8 @@ impl event::EventHandler for MainState {
             if self.a > 250 || self.a <= 0 {
                 self.direction *= -1;
 
-                println!("Delta frame time: {:?} ", timer::get_delta(ctx));
-                println!("Average FPS: {}", timer::get_fps(ctx));
+                println!("Delta frame time: {:?} ", timer::delta(ctx));
+                println!("Average FPS: {}", timer::fps(ctx));
             }
         }
 
@@ -152,9 +151,9 @@ impl event::EventHandler for MainState {
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         self.apply_view_transform(ctx);
 
-        let c = self.a as u8;
+        //let c = self.a as u8;
         //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
-        graphics::clear(ctx);
+        graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
         Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, self.derp_rot);
         Self::draw_single_image(ctx, &self.dozer, Point2::new(0.9, 0.0), 0.5, 0.0);
@@ -173,30 +172,25 @@ impl event::EventHandler for MainState {
         graphics::set_color(ctx, Color::from((255, 255, 255, 255)))?;
         graphics::draw(ctx, &self.pixel_sized_text, dest_point2, 0.0)?;*/
 
-        graphics::present(ctx);
+        graphics::present(ctx)?;
 
         timer::yield_now();
         Ok(())
     }
 }
 
-pub fn main() {
-    let c = conf::Conf::new();
-    println!("Starting with default config: {:#?}", c);
-    let ctx = &mut Context::load_from_conf("imageview", "ggez", c).unwrap();
-
-    // We add the CARGO_MANIFEST_DIR/resources do the filesystems paths so
-    // we we look in the cargo project for files.
-    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+pub fn main() -> GameResult {
+    let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let mut path = path::PathBuf::from(manifest_dir);
         path.push("resources");
-        ctx.filesystem.mount(&path, true);
-    }
-
-    let state = &mut MainState::new(ctx).unwrap();
-    if let Err(e) = event::run(ctx, state) {
-        println!("Error encountered: {}", e);
+        path
     } else {
-        println!("Game exited cleanly.");
-    }
+        path::PathBuf::from("./resources")
+    };
+
+    let cb = ggez::ContextBuilder::new("Hindranch v 3.74b", "ggez").add_resource_path(resource_dir);
+    let (ctx, event_loop) = &mut cb.build()?;
+
+    let state = &mut MainState::new(ctx)?;
+    event::run(ctx, event_loop, state)
 }
