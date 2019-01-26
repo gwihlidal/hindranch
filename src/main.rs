@@ -120,7 +120,7 @@ impl Default for PlayerInput {
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
-        println!("{:?}", map);
+        //println!("{:?}", map);
 
         let map_tile_image = graphics::Image::new(ctx, &map.tilesets[0].images[0].source)
             .expect("opening the tileset image");
@@ -562,8 +562,25 @@ impl event::EventHandler for MainState {
     }
 
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
-        graphics::set_screen_coordinates(ctx, graphics::Rect::new(0.0, 0.0, width, height))
-            .unwrap();
+        println!("Resized screen to {}, {}", width, height);
+
+        //if self.window_settings.resize_projection {
+            let new_rect = graphics::Rect::new(
+                0.0,
+                0.0,
+                width as f32,// * self.zoom,
+                height as f32,// * self.zoom,
+            );
+            graphics::set_screen_coordinates(ctx, new_rect).unwrap();
+        //}
+    }
+}
+
+pub fn resolution() -> (f32, f32) {
+    if cfg!(target_os = "macos") {
+        (1024.0, 768.0)
+    } else {
+        (1280.0, 720.0)
     }
 }
 
@@ -576,6 +593,8 @@ pub fn main() -> GameResult {
         path::PathBuf::from("./resources")
     };
 
+    let (width, height) = resolution();
+
     let cb = ggez::ContextBuilder::new("hindranch", "ggez")
         .add_resource_path(resource_dir)
         .window_setup(WindowSetup {
@@ -584,12 +603,14 @@ pub fn main() -> GameResult {
             ..Default::default()
         })
         .window_mode(WindowMode {
-            //width: 960.0,
-            //height: 540.0,
-            //hidpi: false,
+            width,
+            height,
+            hidpi: false,
             ..Default::default()
         });
     let (ctx, event_loop) = &mut cb.build()?;
+
+    println!("Renderer: {}", graphics::renderer_info(ctx).unwrap());
 
     let state = &mut MainState::new(ctx)?;
     event::run(ctx, event_loop, state)
