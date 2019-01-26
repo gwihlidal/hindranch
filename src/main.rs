@@ -1,6 +1,9 @@
 extern crate ggez;
 extern crate rand;
 
+//#[macro_use]
+//extern crate state_machine;
+
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
@@ -13,6 +16,7 @@ use nalgebra as na;
 use std::env;
 use std::path::{self, Path};
 
+mod enemy;
 mod music;
 mod voice;
 
@@ -127,6 +131,10 @@ impl MainState {
                 Material::new(0.3, 0.5),
             );
         }
+
+        let _bulldozer_0 = enemy::Bulldozer::new(8);
+        let _bulldozer_1 = enemy::Bulldozer::new(8);
+        let _sheriff = enemy::Sheriff::new(4);
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
         //let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
@@ -349,6 +357,26 @@ impl event::EventHandler for MainState {
         )?;
         graphics::set_color(ctx, Color::from((255, 255, 255, 255)))?;
         graphics::draw(ctx, &self.pixel_sized_text, dest_point2, 0.0)?;*/
+
+        /*graphics::queue_text(ctx, &t, Point2::new(0.0, 20.0), None);
+        graphics::draw_queued_text(
+            ctx,
+            graphics::DrawParam::new()
+                //.dest(Point2::new(500.0, 300.0))
+                //.rotation(-0.5),
+        )?;
+
+
+        graphics::set_color(ctx, graphics::Color::new(1.0, 1.0, 1.0, 1.0))?;
+        graphics::draw(ctx, &self.title_text, title_dest, 0.0)?;*/
+
+        let fps = timer::fps(ctx);
+        let fps_display = graphics::Text::new(format!("FPS: {}", fps));
+        graphics::draw(
+            ctx,
+            &fps_display,
+            (Point2::new(400.0, 400.0), graphics::WHITE),
+        )?;
 
         graphics::present(ctx)?;
 
