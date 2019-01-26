@@ -25,13 +25,12 @@ use std::rc::Rc;
 mod enemy;
 mod music;
 mod settings;
+mod tile_util;
+mod types;
 mod voice;
 
-#[allow(dead_code)]
-type Point2 = na::Point2<f32>;
-type Vector2 = na::Vector2<f32>;
-type Vector3 = na::Vector3<f32>;
-type Matrix4 = na::Matrix4<f32>;
+use self::tile_util::*;
+use self::types::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Cuboid, ShapeHandle};
@@ -42,7 +41,6 @@ use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
 
 const COLLIDER_MARGIN: f32 = 0.01;
-const TILE_SIZE_WORLD: f32 = 1.0;
 
 #[derive(Debug, Clone)]
 pub struct Positional {
@@ -135,76 +133,6 @@ impl PlayerInput {
 impl Default for PlayerInput {
     fn default() -> Self {
         PlayerInput::new()
-    }
-}
-
-struct TileMapLayerView<'a> {
-    layer: &'a tiled::Layer,
-    start_x: u32,
-    end_x: u32,
-    start_y: u32,
-    end_y: u32,
-}
-
-#[allow(dead_code)]
-struct TileMapLayerViewIterator<'a> {
-    view: &'a TileMapLayerView<'a>,
-    x: i32,
-    y: i32,
-}
-
-impl<'a> TileMapLayerView<'a> {
-    #[allow(dead_code)]
-    fn iter(&'a self) -> TileMapLayerViewIterator<'a> {
-        TileMapLayerViewIterator {
-            view: self,
-            x: self.start_x as i32 - 1,
-            y: self.start_y as i32,
-        }
-    }
-}
-
-#[derive(Clone)]
-struct MapTile {
-    tile_id: u32,
-    pos: Point2,
-}
-
-impl<'a> Iterator for TileMapLayerViewIterator<'a> {
-    type Item = MapTile;
-
-    fn next(&mut self) -> Option<MapTile> {
-        let res = loop {
-            self.x += 1;
-            if self.x >= self.view.end_x as i32 {
-                self.x = self.view.start_x as i32;
-                self.y += 1;
-            }
-
-            if self.y < self.view.end_y as i32 {
-                let tile = self.view.layer.tiles[(99 - self.y) as usize][self.x as usize];
-                if tile != 0 {
-                    break Some((self.x as u32, self.y as u32, tile - 1));
-                }
-            } else {
-                break None;
-            }
-        };
-
-        // TODO: get actual map size
-        res.map(|(x, y, tile_id)| MapTile {
-            pos: {
-                let tile_width = 64; // TODO
-                let tile_height = 64; // TODO
-                let scale = TILE_SIZE_WORLD / tile_width as f32;
-
-                let x = (x - self.view.start_x) * tile_width; // + offset_x as f32;
-                let y = (y - self.view.start_y) * tile_height; // + offset_y as f32;
-
-                Point2::new(x as f32 * scale, y as f32 * scale)
-            },
-            tile_id,
-        })
     }
 }
 
@@ -403,7 +331,7 @@ impl MainState {
         let layer = Self::get_map_layer(map, layer_name);
 
         let tile_width = map.tile_width;
-        let scale = TILE_SIZE_WORLD / tile_width as f32;
+        let scale = 1.0 / tile_width as f32;
 
         let start_column = 10;
         let start_row = 30;
@@ -589,7 +517,7 @@ impl event::EventHandler for MainState {
 
         for wall_piece in self.wall_pieces.iter() {
             let tile_width = 64; // TODO
-            let scale = TILE_SIZE_WORLD / tile_width as f32;
+            let scale = 1.0 / tile_width as f32;
 
             let pos: Point2 = self
                 .world
