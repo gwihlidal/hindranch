@@ -300,12 +300,10 @@ impl MainState {
     }
 
     // Inspired by https://github.com/FloVanGH/pg-engine/blob/master/src/drawing.rs
-    // TODO: add batching
     fn draw_map_layer(
         batch: &mut graphics::spritebatch::SpriteBatch,
         map: &tiled::Map,
         image: &graphics::Image,
-        ctx: &mut Context,
         layer_name: &str,
     ) {
         //let map = &self.map;
@@ -337,9 +335,6 @@ impl MainState {
                     .offset(Point2::new(0.5, 0.5)),
             );
         }
-
-        graphics::draw(ctx, batch, graphics::DrawParam::new()).unwrap();
-        batch.clear();
     }
 
     fn draw_single_image(
@@ -391,7 +386,7 @@ impl MainState {
                 let rad = 0.5 - COLLIDER_MARGIN;
 
                 let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
-                let inertia = geom.inertia(100.0);
+                let inertia = geom.inertia(1.0);
                 let center_of_mass = geom.center_of_mass();
 
                 let pos = Isometry2::new(pos.coords, na::zero());
@@ -413,6 +408,34 @@ impl MainState {
                 rb,
                 hp: 100.0,
             });
+        }
+    }
+
+    fn draw_wall_pieces(
+        wall_pieces: &[WallPiece],
+        world: &World<f32>,
+        sprite_batch: &mut graphics::spritebatch::SpriteBatch,
+    ) {
+        for wall_piece in wall_pieces.iter() {
+            let tile_width = 64; // TODO
+            let scale = 1.0 / tile_width as f32;
+
+            let (pos, rot): (Point2, f32) = {
+                let positional = world.rigid_body(wall_piece.rb).unwrap().position();
+                (
+                    positional.translation.vector.into(),
+                    positional.rotation.angle(),
+                )
+            };
+
+            sprite_batch.add(
+                graphics::DrawParam::new()
+                    .src(wall_piece.tile_snip)
+                    .dest(pos - Vector2::new(0.5, 0.5))
+                    .scale(Vector2::new(scale, -scale))
+                    .rotation(rot)
+                    .offset(Point2::new(0.5, 0.5)),
+            );
         }
     }
 }
@@ -471,6 +494,15 @@ impl event::EventHandler for MainState {
                 }
             }
 
+            for wall_piece in self.wall_pieces.iter() {
+                if let Some(rb) = self.world.rigid_body_mut(wall_piece.rb) {
+                    let mut vel = rb.velocity().clone();
+                    vel.linear *= 0.1;
+                    vel.angular *= 0.1;
+                    rb.set_velocity(vel);
+                }
+            }
+
             self.world.step();
         }
 
@@ -493,42 +525,12 @@ impl event::EventHandler for MainState {
             &mut self.map_spritebatch,
             &self.map,
             &self.map_tile_image,
-            ctx,
             "Background",
         );
 
-        for wall_piece in self.wall_pieces.iter() {
-            let tile_width = 64; // TODO
-            let scale = 1.0 / tile_width as f32;
-
-            let pos: Point2 = self
-                .world
-                .rigid_body(wall_piece.rb)
-                .unwrap()
-                .position()
-                .translation
-                .vector
-                .into();
-
-            self.map_spritebatch.add(
-                graphics::DrawParam::new()
-                    .src(wall_piece.tile_snip)
-                    .dest(pos - Vector2::new(0.5, 0.5))
-                    .scale(Vector2::new(scale, -scale))
-                    .offset(Point2::new(0.5, 0.5)),
-            );
-        }
-
+        Self::draw_wall_pieces(&self.wall_pieces, &self.world, &mut self.map_spritebatch);
         graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
         self.map_spritebatch.clear();
-
-        /*Self::draw_map_layer(
-            &mut self.map_spritebatch,
-            &self.map,
-            &self.map_tile_image,
-            ctx,
-            "Walls",
-        );*/
 
         for enemy in &self.enemies {
             let positional = enemy.positional();
