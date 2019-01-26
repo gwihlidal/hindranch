@@ -177,25 +177,6 @@ impl MainState {
         let mut world = World::new();
         world.set_timestep(1.0 / 60.0);
 
-        /*{
-            let rad = 0.2;
-
-            let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
-            let inertia = geom.inertia(1000.0);
-            let center_of_mass = geom.center_of_mass();
-
-            let pos = Isometry2::new(Vector2::new(0.68, 0.8), na::zero());
-            let rb = world.add_rigid_body(pos, inertia, center_of_mass);
-
-            world.add_collider(
-                COLLIDER_MARGIN,
-                geom.clone(),
-                rb,
-                Isometry2::identity(),
-                Material::new(0.3, 0.5),
-            );
-        }*/
-
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
         let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(0.5, -0.8));
@@ -213,16 +194,6 @@ impl MainState {
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
         let map_spritebatch = graphics::spritebatch::SpriteBatch::new(map_tile_image.clone());
-
-        /*let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf", 48).unwrap();
-        let text = graphics::Text::new(ctx, "Hello world!", &font).unwrap();
-        let bmpfont =
-            graphics::Font::new_bitmap(ctx, "/arial.png", "ABCDEFGHIJKLMNOPQRSTUVWXYZ").unwrap();
-        let bmptext = graphics::Text::new(ctx, "ZYXWVYTSRQPONMLKJIHGFEDCBA", &bmpfont).unwrap();*/
-
-        /*let pixel_font = graphics::Font::new_px(ctx, "/DejaVuSerif.ttf", 32).unwrap();
-        let pixel_sized_text =
-            graphics::Text::new(ctx, "This text is 32 pixels high", &pixel_font).unwrap();*/
 
         let mut voice_queue = voice::VoiceQueue::new();
         if settings.voice {
@@ -557,32 +528,6 @@ impl event::EventHandler for MainState {
                 positional.rotation,
             );
         }
-
-        /*graphics::draw(ctx, &self.text, dest_point, 0.0)?;
-        let dest_point = graphics::Point2::new(100.0, 50.0);
-        graphics::draw(ctx, &self.bmptext, dest_point, 0.0)?;
-
-        let dest_point2 = graphics::Point2::new(0.0, 256.0);
-        graphics::set_color(ctx, Color::from((0, 0, 0, 255)))?;
-        graphics::rectangle(
-            ctx,
-            graphics::DrawMode::Fill,
-            graphics::Rect::new(0.0, 256.0, 500.0, 32.0),
-        )?;
-        graphics::set_color(ctx, Color::from((255, 255, 255, 255)))?;
-        graphics::draw(ctx, &self.pixel_sized_text, dest_point2, 0.0)?;*/
-
-        /*graphics::queue_text(ctx, &t, Point2::new(0.0, 20.0), None);
-        graphics::draw_queued_text(
-            ctx,
-            graphics::DrawParam::new()
-                //.dest(Point2::new(500.0, 300.0))
-                //.rotation(-0.5),
-        )?;
-
-
-        graphics::set_color(ctx, graphics::Color::new(1.0, 1.0, 1.0, 1.0))?;
-        graphics::draw(ctx, &self.title_text, title_dest, 0.0)?;*/
 
         graphics::present(ctx)?;
 
