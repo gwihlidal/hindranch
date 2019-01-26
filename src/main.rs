@@ -190,9 +190,9 @@ impl MainState {
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
-        let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(0.5, -0.8));
-        let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(2.5, -2.8));
-        let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(1.5, -1.8));
+        let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-10.5, -2.0));
+        let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-12.5, -0.0));
+        let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-11.5, 2.0));
 
         //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
 
