@@ -6,9 +6,6 @@ extern crate toml;
 #[macro_use]
 extern crate serde_derive;
 
-//#[macro_use]
-//extern crate state_machine;
-
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
