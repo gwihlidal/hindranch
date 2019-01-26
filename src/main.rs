@@ -33,6 +33,7 @@ mod types;
 mod voice;
 
 use self::characters::*;
+use self::enemy::*;
 use self::player::*;
 use self::sounds::*;
 use self::tile_util::*;
@@ -114,12 +115,13 @@ struct MainState {
     voice_queue: voice::VoiceQueue,
     music_track: Option<music::MusicTrack>,
 
-    enemies: Vec<Box<dyn enemy::Enemy>>,
+    enemies: Vec<Box<dyn Enemy>>,
 
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
 
     camera_pos: Point2,
+    strategic_view: bool,
 
     character_spritebatch: graphics::spritebatch::SpriteBatch,
 
@@ -129,11 +131,33 @@ struct MainState {
     world: World<f32>,
 }
 
+struct EnemyDozerBehavior {
+    ramming: bool,
+}
+
+impl EnemyDozerBehavior {
+    fn new() -> Self {
+        Self { ramming: false }
+    }
+}
+
+impl AiBehavior for EnemyDozerBehavior {
+    fn update(&mut self) -> Movement {
+        Movement {
+            left: false,
+            right: false,
+            up: true,
+            down: false,
+        }
+    }
+}
+
 fn spawn_dozer(
     world: &mut World<f32>,
     image: Rc<graphics::Image>,
     pos: Point2,
-) -> Box<dyn enemy::Enemy> {
+    rotation: f32,
+) -> Box<dyn Enemy> {
     let size = {
         let rad = 3.0 / 2.0;
         let size = Vector2::new(image.width() as f32, image.height() as f32);
@@ -144,7 +168,7 @@ fn spawn_dozer(
     let inertia = geom.inertia(1.0);
     let center_of_mass = geom.center_of_mass();
 
-    let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
+    let pos = Isometry2::new(Vector2::new(pos.x, pos.y), rotation);
     let rb = world.add_rigid_body(pos, inertia, center_of_mass);
 
     world.add_collider(
@@ -155,11 +179,12 @@ fn spawn_dozer(
         Material::new(0.3, 0.5),
     );
 
-    Box::new(enemy::Bulldozer::new(
+    Box::new(Bulldozer::new(
         rb,
         image.clone(),
         8.0, /* health */
         Positional::default(),
+        Some(Box::new(EnemyDozerBehavior::new())),
     ))
 }
 
@@ -178,18 +203,7 @@ impl MainState {
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
-        //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
-
-        let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
-        if settings.enemies {
-            let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-10.5, -2.0));
-            let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-12.5, -0.0));
-            let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-11.5, 2.0));
-
-            enemies.push(dozer_0);
-            enemies.push(dozer_1);
-            enemies.push(dozer_2);
-        }
+        //let _sheriff = Sheriff::new(4.0, Positional::default());
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
@@ -221,7 +235,7 @@ impl MainState {
         let text = graphics::Text::new(("Hello world!", font, 48.0));
 
         let mut s = MainState {
-            settings,
+            settings: settings.clone(),
             font,
             text,
 
@@ -242,12 +256,13 @@ impl MainState {
             voice_queue,
             music_track: Some(music_track),
 
-            enemies,
+            enemies: Vec::new(),
 
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
 
             camera_pos: Point2::origin(),
+            strategic_view: false,
 
             world,
             character_spritebatch,
@@ -259,7 +274,33 @@ impl MainState {
 
         s.spawn_wall_pieces();
 
+        if settings.enemies {
+            s.spawn_bulldozers(3);
+        }
+
         Ok(s)
+    }
+
+    fn spawn_bulldozers(&mut self, count: usize) {
+        let a_off = rand::random::<f32>() * std::f32::consts::PI;
+
+        // Stratified circular positioning
+        for i in 0..count {
+            let amin = i as f32 / count as f32;
+            let amax = (i + 1) as f32 / count as f32;
+            let a =
+                a_off + (amin + (amax - amin) * rand::random::<f32>()) * std::f32::consts::PI * 2.0;
+
+            const SPAWN_DIST: f32 = 40.0;
+
+            let dozer_0 = spawn_dozer(
+                &mut self.world,
+                self.dozer_image.clone(),
+                Point2::new(a.cos() * SPAWN_DIST, a.sin() * SPAWN_DIST),
+                std::f32::consts::PI + a,
+            );
+            self.enemies.push(dozer_0);
+        }
     }
 
     pub fn calculate_view_transform(&mut self, ctx: &Context, origin: Point2, scale: f32) {
@@ -387,6 +428,7 @@ impl MainState {
             KeyCode::A | KeyCode::Left => self.player.input.left = value,
             KeyCode::S | KeyCode::Down => self.player.input.down = value,
             KeyCode::D | KeyCode::Right => self.player.input.right = value,
+            KeyCode::Back => self.strategic_view = value,
             _ => (),
         }
     }
@@ -488,7 +530,11 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.calculate_view_transform(&ctx, self.camera_pos, 0.1);
+        self.calculate_view_transform(
+            &ctx,
+            self.camera_pos,
+            if self.strategic_view { 0.02 } else { 0.1 },
+        );
 
         const DESIRED_FPS: u32 = 60;
         //let dt = 1.0 / (DESIRED_FPS as f32);
@@ -510,7 +556,7 @@ impl event::EventHandler for MainState {
                 if self.settings.dozer_drive && i == 0 {
                     // TODO: Player controlled hack
                     enemy.update(
-                        Some(enemy::Movement {
+                        Some(Movement {
                             left: self.player.input.left,
                             right: self.player.input.right,
                             up: self.player.input.up,

@@ -10,7 +10,7 @@ pub fn load_settings() -> Settings {
     toml::from_str(&settings_toml).unwrap()
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     pub music: bool,
     pub voice: bool,

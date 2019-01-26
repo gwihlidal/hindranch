@@ -5,6 +5,7 @@ use crate::{BodyHandle, Force2, Point2, Positional, Vector2, World};
 use ggez::graphics;
 use std::rc::Rc;
 
+#[derive(Clone, Copy)]
 pub struct Movement {
     pub left: bool,
     pub right: bool,
@@ -23,12 +24,17 @@ pub trait Enemy {
     fn positional(&self) -> Positional;
 }
 
+pub trait AiBehavior {
+    fn update(&mut self) -> Movement;
+}
+
 pub struct Bulldozer {
     movement: Movement,
     rigid_body: BodyHandle,
     image: Rc<graphics::Image>,
     health: f32,
     positional: Positional,
+    behavior: Option<Box<dyn AiBehavior>>,
 }
 
 impl Bulldozer {
@@ -37,6 +43,7 @@ impl Bulldozer {
         image: Rc<graphics::Image>,
         health: f32,
         positional: Positional,
+        behavior: Option<Box<dyn AiBehavior>>,
     ) -> Self {
         Bulldozer {
             movement: Movement {
@@ -49,12 +56,11 @@ impl Bulldozer {
             image,
             health,
             positional,
+            behavior,
         }
     }
-}
 
-impl Enemy for Bulldozer {
-    fn update(&mut self, movement: Option<Movement>, world: &mut World<f32>) {
+    fn apply_physics_movement(&mut self, movement: &Movement, world: &mut World<f32>) {
         let rigid_body = world.rigid_body_mut(self.rigid_body).unwrap();
         let pos = rigid_body.position();
         self.positional.position = pos.translation.vector.into();
@@ -83,12 +89,6 @@ impl Enemy for Bulldozer {
         let mut target_vel = 0.0;
         let mut target_spin = 0.0;
 
-        let movement = if let Some(ref movement) = movement {
-            movement
-        } else {
-            &self.movement
-        };
-
         if movement.right {
             target_spin -= 1.0;
         }
@@ -114,6 +114,16 @@ impl Enemy for Bulldozer {
         rigid_body.activate();
         rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
         rigid_body.apply_force(&Force2::new(force, torque));
+    }
+}
+
+impl Enemy for Bulldozer {
+    fn update(&mut self, movement: Option<Movement>, world: &mut World<f32>) {
+        if let Some(ref mut behavior) = self.behavior {
+            self.movement = behavior.update();
+        }
+
+        self.apply_physics_movement(&movement.unwrap_or(self.movement), world);
     }
 
     fn rigid_body(&self) -> Option<BodyHandle> {
