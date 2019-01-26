@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{BodyHandle, Force2, Point2, Positional, RigidBody, Vector2, World};
+use crate::{BodyHandle, Force2, Point2, Positional, Vector2, World};
 
 use ggez::graphics;
 use std::rc::Rc;

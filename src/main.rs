@@ -534,7 +534,7 @@ impl event::EventHandler for MainState {
                     if self.settings.dozer_drive && self.enemies.len() > 0 {
                         (self.enemies[0].positional(), 4.0, 0.07)
                     } else {
-                        (self.player.positional, 0.0, 1.0)
+                        (self.player.positional, 0.0, 0.3)
                     };
 
                 self.update_camera(camera_positional, look_ahead, stiffness);

@@ -1,7 +1,7 @@
 use crate::{
-    graphics::spritebatch::SpriteBatch, graphics::DrawParam, settings::Settings, BodyHandle,
-    Characters, Cuboid, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle,
-    Vector2, Volumetric, World,
+    graphics::spritebatch::SpriteBatch, graphics::DrawParam, settings::Settings, Ball, BodyHandle,
+    Characters, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2,
+    Volumetric, World,
 };
 use nalgebra as na;
 
@@ -40,13 +40,7 @@ impl Player {
     ) -> Self {
         let entry = characters.get_entry(name);
 
-        let size = {
-            let rad = 0.19;
-            let size = Vector2::new(entry.stand.w as f32, entry.stand.h as f32);
-            rad * size / size.x.min(size.y)
-        };
-
-        let geom = ShapeHandle::new(Cuboid::new(size));
+        let geom = ShapeHandle::new(Ball::new(0.19));
         let inertia = geom.inertia(0.1);
         let center_of_mass = geom.center_of_mass();
 
@@ -58,7 +52,7 @@ impl Player {
             geom.clone(),
             rb,
             Isometry2::identity(),
-            Material::new(0.3, 0.5),
+            Material::new(0.0, 0.0),
         );
 
         Player {
@@ -127,14 +121,14 @@ impl Player {
         let spin = rigid_body.velocity().angular;
 
         const MAX_TORQUE: f32 = 1000.0;
-        const TORQUE_RATE: f32 = 0.03;
+        const TORQUE_RATE: f32 = 0.005;
         const MAX_SPIN: f32 = 5.0;
 
         const MAX_FORCE: f32 = 100.0;
-        const FORCE_RATE: f32 = 0.01;
-        const MAX_VEL: f32 = 10.0;
+        const FORCE_RATE: f32 = 0.2;
+        const MAX_VEL: f32 = 7.0;
 
-        const SIDEWAYS_DAMPING: f32 = 0.1;
+        const SIDEWAYS_DAMPING: f32 = 0.5;
 
         let mut target_vel = 0.0;
         let mut target_spin = 0.0;
