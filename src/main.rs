@@ -77,6 +77,7 @@ struct MainState {
 
     map: tiled::Map,
     map_tile_image: graphics::Image,
+    map_spritebatch: graphics::spritebatch::SpriteBatch,
     world: World<f32>,
 }
 
@@ -140,6 +141,8 @@ impl MainState {
         //let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
         let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
 
+        let map_spritebatch = graphics::spritebatch::SpriteBatch::new(map_tile_image.clone());
+
         /*let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf", 48).unwrap();
         let text = graphics::Text::new(ctx, "Hello world!", &font).unwrap();
         let bmpfont =
@@ -176,6 +179,7 @@ impl MainState {
             world,
             map,
             map_tile_image,
+            map_spritebatch,
         };
 
         Ok(s)
@@ -209,8 +213,14 @@ impl MainState {
 
     // Inspired by https://github.com/FloVanGH/pg-engine/blob/master/src/drawing.rs
     // TODO: add batching
-    fn draw_map_layer(&self, ctx: &mut Context, layer_name: &str) {
-        let map = &self.map;
+    fn draw_map_layer(
+        batch: &mut graphics::spritebatch::SpriteBatch,
+        map: &tiled::Map,
+        image: &graphics::Image,
+        ctx: &mut Context,
+        layer_name: &str,
+    ) {
+        //let map = &self.map;
         let layer_idx = map
             .layers
             .iter()
@@ -222,12 +232,12 @@ impl MainState {
         let tile_width = map.tile_width;
         let tile_height = map.tile_height;
 
-        let image = &self.map_tile_image;
+        //let image = &self.map_tile_image;
 
         let start_column = 10;
         let start_row = 30;
-        let end_column = 40; //end_column;
-        let end_row = 60; //end_row;
+        let end_column = 100; //end_column;
+        let end_row = 100; //end_row;
 
         /*if end_column > map.column_count() {
             end_column = map.column_count();
@@ -262,9 +272,13 @@ impl MainState {
                     .dest(Point2::new(x as f32 * scale, y as f32 * scale))
                     .scale(Vector2::new(scale, -scale));
 
-                graphics::draw(ctx, image, draw_param).unwrap();
+                batch.add(draw_param);
+                //graphics::draw(ctx, image, draw_param).unwrap();
             }
         }
+
+        graphics::draw(ctx, batch, graphics::DrawParam::new()).unwrap();
+        batch.clear();
     }
 
     fn draw_single_image(
@@ -332,8 +346,21 @@ impl event::EventHandler for MainState {
 
         Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 1.0, 0.0);
 
-        self.draw_map_layer(ctx, "Background");
-        self.draw_map_layer(ctx, "Walls");
+        Self::draw_map_layer(
+            &mut self.map_spritebatch,
+            &self.map,
+            &self.map_tile_image,
+            ctx,
+            "Background",
+        );
+
+        Self::draw_map_layer(
+            &mut self.map_spritebatch,
+            &self.map,
+            &self.map_tile_image,
+            ctx,
+            "Walls",
+        );
 
         //Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
         Self::draw_single_image(
