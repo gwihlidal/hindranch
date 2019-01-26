@@ -28,6 +28,12 @@ pub struct Player {
     pub reload: (Rect, Vector2),
     pub silencer: (Rect, Vector2),
     pub stand: (Rect, Vector2),
+    pub dead_gun: (Rect, Vector2),
+    pub dead_hold: (Rect, Vector2),
+    pub dead_machine: (Rect, Vector2),
+    pub dead_reload: (Rect, Vector2),
+    pub dead_silencer: (Rect, Vector2),
+    pub dead_stand: (Rect, Vector2),
 }
 
 impl Player {
@@ -39,6 +45,7 @@ impl Player {
         characters: &Characters,
     ) -> Self {
         let entry = characters.get_entry(name);
+        let zombie = characters.get_entry("zombie");
 
         let geom = ShapeHandle::new(Ball::new(0.19));
         let inertia = geom.inertia(0.1);
@@ -67,17 +74,23 @@ impl Player {
             reload: characters.transform(&entry.reload),
             silencer: characters.transform(&entry.silencer),
             stand: characters.transform(&entry.stand),
+            dead_gun: characters.transform(&zombie.gun),
+            dead_hold: characters.transform(&zombie.hold),
+            dead_machine: characters.transform(&zombie.machine),
+            dead_reload: characters.transform(&zombie.reload),
+            dead_silencer: characters.transform(&zombie.silencer),
+            dead_stand: characters.transform(&zombie.stand),
         }
     }
 
     pub fn draw(&self, batch: &mut SpriteBatch) {
         let (rect, scale) = match self.visual {
-            VisualState::Gun => self.gun,
-            VisualState::Hold => self.hold,
-            VisualState::Machine => self.machine,
-            VisualState::Reload => self.reload,
-            VisualState::Silencer => self.silencer,
-            VisualState::Stand => self.stand,
+            VisualState::Gun => if self.alive() { self.gun } else { self.dead_gun },
+            VisualState::Hold => if self.alive() { self.hold } else { self.dead_hold },
+            VisualState::Machine => if self.alive() { self.machine } else { self.dead_machine },
+            VisualState::Reload => if self.alive() { self.reload } else { self.dead_reload },
+            VisualState::Silencer => if self.alive() { self.silencer } else { self.dead_silencer },
+            VisualState::Stand => if self.alive() { self.stand } else { self.dead_stand },
         };
         batch.add(
             DrawParam::new()

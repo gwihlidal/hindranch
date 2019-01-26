@@ -670,6 +670,16 @@ impl event::EventHandler for MainState {
             KeyCode::Key4 => self.player.set_visual(VisualState::Reload),
             KeyCode::Key5 => self.player.set_visual(VisualState::Silencer),
             KeyCode::Key6 => self.player.set_visual(VisualState::Stand),
+            KeyCode::Key0 => {
+                if self.player.alive() {
+                    self.player.damage(13.0);
+                    if !self.player.alive() {
+                        // DEAD! :(
+                            //
+                        )
+                    }
+                }
+            }
             KeyCode::M => {
                 if let Some(ref mut track) = self.music_track {
                     track.stop();
