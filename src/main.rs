@@ -82,7 +82,7 @@ struct MainState {
     a: i32,
     direction: i32,
     splash: graphics::Image,
-    //dragon: graphics::Image,
+
     dozer: graphics::Image,
     dozer_rb: BodyHandle,
     dozer_pos: Positional,
