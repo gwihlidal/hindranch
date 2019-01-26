@@ -7,10 +7,8 @@ use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 pub struct Movement {
-    pub left: bool,
-    pub right: bool,
-    pub up: bool,
-    pub down: bool,
+    pub forward: f32,
+    pub right: f32,
 }
 
 pub trait Enemy {
@@ -47,10 +45,8 @@ impl Bulldozer {
     ) -> Self {
         Bulldozer {
             movement: Movement {
-                left: false,
-                right: false,
-                up: false,
-                down: false,
+                forward: 0.0,
+                right: 0.0,
             },
             rigid_body,
             image,
@@ -86,21 +82,8 @@ impl Bulldozer {
         // Bulldozers technically don't strafe, but we have a need for speed.
         const SIDEWAYS_DAMPING: f32 = 0.1;
 
-        let mut target_vel = 0.0;
-        let mut target_spin = 0.0;
-
-        if movement.right {
-            target_spin -= 1.0;
-        }
-        if movement.left {
-            target_spin += 1.0;
-        }
-        if movement.up {
-            target_vel += 1.0;
-        }
-        if movement.down {
-            target_vel -= 1.0;
-        }
+        let mut target_vel = movement.forward.min(1.0).max(-1.0);
+        let mut target_spin = (-movement.right).min(1.0).max(-1.0);
 
         target_spin *= MAX_SPIN;
         target_spin -= spin;

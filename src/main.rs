@@ -49,6 +49,16 @@ use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
 
 const COLLIDER_MARGIN: f32 = 0.01;
+const DOZER_OUTER_RADIUS: f32 = 40.0;
+
+impl From<&PlayerInput> for Movement {
+    fn from(i: &PlayerInput) -> Self {
+        Self {
+            forward: (if i.up { 1.0 } else { 0.0 }) + (if i.down { -1.0 } else { 0.0 }),
+            right: (if i.right { 1.0 } else { 0.0 }) + (if i.left { -1.0 } else { 0.0 }),
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct Positional {
@@ -144,10 +154,8 @@ impl EnemyDozerBehavior {
 impl AiBehavior for EnemyDozerBehavior {
     fn update(&mut self) -> Movement {
         Movement {
-            left: false,
-            right: false,
-            up: true,
-            down: false,
+            forward: 1.0,
+            right: 0.0,
         }
     }
 }
@@ -291,7 +299,7 @@ impl MainState {
             let a =
                 a_off + (amin + (amax - amin) * rand::random::<f32>()) * std::f32::consts::PI * 2.0;
 
-            const SPAWN_DIST: f32 = 40.0;
+            const SPAWN_DIST: f32 = DOZER_OUTER_RADIUS;
 
             let dozer_0 = spawn_dozer(
                 &mut self.world,
@@ -555,15 +563,7 @@ impl event::EventHandler for MainState {
             for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
                 if self.settings.dozer_drive && i == 0 {
                     // TODO: Player controlled hack
-                    enemy.update(
-                        Some(Movement {
-                            left: self.player.input.left,
-                            right: self.player.input.right,
-                            up: self.player.input.up,
-                            down: self.player.input.down,
-                        }),
-                        &mut self.world,
-                    );
+                    enemy.update(Some((&self.player.input).into()), &mut self.world);
                 } else {
                     enemy.update(None, &mut self.world);
                 }
