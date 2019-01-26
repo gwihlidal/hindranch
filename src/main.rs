@@ -312,6 +312,7 @@ impl event::EventHandler for MainState {
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
         self.draw_map_layer(ctx, "Background");
+        self.draw_map_layer(ctx, "Walls");
 
         Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
         Self::draw_single_image(
