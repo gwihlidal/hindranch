@@ -14,6 +14,9 @@ rand = "0.6.4"
 nphysics2d = "0.9"
 ncollide2d = "0.17"
 tiled = "0.8"
+serde = "1.0.85"
+serde_derive = "1.0.85"
+toml = "0.4.10"
 
 [build-dependencies]
 restson = "0.5.1"

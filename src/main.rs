@@ -1,5 +1,10 @@
+#![allow(dead_code)]
+
 extern crate ggez;
 extern crate rand;
+extern crate toml;
+#[macro_use]
+extern crate serde_derive;
 
 //#[macro_use]
 //extern crate state_machine;
@@ -19,6 +24,7 @@ use std::rc::Rc;
 
 mod enemy;
 mod music;
+mod settings;
 mod voice;
 
 #[allow(dead_code)]
@@ -79,6 +85,8 @@ struct WallPiece {
 }
 
 struct MainState {
+    settings: settings::Settings,
+
     player_input: PlayerInput,
 
     a: i32,
@@ -229,7 +237,7 @@ fn spawn_dozer(
 }
 
 impl MainState {
-    fn new(ctx: &mut Context) -> GameResult<MainState> {
+    fn new(settings: settings::Settings, ctx: &mut Context) -> GameResult<MainState> {
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
         //println!("{:?}", map);
 
@@ -287,13 +295,19 @@ impl MainState {
             graphics::Text::new(ctx, "This text is 32 pixels high", &pixel_font).unwrap();*/
 
         let mut voice_queue = voice::VoiceQueue::new();
-        voice_queue.enqueue("shout", ctx);
-        voice_queue.enqueue("defiance", ctx);
+        if settings.voice {
+            voice_queue.enqueue("shout", ctx);
+            voice_queue.enqueue("defiance", ctx);
+        }
 
         let mut music_track = music::MusicTrack::new("cantina", ctx);
-        music_track.play();
+        if settings.music {
+            music_track.play();
+        }
 
         let s = MainState {
+            settings,
+
             player_input: Default::default(),
             a: 0,
             direction: 1,
@@ -506,16 +520,6 @@ impl event::EventHandler for MainState {
                 }
             }
 
-            if self.enemies.len() > 0 {
-                let test_enemy = &mut self.enemies[0];
-                if let Some(body_handle) = test_enemy.rigid_body() {
-                    let positional = test_enemy.positional();
-                    let rigid_body = self.world.rigid_body_mut(body_handle).unwrap();
-
-                    Self::drive_bulldozer(&positional, rigid_body, &self.player_input);
-                }
-            }
-
             self.world.step();
         }
 
@@ -647,6 +651,8 @@ pub fn resolution() -> (f32, f32) {
 }
 
 pub fn main() -> GameResult {
+    let settings = settings::load_settings();
+
     let resource_dir = if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let mut path = path::PathBuf::from(manifest_dir);
         path.push("resources");
@@ -674,6 +680,6 @@ pub fn main() -> GameResult {
 
     println!("Renderer: {}", graphics::renderer_info(ctx).unwrap());
 
-    let state = &mut MainState::new(ctx)?;
+    let state = &mut MainState::new(settings, ctx)?;
     event::run(ctx, event_loop, state)
 }
