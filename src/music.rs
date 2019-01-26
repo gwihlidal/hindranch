@@ -30,5 +30,5 @@ impl MusicTrack {
         if self.source.playing() {
             self.source.stop();
         }
-    }   
+    }
 }

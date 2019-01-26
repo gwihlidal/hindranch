@@ -4,17 +4,17 @@ extern crate rand;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
-use ggez::input::keyboard::{KeyCode, KeyMods};
 #[allow(unused_imports)]
 use ggez::graphics::{Color, Rect, Scale};
+use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
 use std::env;
 use std::path::{self, Path};
 
-mod voice;
 mod music;
+mod voice;
 
 #[allow(dead_code)]
 type Point2 = na::Point2<f32>;
@@ -58,7 +58,7 @@ struct MainState {
     a: i32,
     direction: i32,
     splash: graphics::Image,
-    dragon: graphics::Image,
+    //dragon: graphics::Image,
     dozer: graphics::Image,
     dozer_rb: BodyHandle,
     dozer_pos: Positional,
@@ -129,7 +129,7 @@ impl MainState {
         }
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
-        let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
+        //let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
         let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
 
         /*let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf", 48).unwrap();
@@ -153,7 +153,7 @@ impl MainState {
             a: 0,
             direction: 1,
             splash,
-            dragon,
+            //dragon,
             dozer,
             dozer_rb,
             dozer_pos: Positional::default(),
@@ -327,7 +327,7 @@ impl event::EventHandler for MainState {
         self.draw_map_layer(ctx, "Background");
         self.draw_map_layer(ctx, "Walls");
 
-        Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
+        //Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
         Self::draw_single_image(
             ctx,
             &self.dozer,
@@ -380,6 +380,11 @@ impl event::EventHandler for MainState {
             }
             _ => (),
         }
+    }
+
+    fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
+        graphics::set_screen_coordinates(ctx, graphics::Rect::new(0.0, 0.0, width, height))
+            .unwrap();
     }
 }
 
