@@ -1,10 +1,12 @@
 #![allow(dead_code)]
 
-use crate::{AiBehavior, BodyHandle, Force2, Point2, Positional, Vector2, World};
+use crate::{linear_distance, inverse_distance, exponential_distance, AiBehavior, Context, BodyHandle, Force2, Point2, Positional, Vector2, World};
 
 use ggez::graphics;
+use ggez::audio;
 use std::default::Default;
 use std::rc::Rc;
+use nalgebra as na;
 
 #[derive(Clone, Copy)]
 pub struct Movement {
@@ -22,7 +24,7 @@ impl Default for Movement {
 }
 
 pub trait Enemy {
-    fn update(&mut self, movement: Option<Movement>, world: &mut World<f32>);
+    fn update(&mut self, player_pos: Positional, movement: Option<Movement>, world: &mut World<f32>);
     fn rigid_body(&self) -> Option<BodyHandle>;
     fn image(&self) -> Rc<graphics::Image>;
     fn health(&self) -> f32;
@@ -33,6 +35,8 @@ pub trait Enemy {
 }
 
 pub struct Bulldozer {
+    driving: bool,
+    engine_source: audio::SpatialSource,
     movement: Movement,
     rigid_body: BodyHandle,
     image: Rc<graphics::Image>,
@@ -43,13 +47,19 @@ pub struct Bulldozer {
 
 impl Bulldozer {
     pub fn new(
+        ctx: &mut Context,
+        engine_sound: audio::SoundData,
         rigid_body: BodyHandle,
         image: Rc<graphics::Image>,
         health: f32,
         positional: Positional,
         behavior: Option<Box<dyn AiBehavior>>,
     ) -> Self {
+        let mut engine_source = audio::SpatialSource::from_data(ctx, engine_sound.clone()).unwrap();
+        engine_source.set_repeat(true);
         Bulldozer {
+            driving: false,
+            engine_source,
             movement: Movement {
                 forward: 0.0,
                 right: 0.0,
@@ -91,6 +101,31 @@ impl Bulldozer {
         let mut target_vel = movement.forward.min(1.0).max(-1.0);
         let mut target_spin = (-movement.right).min(1.0).max(-1.0);
 
+        /*let movement = if let Some(ref movement) = movement {
+            movement
+        } else {
+            &self.movement
+        };
+
+        self.driving = false;
+
+        if movement.right {
+            target_spin -= 1.0;
+            self.driving = true;
+        }
+        if movement.left {
+            target_spin += 1.0;
+            self.driving = true;
+        }
+        if movement.up {
+            target_vel += 1.0;
+            self.driving = true;
+        }
+        if movement.down {
+            target_vel -= 1.0;
+            self.driving = true;
+        }*/
+
         target_spin *= MAX_SPIN;
         target_spin -= spin;
 
@@ -103,6 +138,29 @@ impl Bulldozer {
         rigid_body.activate();
         rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
         rigid_body.apply_force(&Force2::new(force, torque));
+
+        //self.engine_source.set_ears(na::Point3::new(player_pos.position.x, player_pos.position.y, 1.0), na::Point3::new(player_pos.position.x, player_pos.position.y, 1.0));
+        //self.engine_source.set_position(na::Point3::new(self.positional.position.x, self.positional.position.y, 1.0));
+
+        let max = 1000.0;
+        let min = 4.0;
+        let roll_off = 1.5;
+        
+        let ear_distance = na::distance(&player_pos.position, &self.positional.position);
+        let volume = exponential_distance(ear_distance, min, max, roll_off);
+        //println!("Volume: {}", volume);
+
+        self.engine_source.set_volume(volume);
+
+        if self.driving {
+            self.engine_source.set_pitch(1.0);
+        } else {
+            self.engine_source.set_pitch(0.7);
+        }
+
+        if !self.engine_source.playing() {
+            self.engine_source.play().unwrap();
+        }
     }
 }
 
@@ -161,7 +219,7 @@ impl Sheriff {
 }
 
 impl Enemy for Sheriff {
-    fn update(&mut self, _movement: Option<Movement>, _world: &mut World<f32>) {
+    fn update(&mut self, _player_pos: Positional, _movement: Option<Movement>, _world: &mut World<f32>) {
         //
     }
 

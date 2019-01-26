@@ -9,6 +9,7 @@ extern crate serde_derive;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
+use ggez::audio;
 #[allow(unused_imports)]
 use ggez::graphics::{Color, Rect, Scale};
 use ggez::input::keyboard::{KeyCode, KeyMods};
@@ -69,6 +70,8 @@ struct WallPiece {
 struct MainState {
     settings: settings::Settings,
 
+    engine_data: audio::SoundData,
+
     font: graphics::Font,
     text: graphics::Text,
 
@@ -107,7 +110,9 @@ struct MainState {
 }
 
 fn spawn_dozer(
+    ctx: &mut Context,
     world: &mut World<f32>,
+    engine_sound: audio::SoundData,
     image: Rc<graphics::Image>,
     pos: Point2,
     rotation: f32,
@@ -134,6 +139,8 @@ fn spawn_dozer(
     );
 
     Box::new(Bulldozer::new(
+        ctx,
+        engine_sound,
         rb,
         image.clone(),
         8.0, /* health */
@@ -157,7 +164,19 @@ impl MainState {
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
-        //let _sheriff = Sheriff::new(4.0, Positional::default());
+        //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
+        /*let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer1.ogg").unwrap();
+        let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
+        if settings.enemies {
+            
+            let dozer_0 = spawn_dozer(ctx, &mut world, engine_sound.clone(), dozer_image.clone(), Point2::new(-10.5, -2.0));
+            let dozer_1 = spawn_dozer(ctx, &mut world, engine_sound.clone(), dozer_image.clone(), Point2::new(-12.5, -0.0));
+            let dozer_2 = spawn_dozer(ctx, &mut world, engine_sound.clone(), dozer_image.clone(), Point2::new(-11.5, 2.0));
+
+            enemies.push(dozer_0);
+            enemies.push(dozer_1);
+            enemies.push(dozer_2);
+        }*/
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
@@ -192,6 +211,8 @@ impl MainState {
             settings: settings.clone(),
             font,
             text,
+
+            engine_data: engine_sound.clone(),
 
             sounds: Sounds::load(ctx),
             characters,
@@ -511,7 +532,7 @@ impl event::EventHandler for MainState {
                     // TODO: Player controlled hack
                     enemy.update(Some((&self.player.input).into()), &mut self.world);
                 } else {
-                    enemy.update(None, &mut self.world);
+                    enemy.update(self.player.positional, None, &mut self.world);
                 }
             }
 

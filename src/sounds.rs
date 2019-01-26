@@ -27,6 +27,22 @@ impl Sounds {
     pub fn play_break2(&mut self) {
         self.break2.play().unwrap();
     }
-
 }
 
+pub fn inverse_distance(distance: f32, min_distance: f32, max_distance: f32, roll_off: f32) -> f32 {
+    let distance = distance.max(min_distance);
+    let distance = distance.min(max_distance);
+    min_distance / (min_distance + roll_off * (distance - min_distance))
+}
+
+pub fn linear_distance(distance: f32, min_distance: f32, max_distance: f32, roll_off: f32) -> f32 {
+    let distance = distance.max(min_distance);
+    let distance = distance.min(max_distance);
+    1.0 - roll_off * (distance - min_distance) / (max_distance - min_distance)
+}
+
+pub fn exponential_distance(distance: f32, min_distance: f32, max_distance: f32, roll_off: f32) -> f32 {
+    let distance = distance.max(min_distance);
+    let distance = distance.min(max_distance);
+    (distance / min_distance).powf(-roll_off)
+}
