@@ -376,6 +376,7 @@ impl event::EventHandler for MainState {
                 if self.player_input.down {
                     force.y -= 1.0;
                 }
+                rigid_body.activate();
                 rigid_body.apply_force(&Force2::linear(force * 0.1));
             }
 
