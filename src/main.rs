@@ -536,21 +536,6 @@ impl event::EventHandler for MainState {
             "Background",
         );
 
-        let woman = self.characters.get_entry("woman_green");
-        let woman_pos = Point2::new(0.5, 0.5);
-        let (woman_rect, woman_scale) = self.characters.transform(&woman.gun);
-
-        self.character_spritebatch.add(
-            graphics::DrawParam::new()
-                .src(woman_rect)
-                .dest(woman_pos - Vector2::new(0.5, 0.5))
-                .scale(woman_scale)
-                .offset(Point2::new(0.5, 0.5)),
-        );
-
-        graphics::draw(ctx, &self.character_spritebatch, graphics::DrawParam::new()).unwrap();
-        self.character_spritebatch.clear();
-
         for wall_piece in self.wall_pieces.iter() {
             let tile_width = 64; // TODO
             let scale = 1.0 / tile_width as f32;
@@ -576,6 +561,21 @@ impl event::EventHandler for MainState {
         Self::draw_wall_pieces(&self.wall_pieces, &self.world, &mut self.map_spritebatch);
         graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
         self.map_spritebatch.clear();
+
+        let woman = self.characters.get_entry("woman_green");
+        let woman_pos = Point2::new(0.5, 0.5);
+        let (woman_rect, woman_scale) = self.characters.transform(&woman.gun);
+
+        self.character_spritebatch.add(
+            graphics::DrawParam::new()
+                .src(woman_rect)
+                .dest(woman_pos - Vector2::new(0.5, 0.5))
+                .scale(woman_scale)
+                .offset(Point2::new(0.5, 0.5)),
+        );
+
+        graphics::draw(ctx, &self.character_spritebatch, graphics::DrawParam::new()).unwrap();
+        self.character_spritebatch.clear();
 
         for enemy in &self.enemies {
             let positional = enemy.positional();
