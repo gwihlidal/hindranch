@@ -344,7 +344,7 @@ impl event::EventHandler for MainState {
         //graphics::set_screen_coordinates(ctx, Rect::new_i32(0, 0, 960, 540))
         //.expect("Could not set logical screen coordinates before running initial state.");
 
-        Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 1.0, 0.0);
+        Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 2.0, 0.0);
 
         Self::draw_map_layer(
             &mut self.map_spritebatch,
