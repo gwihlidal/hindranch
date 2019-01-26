@@ -42,10 +42,15 @@ pub struct Positional {
 }
 
 impl Positional {
-    fn set_from_physics(&mut self, rigid_body: &RigidBody<f32>) {
+    pub fn set_from_physics(&mut self, rigid_body: &RigidBody<f32>) {
         let pos = rigid_body.position();
         self.position = pos.translation.vector.into();
         self.rotation = pos.rotation.angle();
+    }
+
+    // Assumes sprites face up
+    pub fn forward(&self) -> Vector2 {
+        Vector2::new(-self.rotation.sin(), self.rotation.cos())
     }
 }
 
