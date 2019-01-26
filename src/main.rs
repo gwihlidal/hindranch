@@ -109,6 +109,8 @@ struct MainState {
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
 
+    character_spritebatch: graphics::spritebatch::SpriteBatch,
+
     map: tiled::Map,
     map_tile_image: graphics::Image,
     map_spritebatch: graphics::spritebatch::SpriteBatch,
@@ -192,7 +194,6 @@ impl MainState {
         let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(2.5, -2.8));
         let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(1.5, -1.8));
 
-        //let _bulldozer_1 = enemy::Bulldozer::new(dozer_image.clone(), 8.0, Positional::default());
         //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
 
         let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
@@ -203,6 +204,8 @@ impl MainState {
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
         let map_spritebatch = graphics::spritebatch::SpriteBatch::new(map_tile_image.clone());
+        let character_spritebatch =
+            graphics::spritebatch::SpriteBatch::new(characters.image.clone());
 
         let mut voice_queue = voice::VoiceQueue::new();
         if settings.voice {
@@ -238,6 +241,9 @@ impl MainState {
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
             world,
+
+            character_spritebatch,
+
             map,
             map_tile_image,
             map_spritebatch,
@@ -530,6 +536,43 @@ impl event::EventHandler for MainState {
             "Background",
         );
 
+        let woman = self.characters.get_entry("woman_green");
+        let woman_pos = Point2::new(0.5, 0.5);
+        let (woman_rect, woman_scale) = self.characters.transform(&woman.gun);
+
+        self.character_spritebatch.add(
+            graphics::DrawParam::new()
+                .src(woman_rect)
+                .dest(woman_pos - Vector2::new(0.5, 0.5))
+                .scale(woman_scale)
+                .offset(Point2::new(0.5, 0.5)),
+        );
+
+        graphics::draw(ctx, &self.character_spritebatch, graphics::DrawParam::new()).unwrap();
+        self.character_spritebatch.clear();
+
+        for wall_piece in self.wall_pieces.iter() {
+            let tile_width = 64; // TODO
+            let scale = 1.0 / tile_width as f32;
+
+            let pos: Point2 = self
+                .world
+                .rigid_body(wall_piece.rb)
+                .unwrap()
+                .position()
+                .translation
+                .vector
+                .into();
+
+            self.map_spritebatch.add(
+                graphics::DrawParam::new()
+                    .src(wall_piece.tile_snip)
+                    .dest(pos - Vector2::new(0.5, 0.5))
+                    .scale(Vector2::new(scale, -scale))
+                    .offset(Point2::new(0.5, 0.5)),
+            );
+        }
+        
         Self::draw_wall_pieces(&self.wall_pieces, &self.world, &mut self.map_spritebatch);
         graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
         self.map_spritebatch.clear();

@@ -1,21 +1,19 @@
 use crate::graphics::Image;
-use crate::Rect;
-use crate::Context;
-use std::rc::Rc;
+use crate::{Context, Rect, Vector2};
 
 #[derive(Debug, Clone)]
 pub struct CharacterEntry {
-    name: String,
-    gun: Rect,
-    hold: Rect,
-    machine: Rect,
-    reload: Rect,
-    silencer: Rect,
-    stand: Rect,
+    pub name: String,
+    pub gun: Rect,
+    pub hold: Rect,
+    pub machine: Rect,
+    pub reload: Rect,
+    pub silencer: Rect,
+    pub stand: Rect,
 }
 
 pub struct Characters {
-    pub image: Rc<Image>,
+    pub image: Image,
     pub entries: Vec<CharacterEntry>,
 }
 
@@ -114,15 +112,31 @@ impl Characters {
         });
 
         Characters {
-            image: Rc::new(Image::new(ctx, "/characters.png").unwrap()),
+            image: Image::new(ctx, "/characters.png").unwrap(),
             entries,
         }
     }
 
     pub fn get_entry(&self, name: &str) -> CharacterEntry {
-        let entry = self.entries
-                .iter()
-                .find(|&entry| entry.name == name).unwrap();
+        let entry = self
+            .entries
+            .iter()
+            .find(|&entry| entry.name == name)
+            .unwrap();
         entry.clone()
+    }
+
+    pub fn transform(&self, rect: &Rect) -> (Rect, Vector2) {
+        let img_width = self.image.width() as f32;
+        let img_height = self.image.height() as f32;
+        (
+            Rect {
+                x: rect.x as f32 / img_width,
+                w: rect.w as f32 / img_width,
+                y: rect.y as f32 / img_height,
+                h: rect.h as f32 / img_height,
+            },
+            Vector2::new(1.0 / rect.w as f32, 1.0 / -rect.h as f32),
+        )
     }
 }
