@@ -52,6 +52,11 @@ impl Positional {
     pub fn forward(&self) -> Vector2 {
         Vector2::new(-self.rotation.sin(), self.rotation.cos())
     }
+
+    pub fn right(&self) -> Vector2 {
+        let forward = self.forward();
+        Vector2::new(forward.y, -forward.x)
+    }
 }
 
 impl Default for Positional {
@@ -346,6 +351,25 @@ impl MainState {
     }
 }
 
+/*
+fn angle_shortest_dist(a0: f32, a1: f32) -> f32 {
+    let max = f32::consts::PI * 2.0;
+    let da = (a1 - a0) % max;
+    2.0 * da % max - da
+}
+
+fn calculate_torque_for_aim(aim: Vector2, rotation: f32, spin: f32) -> f32 {
+    let target_rot = if aim.x == 0.0 && aim.y == 0.0 {
+        rotation
+    } else {
+        (-aim.x).atan2(aim.y)
+    };
+
+    let angle_diff = angle_shortest_dist(rotation, target_rot);
+
+    angle_diff * 200.0 - spin * 15.0
+}*/
+
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         self.calculate_view_transform(&ctx, Point2::origin(), 1.0);
@@ -368,21 +392,51 @@ impl event::EventHandler for MainState {
                 let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
                 self.dozer_pos.set_from_physics(rigid_body);
 
-                let mut force = Vector2::zeros();
+                let forward = self.dozer_pos.forward();
+                let right = self.dozer_pos.right();
+
+                let velocity = rigid_body.velocity().linear;
+                let fwd_vel = Vector2::dot(&forward, &velocity);
+                let right_vel = Vector2::dot(&right, &velocity);
+
+                let spin = rigid_body.velocity().angular;
+
+                const MAX_TORQUE: f32 = 0.05;
+                const TORQUE_RATE: f32 = 0.05;
+                const MAX_SPIN: f32 = 2.0;
+
+                const MAX_FORCE: f32 = 2.0;
+                const FORCE_RATE: f32 = 1.0;
+                const MAX_VEL: f32 = 1.0;
+                const SIDEWAYS_DAMPING: f32 = 0.2;
+
+                let mut target_vel = 0.0;
+                let mut target_spin = 0.0;
                 if self.player_input.right {
-                    force.x += 1.0;
+                    target_spin -= 1.0;
                 }
                 if self.player_input.left {
-                    force.x -= 1.0;
+                    target_spin += 1.0;
                 }
                 if self.player_input.up {
-                    force.y += 1.0;
+                    target_vel += 1.0;
                 }
                 if self.player_input.down {
-                    force.y -= 1.0;
+                    target_vel -= 1.0;
                 }
+
+                target_spin *= MAX_SPIN;
+                target_spin -= spin;
+
+                target_vel *= MAX_VEL;
+                target_vel -= fwd_vel;
+
+                let torque = (target_spin * TORQUE_RATE).max(-MAX_TORQUE).min(MAX_TORQUE);
+                let force = forward * (target_vel * FORCE_RATE).max(-MAX_FORCE).min(MAX_FORCE);
+
                 rigid_body.activate();
-                rigid_body.apply_force(&Force2::linear(force * 0.1));
+                rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
+                rigid_body.apply_force(&Force2::new(force, torque));
             }
 
             self.world.step();
