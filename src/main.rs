@@ -1,7 +1,6 @@
 extern crate ggez;
 extern crate rand;
 
-use ggez::audio;
 use ggez::conf::WindowSetup;
 use ggez::event;
 use ggez::graphics;
