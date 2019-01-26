@@ -59,6 +59,8 @@ impl Default for Positional {
 }
 
 struct MainState {
+    player_input: PlayerInput,
+
     a: i32,
     direction: i32,
     splash: graphics::Image,
@@ -79,6 +81,30 @@ struct MainState {
     map_tile_image: graphics::Image,
     map_spritebatch: graphics::spritebatch::SpriteBatch,
     world: World<f32>,
+}
+
+pub struct PlayerInput {
+    pub up: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
+}
+
+impl PlayerInput {
+    pub fn new() -> PlayerInput {
+        PlayerInput {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+        }
+    }
+}
+
+impl Default for PlayerInput {
+    fn default() -> Self {
+        PlayerInput::new()
+    }
 }
 
 impl MainState {
@@ -161,6 +187,7 @@ impl MainState {
         music_track.play();
 
         let s = MainState {
+            player_input: Default::default(),
             a: 0,
             direction: 1,
             splash,
@@ -302,6 +329,16 @@ impl MainState {
         )
         .unwrap();
     }
+
+    fn handle_key(&mut self, keycode: KeyCode, value: bool) {
+        match keycode {
+            KeyCode::W | KeyCode::Up => self.player_input.up = value,
+            KeyCode::A | KeyCode::Left => self.player_input.left = value,
+            KeyCode::S | KeyCode::Down => self.player_input.down = value,
+            KeyCode::D | KeyCode::Right => self.player_input.right = value,
+            _ => (),
+        }
+    }
 }
 
 impl event::EventHandler for MainState {
@@ -433,8 +470,12 @@ impl event::EventHandler for MainState {
                     self.music_track = Some(music_track);
                 }
             }
-            _ => (),
+            _ => self.handle_key(key_code, true),
         }
+    }
+
+    fn key_up_event(&mut self, _ctx: &mut Context, key_code: KeyCode, _key_mod: KeyMods) {
+        self.handle_key(key_code, false);
     }
 
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
