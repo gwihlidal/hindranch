@@ -6,7 +6,7 @@ use ggez::conf::WindowSetup;
 use ggez::event;
 use ggez::graphics;
 #[allow(unused_imports)]
-use ggez::graphics::{Color, Scale};
+use ggez::graphics::{Color, Rect, Scale};
 use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
@@ -68,6 +68,8 @@ struct MainState {
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
 
+    map: tiled::Map,
+    map_tile_image: graphics::Image,
     world: World<f32>,
 }
 
@@ -75,6 +77,9 @@ impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
         println!("{:?}", map);
+
+        let map_tile_image = graphics::Image::new(ctx, &map.tilesets[0].images[0].source)
+            .expect("opening the tileset image");
 
         let mut world = World::new();
         world.set_timestep(1.0 / 60.0);
@@ -155,6 +160,8 @@ impl MainState {
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
             world,
+            map,
+            map_tile_image,
         };
 
         Ok(s)
@@ -184,6 +191,66 @@ impl MainState {
     pub fn apply_view_transform(&self, ctx: &mut Context) {
         graphics::set_transform(ctx, self.world_to_screen);
         graphics::apply_transformations(ctx).unwrap();
+    }
+
+    // Inspired by https://github.com/FloVanGH/pg-engine/blob/master/src/drawing.rs
+    // TODO: add batching
+    fn draw_map_layer(&self, ctx: &mut Context, layer_name: &str) {
+        let map = &self.map;
+        let layer_idx = map
+            .layers
+            .iter()
+            .position(|layer| layer.name == layer_name)
+            .unwrap();
+
+        let scale = 0.001;
+
+        let tile_width = map.tile_width;
+        let tile_height = map.tile_height;
+
+        let image = &self.map_tile_image;
+
+        let start_column = 10;
+        let start_row = 30;
+        let end_column = 40; //end_column;
+        let end_row = 60; //end_row;
+
+        /*if end_column > map.column_count() {
+            end_column = map.column_count();
+        }
+
+        if end_row > map.row_count() {
+            end_row = map.row_count();
+        }*/
+
+        let layer = &map.layers[layer_idx];
+        let tile_column_count = (image.width() as usize) / (tile_width as usize);
+
+        let tile_w = tile_width as f32 / image.width() as f32;
+        let tile_h = tile_height as f32 / image.height() as f32;
+
+        for r in start_row..end_row {
+            for c in start_column..end_column {
+                let tile = layer.tiles[99 - r][c];
+                if 0 == tile {
+                    continue;
+                }
+                let tile = tile - 1; // HACK: assumes one tileset with first id=1
+
+                let x = (c - start_column) * map.tile_width as usize; // + offset_x as f32;
+                let y = (r - start_row) * map.tile_height as usize; // + offset_y as f32;
+
+                let tile_c = (tile as usize % tile_column_count) as f32;
+                let tile_r = (tile as usize / tile_column_count) as f32;
+
+                let draw_param = graphics::DrawParam::new()
+                    .src(Rect::new(tile_w * tile_c, tile_h * tile_r, tile_w, tile_h))
+                    .dest(Point2::new(x as f32 * scale, y as f32 * scale))
+                    .scale(Vector2::new(scale, -scale));
+
+                graphics::draw(ctx, image, draw_param).unwrap();
+            }
+        }
     }
 
     fn draw_single_image(
@@ -243,6 +310,8 @@ impl event::EventHandler for MainState {
         //let c = self.a as u8;
         //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
+
+        self.draw_map_layer(ctx, "Background");
 
         Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
         Self::draw_single_image(
