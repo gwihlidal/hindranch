@@ -30,11 +30,13 @@ mod settings;
 mod tile_util;
 mod types;
 mod voice;
+mod sounds;
 
 use self::characters::*;
 use self::player::*;
 use self::tile_util::*;
 use self::types::*;
+use self::sounds::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
@@ -94,6 +96,7 @@ struct MainState {
     font: graphics::Font,
     text: graphics::Text,
 
+    sounds: Sounds,
     characters: Characters,
     player: Player,
 
@@ -221,6 +224,8 @@ impl MainState {
             settings,
             font,
             text,
+
+            sounds: Sounds::load(ctx),
             characters,
 
             player,
@@ -675,8 +680,7 @@ impl event::EventHandler for MainState {
                     self.player.damage(13.0);
                     if !self.player.alive() {
                         // DEAD! :(
-                            //
-                        )
+                        self.sounds.play_death();
                     }
                 }
             }
