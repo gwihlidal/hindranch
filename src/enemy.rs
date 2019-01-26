@@ -101,31 +101,6 @@ impl Bulldozer {
         let mut target_vel = movement.forward.min(1.0).max(-1.0);
         let mut target_spin = (-movement.right).min(1.0).max(-1.0);
 
-        /*let movement = if let Some(ref movement) = movement {
-            movement
-        } else {
-            &self.movement
-        };
-
-        self.driving = false;
-
-        if movement.right {
-            target_spin -= 1.0;
-            self.driving = true;
-        }
-        if movement.left {
-            target_spin += 1.0;
-            self.driving = true;
-        }
-        if movement.up {
-            target_vel += 1.0;
-            self.driving = true;
-        }
-        if movement.down {
-            target_vel -= 1.0;
-            self.driving = true;
-        }*/
-
         target_spin *= MAX_SPIN;
         target_spin -= spin;
 
@@ -138,6 +113,16 @@ impl Bulldozer {
         rigid_body.activate();
         rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
         rigid_body.apply_force(&Force2::new(force, torque));
+    }
+}
+
+impl Enemy for Bulldozer {
+    fn update(&mut self, player_pos: Positional, movement: Option<Movement>, world: &mut World<f32>) {
+        if let Some(ref mut behavior) = self.behavior {
+            self.movement = behavior.update(world.rigid_body(self.rigid_body).unwrap());
+        }
+
+        self.apply_physics_movement(&movement.unwrap_or(self.movement), world);
 
         //self.engine_source.set_ears(na::Point3::new(player_pos.position.x, player_pos.position.y, 1.0), na::Point3::new(player_pos.position.x, player_pos.position.y, 1.0));
         //self.engine_source.set_position(na::Point3::new(self.positional.position.x, self.positional.position.y, 1.0));
@@ -152,25 +137,15 @@ impl Bulldozer {
 
         self.engine_source.set_volume(volume);
 
-        if self.driving {
-            self.engine_source.set_pitch(1.0);
-        } else {
-            self.engine_source.set_pitch(0.7);
-        }
+        //if self.driving {
+            //self.engine_source.set_pitch(1.0);
+        //} else {
+        //    self.engine_source.set_pitch(0.7);
+        //}
 
         if !self.engine_source.playing() {
             self.engine_source.play().unwrap();
         }
-    }
-}
-
-impl Enemy for Bulldozer {
-    fn update(&mut self, movement: Option<Movement>, world: &mut World<f32>) {
-        if let Some(ref mut behavior) = self.behavior {
-            self.movement = behavior.update(world.rigid_body(self.rigid_body).unwrap());
-        }
-
-        self.apply_physics_movement(&movement.unwrap_or(self.movement), world);
     }
 
     fn rigid_body(&self) -> Option<BodyHandle> {

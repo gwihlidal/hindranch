@@ -164,8 +164,10 @@ impl MainState {
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
+        let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer1.ogg").unwrap();
+
         //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
-        /*let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer1.ogg").unwrap();
+        /*
         let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
         if settings.enemies {
             
@@ -250,13 +252,13 @@ impl MainState {
         s.spawn_wall_pieces();
 
         if settings.enemies {
-            s.spawn_bulldozers(15);
+            s.spawn_bulldozers(ctx, 3);
         }
 
         Ok(s)
     }
 
-    fn spawn_bulldozers(&mut self, count: usize) {
+    fn spawn_bulldozers(&mut self, ctx: &mut Context, count: usize) {
         let a_off = rand::random::<f32>() * std::f32::consts::PI;
 
         // Stratified circular positioning
@@ -269,7 +271,9 @@ impl MainState {
             const SPAWN_DIST: f32 = DOZER_OUTER_RADIUS;
 
             let dozer_0 = spawn_dozer(
+                ctx,
                 &mut self.world,
+                self.engine_data.clone(),
                 self.dozer_image.clone(),
                 Point2::new(a.cos() * SPAWN_DIST, a.sin() * SPAWN_DIST),
                 std::f32::consts::PI + a,
@@ -530,7 +534,7 @@ impl event::EventHandler for MainState {
             for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
                 if self.settings.dozer_drive && i == 0 {
                     // TODO: Player controlled hack
-                    enemy.update(Some((&self.player.input).into()), &mut self.world);
+                    enemy.update(enemy.positional(), Some((&self.player.input).into()), &mut self.world);
                 } else {
                     enemy.update(self.player.positional, None, &mut self.world);
                 }
