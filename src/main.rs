@@ -56,9 +56,9 @@ impl Positional {
         self.rotation = pos.rotation.angle();
     }
 
-    // Assumes sprites face up
+    // Assumes sprites face right
     pub fn forward(&self) -> Vector2 {
-        Vector2::new(-self.rotation.sin(), self.rotation.cos())
+        Vector2::new(self.rotation.cos(), self.rotation.sin())
     }
 
     pub fn right(&self) -> Vector2 {
@@ -530,28 +530,6 @@ impl event::EventHandler for MainState {
             "Background",
         );
 
-        for wall_piece in self.wall_pieces.iter() {
-            let tile_width = 64; // TODO
-            let scale = 1.0 / tile_width as f32;
-
-            let pos: Point2 = self
-                .world
-                .rigid_body(wall_piece.rb)
-                .unwrap()
-                .position()
-                .translation
-                .vector
-                .into();
-
-            self.map_spritebatch.add(
-                graphics::DrawParam::new()
-                    .src(wall_piece.tile_snip)
-                    .dest(pos - Vector2::new(0.5, 0.5))
-                    .scale(Vector2::new(scale, -scale))
-                    .offset(Point2::new(0.5, 0.5)),
-            );
-        }
-        
         Self::draw_wall_pieces(&self.wall_pieces, &self.world, &mut self.map_spritebatch);
         graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
         self.map_spritebatch.clear();
