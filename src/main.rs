@@ -446,14 +446,6 @@ impl MainState {
         }
     }
 
-    fn drive_bulldozer(
-        dozer_pos: &Positional,
-        rigid_body: &mut RigidBody<f32>,
-        input: &PlayerInput,
-    ) {
-
-    }
-
     #[allow(dead_code)]
     fn create_wall_pieces(&mut self) {
         let _walls = Self::get_map_layer(&self.map, "Walls");
