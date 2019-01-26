@@ -4,6 +4,7 @@ extern crate rand;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
+use ggez::input::keyboard::{KeyCode, KeyMods};
 #[allow(unused_imports)]
 use ggez::graphics::{Color, Rect, Scale};
 use ggez::timer;
@@ -13,6 +14,7 @@ use std::env;
 use std::path::{self, Path};
 
 mod voice;
+mod music;
 
 #[allow(dead_code)]
 type Point2 = na::Point2<f32>;
@@ -64,6 +66,7 @@ struct MainState {
     //bmptext: graphics::Text,
     //pixel_sized_text: graphics::Text,
     voice_queue: voice::VoiceQueue,
+    music_track: Option<music::MusicTrack>,
 
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
@@ -143,6 +146,9 @@ impl MainState {
         voice_queue.enqueue("shout", ctx);
         voice_queue.enqueue("defiance", ctx);
 
+        let mut music_track = music::MusicTrack::new("cantina", ctx);
+        music_track.play();
+
         let s = MainState {
             a: 0,
             direction: 1,
@@ -155,6 +161,7 @@ impl MainState {
             //bmptext,
             //pixel_sized_text,
             voice_queue,
+            music_track: Some(music_track),
 
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
@@ -347,6 +354,32 @@ impl event::EventHandler for MainState {
 
         timer::yield_now();
         Ok(())
+    }
+
+    fn key_down_event(
+        &mut self,
+        ctx: &mut Context,
+        key_code: KeyCode,
+        _key_mod: KeyMods,
+        repeat: bool,
+    ) {
+        if repeat {
+            return;
+        }
+
+        match key_code {
+            KeyCode::M => {
+                if let Some(ref mut track) = self.music_track {
+                    track.stop();
+                    self.music_track = None;
+                } else {
+                    let mut music_track = music::MusicTrack::new("twisted", ctx);
+                    music_track.play();
+                    self.music_track = Some(music_track);
+                }
+            }
+            _ => (),
+        }
     }
 }
 
