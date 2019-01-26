@@ -362,7 +362,21 @@ impl event::EventHandler for MainState {
             {
                 let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
                 self.dozer_pos.set_from_physics(rigid_body);
-                rigid_body.apply_force(&Force2::linear(Vector2::new(0.0, 0.1)));
+
+                let mut force = Vector2::zeros();
+                if self.player_input.right {
+                    force.x += 1.0;
+                }
+                if self.player_input.left {
+                    force.x -= 1.0;
+                }
+                if self.player_input.up {
+                    force.y += 1.0;
+                }
+                if self.player_input.down {
+                    force.y -= 1.0;
+                }
+                rigid_body.apply_force(&Force2::linear(force * 0.1));
             }
 
             self.world.step();
