@@ -660,6 +660,8 @@ impl event::EventHandler for MainState {
             KeyCode::Key4 => self.player.set_visual(VisualState::Reload),
             KeyCode::Key5 => self.player.set_visual(VisualState::Silencer),
             KeyCode::Key6 => self.player.set_visual(VisualState::Stand),
+            KeyCode::Key7 => self.sounds.play_break1(),
+            KeyCode::Key8 => self.sounds.play_break2(),
             KeyCode::Key0 => {
                 if self.player.alive() {
                     self.player.damage(13.0);
