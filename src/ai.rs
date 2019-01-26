@@ -12,6 +12,8 @@ pub trait AiBehavior {
 pub struct EnemyDozerBehavior {
     state: DozerState,
     last_vel_mag: f32,
+
+    // TODO: acquire from list of alive wall pieces
     look_at: Point2,
 }
 

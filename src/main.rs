@@ -66,6 +66,44 @@ struct WallPiece {
     hp: f32,
 }
 
+struct SingleImageSpriteBatch {
+    batch: graphics::spritebatch::SpriteBatch,
+    image_dims: (u32, u32),
+}
+
+struct Bullet {
+    pos: Positional,
+    velocity: f32,
+}
+
+impl SingleImageSpriteBatch {
+    fn new(ctx: &mut Context, path: &str) -> Self {
+        let image = graphics::Image::new(ctx, path).expect(&format!("opening image: {}", path));
+        let image_dims = (image.width() as u32, image.height() as u32);
+        let batch = graphics::spritebatch::SpriteBatch::new(image);
+
+        Self { batch, image_dims }
+    }
+
+    fn add(&mut self, pos: Point2, scl: f32, rot: f32) {
+        let min_extent = self.image_dims.0.min(self.image_dims.1);
+        let half_w = 0.5 * scl / min_extent as f32;
+        let half_h = 0.5 * scl / min_extent as f32;
+        self.batch.add(
+            graphics::DrawParam::new()
+                .dest(pos - Vector2::new(0.5, 0.5))
+                .scale(Vector2::new(half_w * 2.0, half_h * -2.0))
+                .offset(Point2::new(0.5, 0.5))
+                .rotation(rot),
+        );
+    }
+
+    fn draw_and_clear(&mut self, ctx: &mut Context) {
+        graphics::draw(ctx, &self.batch, graphics::DrawParam::new()).unwrap();
+        self.batch.clear();
+    }
+}
+
 struct MainState {
     settings: settings::Settings,
 
@@ -74,6 +112,7 @@ struct MainState {
 
     sounds: Sounds,
     characters: Characters,
+    bullets: Vec<Bullet>,
     player: Player,
 
     a: i32,
@@ -81,6 +120,7 @@ struct MainState {
     splash: graphics::Image,
 
     dozer_image: Rc<graphics::Image>,
+    bullet_batch: SingleImageSpriteBatch,
 
     wall_pieces: Vec<WallPiece>,
 
@@ -195,6 +235,7 @@ impl MainState {
 
             sounds: Sounds::load(ctx),
             characters,
+            bullets: Vec::new(),
 
             player,
             a: 0,
@@ -202,6 +243,7 @@ impl MainState {
             splash,
 
             dozer_image,
+            bullet_batch: SingleImageSpriteBatch::new(ctx, "/bullet.png"),
             wall_pieces: Vec::new(),
 
             //text,
