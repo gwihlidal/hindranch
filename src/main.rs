@@ -36,7 +36,7 @@ use nphysics2d::world::World;
 
 const COLLIDER_MARGIN: f32 = 0.01;
 
-struct Positional {
+pub struct Positional {
     position: Point2,
     rotation: f32,
 }
@@ -159,9 +159,9 @@ impl MainState {
             );
         }
 
-        let _bulldozer_0 = enemy::Bulldozer::new(8);
-        let _bulldozer_1 = enemy::Bulldozer::new(8);
-        let _sheriff = enemy::Sheriff::new(4);
+        let _bulldozer_0 = enemy::Bulldozer::new(8.0, Positional::default());
+        let _bulldozer_1 = enemy::Bulldozer::new(8.0, Positional::default());
+        let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
         //let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
