@@ -1,7 +1,7 @@
 use crate::{
-    graphics::spritebatch::SpriteBatch, graphics::DrawParam, BodyHandle, Characters, Cuboid,
-    Force2, Isometry2, Material, Point2, Positional, Rect, settings::Settings, ShapeHandle, Vector2,
-    Volumetric, World,
+    graphics::spritebatch::SpriteBatch, graphics::DrawParam, settings::Settings, BodyHandle,
+    Characters, Cuboid, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle,
+    Vector2, Volumetric, World,
 };
 use nalgebra as na;
 
@@ -17,6 +17,7 @@ pub enum VisualState {
 }
 
 pub struct Player {
+    pub health: f32,
     pub input: PlayerInput,
     pub body_handle: BodyHandle,
     pub visual: VisualState,
@@ -30,7 +31,13 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(world: &mut World<f32>, name: &str, pos: Point2, characters: &Characters) -> Self {
+    pub fn new(
+        world: &mut World<f32>,
+        name: &str,
+        health: f32,
+        pos: Point2,
+        characters: &Characters,
+    ) -> Self {
         let entry = characters.get_entry(name);
 
         let size = {
@@ -55,6 +62,7 @@ impl Player {
         );
 
         Player {
+            health,
             input: PlayerInput::default(),
             body_handle: rb,
             visual: VisualState::Stand,
@@ -85,6 +93,18 @@ impl Player {
                 .offset(Point2::new(0.5, 0.5))
                 .rotation(self.positional.rotation),
         );
+    }
+
+    pub fn health(&self) -> f32 {
+        self.health
+    }
+
+    pub fn damage(&mut self, amount: f32) {
+        self.health -= amount.min(self.health);
+    }
+
+    pub fn alive(&self) -> bool {
+        self.health > 0.0
     }
 
     pub fn set_visual(&mut self, visual: VisualState) {

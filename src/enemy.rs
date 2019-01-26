@@ -21,9 +21,6 @@ pub trait Enemy {
     fn alive(&self) -> bool;
     fn closest_target(&self) -> Option<Point2>;
     fn positional(&self) -> Positional;
-    fn physics_move(&mut self, rigid_body: &RigidBody<f32>);
-    fn absolute_move(&mut self, position: Point2);
-    fn delta_move(&mut self, delta: Point2);
 }
 
 pub struct Bulldozer {
@@ -59,7 +56,9 @@ impl Bulldozer {
 impl Enemy for Bulldozer {
     fn update(&mut self, movement: Option<Movement>, world: &mut World<f32>) {
         let rigid_body = world.rigid_body_mut(self.rigid_body).unwrap();
-        self.physics_move(&rigid_body);
+        let pos = rigid_body.position();
+        self.positional.position = pos.translation.vector.into();
+        self.positional.rotation = pos.rotation.angle();
 
         let forward = self.positional.forward();
         let right = self.positional.right();
@@ -144,23 +143,6 @@ impl Enemy for Bulldozer {
     fn positional(&self) -> Positional {
         self.positional.clone()
     }
-
-    fn physics_move(&mut self, rigid_body: &RigidBody<f32>) {
-        let pos = rigid_body.position();
-        self.positional.position = pos.translation.vector.into();
-        self.positional.rotation = pos.rotation.angle();
-    }
-
-    fn absolute_move(&mut self, position: Point2) {
-        self.positional.position = position;
-    }
-
-    fn delta_move(&mut self, delta: Point2) {
-        self.positional.position = Point2::new(
-            self.positional.position.x + delta.x,
-            self.positional.position.y + delta.y,
-        );
-    }
 }
 
 pub struct Sheriff {
@@ -210,22 +192,5 @@ impl Enemy for Sheriff {
 
     fn positional(&self) -> Positional {
         self.positional.clone()
-    }
-
-    fn physics_move(&mut self, rigid_body: &RigidBody<f32>) {
-        let pos = rigid_body.position();
-        self.positional.position = pos.translation.vector.into();
-        self.positional.rotation = pos.rotation.angle();
-    }
-
-    fn absolute_move(&mut self, position: Point2) {
-        self.positional.position = position;
-    }
-
-    fn delta_move(&mut self, delta: Point2) {
-        self.positional.position = Point2::new(
-            self.positional.position.x + delta.x,
-            self.positional.position.y + delta.y,
-        );
     }
 }

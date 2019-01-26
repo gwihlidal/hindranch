@@ -91,6 +91,9 @@ struct WallPiece {
 struct MainState {
     settings: settings::Settings,
 
+    font: graphics::Font,
+    text: graphics::Text,
+
     characters: Characters,
     player: Player,
 
@@ -202,15 +205,22 @@ impl MainState {
             music_track.play();
         }
 
+        let health = 100.0;
         let player = Player::new(
             &mut world,
             "woman_green",
+            health,
             Point2::new(0.5, 0.5),
             &characters,
         );
 
+        let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf")?;
+        let text = graphics::Text::new(("Hello world!", font, 48.0));
+
         let mut s = MainState {
             settings,
+            font,
+            text,
             characters,
 
             player,
@@ -568,16 +578,14 @@ impl event::EventHandler for MainState {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let identity_transform = graphics::transform(ctx);
+
+        // Apply our custom transform
         self.apply_view_transform(ctx);
 
         //let c = self.a as u8;
         //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
-
-        //graphics::set_screen_coordinates(ctx, Rect::new_i32(0, 0, 960, 540))
-        //.expect("Could not set logical screen coordinates before running initial state.");
-
-        Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 2.0, 0.0);
 
         Self::draw_map_layer(
             &mut self.map_spritebatch,
@@ -605,6 +613,38 @@ impl event::EventHandler for MainState {
                 positional.rotation,
             );
         }
+
+        // Reset to identity transform for text and splash screen
+        graphics::set_transform(ctx, identity_transform);
+        graphics::apply_transformations(ctx)?;
+
+        //Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 2.0, 0.0);
+
+        let text2 = graphics::Text::new((
+            format!("Health: {:.0}", self.player.health()),
+            self.font,
+            48.0,
+        ));
+
+        let mut height = 0.0;
+        //for (_key, text) in &self.texts {
+        graphics::queue_text(ctx, &self.text, Point2::new(20.0, 20.0 + height), None);
+        height += 20.0 + self.text.height(ctx) as f32;
+
+        graphics::queue_text(ctx, &text2, Point2::new(20.0, 20.0 + height), None);
+        //height += 20.0 + text2.height(ctx) as f32;
+        //}
+        // When drawing via `draw_queued()`, `.offset` in `DrawParam` will be
+        // in screen coordinates, and `.color` will be ignored.
+        graphics::draw_queued_text(ctx, graphics::DrawParam::default())?;
+
+        /*graphics::draw(
+            ctx,
+            &self.text,
+            graphics::DrawParam::new()
+                .dest(Point2::new(10.0, 10.0))
+                .color(Color::from((0, 0, 0, 255))),
+        )?;*/
 
         graphics::present(ctx)?;
 
