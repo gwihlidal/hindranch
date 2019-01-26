@@ -15,6 +15,7 @@ use ggez::{Context, GameResult};
 use nalgebra as na;
 use std::env;
 use std::path::{self, Path};
+use std::rc::Rc;
 
 mod enemy;
 mod music;
@@ -37,6 +38,7 @@ use nphysics2d::world::World;
 const COLLIDER_MARGIN: f32 = 0.01;
 const TILE_SIZE_WORLD: f32 = 1.0;
 
+#[derive(Debug, Clone)]
 pub struct Positional {
     position: Point2,
     rotation: f32,
@@ -82,18 +84,19 @@ struct MainState {
     a: i32,
     direction: i32,
     splash: graphics::Image,
-
-    dozer: graphics::Image,
-    dozer_rb: BodyHandle,
-    dozer_pos: Positional,
+    
+    dozer_image: Rc<graphics::Image>,
 
     #[allow(dead_code)]
     wall_pieces: Vec<WallPiece>,
+
     //text: graphics::Text,
     //bmptext: graphics::Text,
     //pixel_sized_text: graphics::Text,
     voice_queue: voice::VoiceQueue,
     music_track: Option<music::MusicTrack>,
+
+    enemies: Vec<Box<dyn enemy::Enemy>>,
 
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
@@ -195,6 +198,36 @@ impl<'a> Iterator for TileMapLayerViewIterator<'a> {
     }
 }
 
+fn spawn_dozer(
+    world: &mut World<f32>,
+    image: Rc<graphics::Image>,
+    pos: Point2,
+) -> Box<dyn enemy::Enemy> {
+    let rad = 2.0;
+
+    let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
+    let inertia = geom.inertia(1.0);
+    let center_of_mass = geom.center_of_mass();
+
+    let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
+    let rb = world.add_rigid_body(pos, inertia, center_of_mass);
+
+    world.add_collider(
+        COLLIDER_MARGIN,
+        geom.clone(),
+        rb,
+        Isometry2::identity(),
+        Material::new(0.3, 0.5),
+    );
+
+    Box::new(enemy::Bulldozer::new(
+        rb,
+        image.clone(),
+        8.0, /* health */
+        Positional::default(),
+    ))
+}
+
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
@@ -205,28 +238,6 @@ impl MainState {
 
         let mut world = World::new();
         world.set_timestep(1.0 / 60.0);
-
-        let dozer_rb;
-        {
-            let rad = 2.0;
-
-            let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
-            let inertia = geom.inertia(1.0);
-            let center_of_mass = geom.center_of_mass();
-
-            let pos = Isometry2::new(Vector2::new(0.5, -0.8), na::zero());
-            let rb = world.add_rigid_body(pos, inertia, center_of_mass);
-
-            world.add_collider(
-                COLLIDER_MARGIN,
-                geom.clone(),
-                rb,
-                Isometry2::identity(),
-                Material::new(0.3, 0.5),
-            );
-
-            dozer_rb = rb;
-        }
 
         /*{
             let rad = 0.2;
@@ -247,13 +258,21 @@ impl MainState {
             );
         }*/
 
-        let _bulldozer_0 = enemy::Bulldozer::new(8.0, Positional::default());
-        let _bulldozer_1 = enemy::Bulldozer::new(8.0, Positional::default());
-        let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
+        let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
+
+        let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(0.5, -0.8));
+        let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(2.5, -2.8));
+        let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(1.5, -1.8));
+
+        //let _bulldozer_1 = enemy::Bulldozer::new(dozer_image.clone(), 8.0, Positional::default());
+        //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
+
+        let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
+        enemies.push(dozer_0);
+        enemies.push(dozer_1);
+        enemies.push(dozer_2);
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
-        //let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
-        let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
 
         let map_spritebatch = graphics::spritebatch::SpriteBatch::new(map_tile_image.clone());
 
@@ -279,16 +298,17 @@ impl MainState {
             a: 0,
             direction: 1,
             splash,
-            //dragon,
-            dozer,
-            dozer_rb,
-            dozer_pos: Positional::default(),
+
+            dozer_image,
             wall_pieces: Vec::new(),
+
             //text,
             //bmptext,
             //pixel_sized_text,
             voice_queue,
             music_track: Some(music_track),
+
+            enemies,
 
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
@@ -427,59 +447,11 @@ impl MainState {
     }
 
     fn drive_bulldozer(
-        dozer_pos: &mut Positional,
+        dozer_pos: &Positional,
         rigid_body: &mut RigidBody<f32>,
         input: &PlayerInput,
     ) {
-        dozer_pos.set_from_physics(rigid_body);
 
-        let forward = dozer_pos.forward();
-        let right = dozer_pos.right();
-
-        let velocity = rigid_body.velocity().linear;
-        let fwd_vel = Vector2::dot(&forward, &velocity);
-        let right_vel = Vector2::dot(&right, &velocity);
-
-        let spin = rigid_body.velocity().angular;
-
-        const MAX_TORQUE: f32 = 1000.0;
-        const TORQUE_RATE: f32 = 500.0;
-        const MAX_SPIN: f32 = 2.0;
-
-        const MAX_FORCE: f32 = 500.0;
-        const FORCE_RATE: f32 = 200.0;
-        const MAX_VEL: f32 = 10.0;
-
-        // Bulldozers technically don't strafe, but we have a need for speed.
-        const SIDEWAYS_DAMPING: f32 = 0.1;
-
-        let mut target_vel = 0.0;
-        let mut target_spin = 0.0;
-        if input.right {
-            target_spin -= 1.0;
-        }
-        if input.left {
-            target_spin += 1.0;
-        }
-        if input.up {
-            target_vel += 1.0;
-        }
-        if input.down {
-            target_vel -= 1.0;
-        }
-
-        target_spin *= MAX_SPIN;
-        target_spin -= spin;
-
-        target_vel *= MAX_VEL;
-        target_vel -= fwd_vel;
-
-        let torque = (target_spin * TORQUE_RATE).max(-MAX_TORQUE).min(MAX_TORQUE);
-        let force = forward * (target_vel * FORCE_RATE).max(-MAX_FORCE).min(MAX_FORCE);
-
-        rigid_body.activate();
-        rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
-        rigid_body.apply_force(&Force2::new(force, torque));
     }
 
     #[allow(dead_code)]
@@ -525,11 +497,32 @@ impl event::EventHandler for MainState {
                 println!("Average FPS: {}", timer::fps(ctx));
             }
 
-            Self::drive_bulldozer(
-                &mut self.dozer_pos,
-                self.world.rigid_body_mut(self.dozer_rb).unwrap(),
-                &self.player_input,
-            );
+            for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
+                if i == 0 {
+                    // TODO: Player controlled hack
+                    enemy.update(
+                        Some(enemy::Movement {
+                            left: self.player_input.left,
+                            right: self.player_input.right,
+                            up: self.player_input.up,
+                            down: self.player_input.down,
+                        }),
+                        &mut self.world,
+                    );
+                } else {
+                    enemy.update(None, &mut self.world);
+                }
+            }
+
+            if self.enemies.len() > 0 {
+                let test_enemy = &mut self.enemies[0];
+                if let Some(body_handle) = test_enemy.rigid_body() {
+                    let positional = test_enemy.positional();
+                    let rigid_body = self.world.rigid_body_mut(body_handle).unwrap();
+
+                    Self::drive_bulldozer(&positional, rigid_body, &self.player_input);
+                }
+            }
 
             self.world.step();
         }
@@ -565,14 +558,16 @@ impl event::EventHandler for MainState {
             "Walls",
         );*/
 
-        //Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
-        Self::draw_single_image(
-            ctx,
-            &self.dozer,
-            self.dozer_pos.position,
-            3.0,
-            self.dozer_pos.rotation,
-        );
+        for enemy in &self.enemies {
+            let positional = enemy.positional();
+            Self::draw_single_image(
+                ctx,
+                &enemy.image(),
+                positional.position,
+                3.0,
+                positional.rotation,
+            );
+        }
 
         /*graphics::draw(ctx, &self.text, dest_point, 0.0)?;
         let dest_point = graphics::Point2::new(100.0, 50.0);
@@ -599,14 +594,6 @@ impl event::EventHandler for MainState {
 
         graphics::set_color(ctx, graphics::Color::new(1.0, 1.0, 1.0, 1.0))?;
         graphics::draw(ctx, &self.title_text, title_dest, 0.0)?;*/
-
-        let fps = timer::fps(ctx);
-        let fps_display = graphics::Text::new(format!("FPS: {}", fps));
-        graphics::draw(
-            ctx,
-            &fps_display,
-            (Point2::new(400.0, 400.0), graphics::WHITE),
-        )?;
 
         graphics::present(ctx)?;
 
