@@ -478,6 +478,12 @@ impl MainState {
     fn wall_velocity_to_damage(vel: &Vector2) -> f32 {
         (0.1 * (Vector2::norm(vel) - 4.0)).max(0.0)
     }
+
+    fn px_to_world(&self, x: f32, y: f32) -> Point2 {
+        (self.screen_to_world * na::Vector4::new(x, y, 0.0, 1.0))
+            .xy()
+            .into()
+    }
 }
 
 /*
@@ -660,9 +666,7 @@ impl event::EventHandler for MainState {
     }
 
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _xrel: f32, _yrel: f32) {
-        self.player.input.aim_pos = (self.screen_to_world * na::Vector4::new(x, y, 0.0, 1.0))
-            .xy()
-            .into();
+        self.player.input.aim_pos = self.px_to_world(x, y);
     }
 
     fn key_down_event(
