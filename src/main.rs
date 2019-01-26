@@ -84,7 +84,7 @@ struct MainState {
     a: i32,
     direction: i32,
     splash: graphics::Image,
-    
+
     dozer_image: Rc<graphics::Image>,
 
     #[allow(dead_code)]
