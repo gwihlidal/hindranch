@@ -180,7 +180,6 @@ impl MainState {
             let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-12.5, -0.0));
             let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-11.5, 2.0));
 
-
             enemies.push(dozer_0);
             enemies.push(dozer_1);
             enemies.push(dozer_2);
@@ -274,11 +273,11 @@ impl MainState {
         graphics::apply_transformations(ctx).unwrap();
     }
 
-    fn update_camera(&mut self, target: Positional) {
+    fn update_camera(&mut self, target: Positional, look_ahead: f32, stiffness: f32) {
         let mut pos = target.position.coords;
-        pos += target.forward() * 4.0;
+        pos += target.forward() * look_ahead;
 
-        self.camera_pos = Vector2::lerp(&self.camera_pos.coords, &pos, 0.07).into();
+        self.camera_pos = Vector2::lerp(&self.camera_pos.coords, &pos, stiffness).into();
     }
 
     fn tile_id_to_src_rect(tile: u32, map: &tiled::Map, image: &graphics::Image) -> Rect {
@@ -520,13 +519,16 @@ impl event::EventHandler for MainState {
                 }
             }
 
-            let camera_positional = if self.settings.dozer_drive && self.enemies.len() > 0 {
-                self.enemies[0].positional()
-            } else {
-                self.player.positional
-            };
+            {
+                let (camera_positional, look_ahead, stiffness) =
+                    if self.settings.dozer_drive && self.enemies.len() > 0 {
+                        (self.enemies[0].positional(), 4.0, 0.07)
+                    } else {
+                        (self.player.positional, 0.0, 1.0)
+                    };
 
-            self.update_camera(camera_positional);
+                self.update_camera(camera_positional, look_ahead, stiffness);
+            }
 
             // Dampen wall piece physics and calculate damage
             for wall_piece in self.wall_pieces.iter_mut() {
