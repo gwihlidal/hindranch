@@ -507,9 +507,13 @@ impl event::EventHandler for MainState {
                 }
             }
 
-            if !self.enemies.is_empty() {
-                self.update_camera(self.enemies[0].positional());
-            }
+            let camera_positional = if self.settings.dozer_drive && self.enemies.len() > 0 {
+                self.enemies[0].positional()
+            } else {
+                self.player.positional
+            };
+
+            self.update_camera(camera_positional);
 
             // Dampen wall piece physics
             for wall_piece in self.wall_pieces.iter() {
