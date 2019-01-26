@@ -35,7 +35,7 @@ use self::types::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
-use nphysics2d::algebra::{Force2, Inertia2};
+use nphysics2d::algebra::Force2;
 use nphysics2d::force_generator::Spring;
 //use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
 use nphysics2d::object::{BodyHandle, Material, RigidBody};
@@ -44,7 +44,7 @@ use nphysics2d::world::World;
 
 const COLLIDER_MARGIN: f32 = 0.01;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Positional {
     position: Point2,
     rotation: f32,
@@ -109,6 +109,8 @@ struct MainState {
 
     world_to_screen: Matrix4,
     screen_to_world: Matrix4,
+
+    camera_pos: Point2,
 
     character_spritebatch: graphics::spritebatch::SpriteBatch,
 
@@ -241,8 +243,10 @@ impl MainState {
 
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
-            world,
 
+            camera_pos: Point2::origin(),
+
+            world,
             character_spritebatch,
 
             map,
@@ -279,6 +283,13 @@ impl MainState {
     pub fn apply_view_transform(&self, ctx: &mut Context) {
         graphics::set_transform(ctx, self.world_to_screen);
         graphics::apply_transformations(ctx).unwrap();
+    }
+
+    fn update_camera(&mut self, target: Positional) {
+        let mut pos = target.position.coords;
+        pos += target.forward() * 4.0;
+
+        self.camera_pos = Vector2::lerp(&self.camera_pos.coords, &pos, 0.07).into();
     }
 
     fn tile_id_to_src_rect(tile: u32, map: &tiled::Map, image: &graphics::Image) -> Rect {
@@ -473,7 +484,7 @@ fn calculate_torque_for_aim(aim: Vector2, rotation: f32, spin: f32) -> f32 {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.calculate_view_transform(&ctx, Point2::origin(), 0.1);
+        self.calculate_view_transform(&ctx, self.camera_pos, 0.1);
 
         const DESIRED_FPS: u32 = 60;
         //let dt = 1.0 / (DESIRED_FPS as f32);
@@ -504,6 +515,10 @@ impl event::EventHandler for MainState {
                 } else {
                     enemy.update(None, &mut self.world);
                 }
+            }
+
+            if !self.enemies.is_empty() {
+                self.update_camera(self.enemies[0].positional());
             }
 
             // Dampen wall piece physics
