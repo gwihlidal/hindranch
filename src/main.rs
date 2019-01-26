@@ -35,7 +35,8 @@ use self::types::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
-use nphysics2d::algebra::Force2;
+use nphysics2d::algebra::{Force2, Inertia2};
+use nphysics2d::force_generator::Spring;
 //use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
 use nphysics2d::object::{BodyHandle, Material, RigidBody};
 use nphysics2d::volumetric::Volumetric;
@@ -387,6 +388,7 @@ impl MainState {
 
                 // Sim as balls for less coupling between elements
                 let geom = ShapeHandle::new(Ball::new(rad));
+                //let geom = ShapeHandle::new(Cuboid::new(Vector2::new(rad, rad)));
                 let inertia = geom.inertia(10.0);
                 let center_of_mass = geom.center_of_mass();
 
@@ -403,6 +405,15 @@ impl MainState {
 
                 rb
             };
+
+            self.world.add_force_generator(Spring::new(
+                BodyHandle::ground(),
+                rb,
+                pos,
+                Point2::origin(),
+                0.0,
+                100.0,
+            ));
 
             self.wall_pieces.push(WallPiece {
                 tile_snip: src,
@@ -499,9 +510,12 @@ impl event::EventHandler for MainState {
             for wall_piece in self.wall_pieces.iter() {
                 if let Some(rb) = self.world.rigid_body_mut(wall_piece.rb) {
                     let mut vel = rb.velocity().clone();
-                    vel.linear *= 0.9;
-                    vel.angular *= 0.9;
+                    vel.linear *= 0.95;
+                    vel.angular *= 0.95;
                     rb.set_velocity(vel);
+                    let mut pos = rb.position().clone();
+                    pos.rotation = nalgebra::UnitComplex::from_angle(pos.rotation.angle() * 0.95);
+                    rb.set_position(pos);
                 }
             }
 
