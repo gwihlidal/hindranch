@@ -486,25 +486,6 @@ impl MainState {
     }
 }
 
-/*
-fn angle_shortest_dist(a0: f32, a1: f32) -> f32 {
-    let max = f32::consts::PI * 2.0;
-    let da = (a1 - a0) % max;
-    2.0 * da % max - da
-}
-
-fn calculate_torque_for_aim(aim: Vector2, rotation: f32, spin: f32) -> f32 {
-    let target_rot = if aim.x == 0.0 && aim.y == 0.0 {
-        rotation
-    } else {
-        (-aim.x).atan2(aim.y)
-    };
-
-    let angle_diff = angle_shortest_dist(rotation, target_rot);
-
-    angle_diff * 200.0 - spin * 15.0
-}*/
-
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         self.calculate_view_transform(&ctx, self.camera_pos, 0.1);
