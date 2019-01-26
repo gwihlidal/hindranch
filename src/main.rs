@@ -87,7 +87,6 @@ struct MainState {
     dozer_rb: BodyHandle,
     dozer_pos: Positional,
 
-    #[allow(dead_code)]
     wall_pieces: Vec<WallPiece>,
     //text: graphics::Text,
     //bmptext: graphics::Text,
@@ -139,9 +138,8 @@ struct TileMapLayerView<'a> {
 #[allow(dead_code)]
 struct TileMapLayerViewIterator<'a> {
     view: &'a TileMapLayerView<'a>,
-    x: u32,
-    y: u32,
-    next_item: Option<(u32, u32)>,
+    x: i32,
+    y: i32,
 }
 
 impl<'a> TileMapLayerView<'a> {
@@ -149,9 +147,8 @@ impl<'a> TileMapLayerView<'a> {
     fn iter(&'a self) -> TileMapLayerViewIterator<'a> {
         TileMapLayerViewIterator {
             view: self,
-            x: self.start_x,
-            y: self.start_y,
-            next_item: Some((self.start_x, self.start_y)),
+            x: self.start_x as i32 - 1,
+            y: self.start_y as i32,
         }
     }
 }
@@ -166,20 +163,25 @@ impl<'a> Iterator for TileMapLayerViewIterator<'a> {
     type Item = MapTile;
 
     fn next(&mut self) -> Option<MapTile> {
-        let res = self.next_item.take();
+        let res = loop {
+            self.x += 1;
+            if self.x >= self.view.end_x as i32 {
+                self.x = self.view.start_x as i32;
+                self.y += 1;
+            }
 
-        self.x += 1;
-        if self.x >= self.view.end_x {
-            self.x = self.view.start_x;
-            self.y += 1;
-        }
-
-        if self.y < self.view.end_y {
-            self.next_item = Some((self.x, self.y));
-        }
+            if self.y < self.view.end_y as i32 {
+                let tile = self.view.layer.tiles[(99 - self.y) as usize][self.x as usize];
+                if tile != 0 {
+                    break Some((self.x as u32, self.y as u32, tile - 1));
+                }
+            } else {
+                break None;
+            }
+        };
 
         // TODO: get actual map size
-        res.map(|(x, y)| MapTile {
+        res.map(|(x, y, tile_id)| MapTile {
             pos: {
                 let tile_width = 64; // TODO
                 let tile_height = 64; // TODO
@@ -190,7 +192,7 @@ impl<'a> Iterator for TileMapLayerViewIterator<'a> {
 
                 Point2::new(x as f32 * scale, y as f32 * scale)
             },
-            tile_id: self.view.layer.tiles[(99 - y) as usize][x as usize],
+            tile_id,
         })
     }
 }
@@ -274,7 +276,7 @@ impl MainState {
         let mut music_track = music::MusicTrack::new("cantina", ctx);
         music_track.play();
 
-        let s = MainState {
+        let mut s = MainState {
             player_input: Default::default(),
             a: 0,
             direction: 1,
@@ -297,6 +299,8 @@ impl MainState {
             map_tile_image,
             map_spritebatch,
         };
+
+        s.create_wall_pieces();
 
         Ok(s)
     }
@@ -482,9 +486,46 @@ impl MainState {
         rigid_body.apply_force(&Force2::new(force, torque));
     }
 
-    #[allow(dead_code)]
     fn create_wall_pieces(&mut self) {
-        let _walls = Self::get_map_layer(&self.map, "Walls");
+        // TODO: extents
+        let view = TileMapLayerView {
+            layer: Self::get_map_layer(&self.map, "Walls"),
+            start_x: 10,
+            end_x: 100,
+            start_y: 30,
+            end_y: 100,
+        };
+
+        for MapTile { tile_id, pos } in view.iter() {
+            let src = Self::tile_id_to_src_rect(tile_id, &self.map, &self.map_tile_image);
+
+            let rb = {
+                let rad = 0.5 - COLLIDER_MARGIN;
+
+                let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
+                let inertia = geom.inertia(100.0);
+                let center_of_mass = geom.center_of_mass();
+
+                let pos = Isometry2::new(pos.coords, na::zero());
+                let rb = self.world.add_rigid_body(pos, inertia, center_of_mass);
+
+                self.world.add_collider(
+                    COLLIDER_MARGIN,
+                    geom.clone(),
+                    rb,
+                    Isometry2::identity(),
+                    Material::new(0.3, 0.5),
+                );
+
+                rb
+            };
+
+            self.wall_pieces.push(WallPiece {
+                tile_snip: src,
+                rb,
+                hp: 100.0,
+            });
+        }
     }
 }
 
@@ -556,6 +597,30 @@ impl event::EventHandler for MainState {
             ctx,
             "Background",
         );
+
+        for wall_piece in self.wall_pieces.iter() {
+            let tile_width = 64; // TODO
+            let scale = TILE_SIZE_WORLD / tile_width as f32;
+
+            let pos: Point2 = self
+                .world
+                .rigid_body(wall_piece.rb)
+                .unwrap()
+                .position()
+                .translation
+                .vector
+                .into();
+
+            self.map_spritebatch.add(
+                graphics::DrawParam::new()
+                    .src(wall_piece.tile_snip)
+                    .dest(pos)
+                    .scale(Vector2::new(scale, -scale)),
+            );
+        }
+
+        graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
+        self.map_spritebatch.clear();
 
         /*Self::draw_map_layer(
             &mut self.map_spritebatch,
