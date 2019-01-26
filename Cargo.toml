@@ -8,14 +8,15 @@ build = "build.rs"
 
 [dependencies]
 cgmath = "0.17.0"
-nalgebra = "0.16.3"
-#nalgebra-glm = "0.2.1"
+nalgebra = "0.16"
 ggez = { git = "https://github.com/gwihlidal/ggez", rev = "29a985aea6bcb62e61c823487101213b6d8eeaf5" }
 rand = "0.6.4"
 nphysics2d = "0.9"
 ncollide2d = "0.17"
 tiled = "0.8"
-state_machine = "0.1.14"
+serde = "1.0.85"
+serde_derive = "1.0.85"
+toml = "0.4.10"
 
 [build-dependencies]
 restson = "0.5.1"

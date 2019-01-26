@@ -16,3 +16,10 @@ resources/voice/lines_cache.toml
 
 # Google API Key
 api_key.txt
+
+# Temp merge files
+*_BACKUP_*
+*_BASE_*
+*_LOCAL_*
+*_REMOTE_*
+*.orig
