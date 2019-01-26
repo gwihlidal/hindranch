@@ -141,9 +141,13 @@ fn spawn_dozer(
     image: Rc<graphics::Image>,
     pos: Point2,
 ) -> Box<dyn enemy::Enemy> {
-    let rad = 2.0;
+    let size = {
+        let rad = 3.0 / 2.0;
+        let size = Vector2::new(image.width() as f32, image.height() as f32);
+        rad * size / size.x.min(size.y)
+    };
 
-    let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
+    let geom = ShapeHandle::new(Cuboid::new(size));
     let inertia = geom.inertia(1.0);
     let center_of_mass = geom.center_of_mass();
 
@@ -322,8 +326,9 @@ impl MainState {
             batch.add(
                 graphics::DrawParam::new()
                     .src(src)
-                    .dest(pos)
-                    .scale(Vector2::new(scale, -scale)),
+                    .dest(pos - Vector2::new(0.5, 0.5))
+                    .scale(Vector2::new(scale, -scale))
+                    .offset(Point2::new(0.5, 0.5)),
             );
         }
 
@@ -502,8 +507,9 @@ impl event::EventHandler for MainState {
             self.map_spritebatch.add(
                 graphics::DrawParam::new()
                     .src(wall_piece.tile_snip)
-                    .dest(pos)
-                    .scale(Vector2::new(scale, -scale)),
+                    .dest(pos - Vector2::new(0.5, 0.5))
+                    .scale(Vector2::new(scale, -scale))
+                    .offset(Point2::new(0.5, 0.5)),
             );
         }
 
