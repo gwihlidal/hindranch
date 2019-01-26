@@ -69,6 +69,13 @@ impl Default for Positional {
     }
 }
 
+#[allow(dead_code)]
+struct WallPiece {
+    tile_snip: Rect,
+    rb: BodyHandle,
+    hp: f32,
+}
+
 struct MainState {
     player_input: PlayerInput,
 
@@ -79,6 +86,9 @@ struct MainState {
     dozer: graphics::Image,
     dozer_rb: BodyHandle,
     dozer_pos: Positional,
+
+    #[allow(dead_code)]
+    wall_pieces: Vec<WallPiece>,
     //text: graphics::Text,
     //bmptext: graphics::Text,
     //pixel_sized_text: graphics::Text,
@@ -115,6 +125,73 @@ impl PlayerInput {
 impl Default for PlayerInput {
     fn default() -> Self {
         PlayerInput::new()
+    }
+}
+
+struct TileMapLayerView<'a> {
+    layer: &'a tiled::Layer,
+    start_x: u32,
+    end_x: u32,
+    start_y: u32,
+    end_y: u32,
+}
+
+#[allow(dead_code)]
+struct TileMapLayerViewIterator<'a> {
+    view: &'a TileMapLayerView<'a>,
+    x: u32,
+    y: u32,
+    next_item: Option<(u32, u32)>,
+}
+
+impl<'a> TileMapLayerView<'a> {
+    #[allow(dead_code)]
+    fn iter(&'a self) -> TileMapLayerViewIterator<'a> {
+        TileMapLayerViewIterator {
+            view: self,
+            x: self.start_x,
+            y: self.start_y,
+            next_item: Some((self.start_x, self.start_y)),
+        }
+    }
+}
+
+#[derive(Clone)]
+struct MapTile {
+    tile_id: u32,
+    pos: Point2,
+}
+
+impl<'a> Iterator for TileMapLayerViewIterator<'a> {
+    type Item = MapTile;
+
+    fn next(&mut self) -> Option<MapTile> {
+        let res = self.next_item.take();
+
+        self.x += 1;
+        if self.x >= self.view.end_x {
+            self.x = self.view.start_x;
+            self.y += 1;
+        }
+
+        if self.y < self.view.end_y {
+            self.next_item = Some((self.x, self.y));
+        }
+
+        // TODO: get actual map size
+        res.map(|(x, y)| MapTile {
+            pos: {
+                let tile_width = 64; // TODO
+                let tile_height = 64; // TODO
+                let scale = TILE_SIZE_WORLD / tile_width as f32;
+
+                let x = (x - self.view.start_x) * tile_width; // + offset_x as f32;
+                let y = (y - self.view.start_y) * tile_height; // + offset_y as f32;
+
+                Point2::new(x as f32 * scale, y as f32 * scale)
+            },
+            tile_id: self.view.layer.tiles[(99 - y) as usize][x as usize],
+        })
     }
 }
 
@@ -206,6 +283,7 @@ impl MainState {
             dozer,
             dozer_rb,
             dozer_pos: Positional::default(),
+            wall_pieces: Vec::new(),
             //text,
             //bmptext,
             //pixel_sized_text,
@@ -249,6 +327,31 @@ impl MainState {
         graphics::apply_transformations(ctx).unwrap();
     }
 
+    fn tile_id_to_src_rect(tile: u32, map: &tiled::Map, image: &graphics::Image) -> Rect {
+        let tile_width = map.tile_width;
+        let tile_height = map.tile_height;
+
+        let tile_w = tile_width as f32 / image.width() as f32;
+        let tile_h = tile_height as f32 / image.height() as f32;
+
+        let tile_column_count = (image.width() as usize) / (tile_width as usize);
+
+        let tile_c = (tile as usize % tile_column_count) as f32;
+        let tile_r = (tile as usize / tile_column_count) as f32;
+
+        Rect::new(tile_w * tile_c, tile_h * tile_r, tile_w, tile_h)
+    }
+
+    fn get_map_layer<'a>(map: &'a tiled::Map, layer_name: &str) -> &'a tiled::Layer {
+        let layer_idx = map
+            .layers
+            .iter()
+            .position(|layer| layer.name == layer_name)
+            .unwrap();
+
+        &map.layers[layer_idx]
+    }
+
     // Inspired by https://github.com/FloVanGH/pg-engine/blob/master/src/drawing.rs
     // TODO: add batching
     fn draw_map_layer(
@@ -259,59 +362,32 @@ impl MainState {
         layer_name: &str,
     ) {
         //let map = &self.map;
-        let layer_idx = map
-            .layers
-            .iter()
-            .position(|layer| layer.name == layer_name)
-            .unwrap();
+        let layer = Self::get_map_layer(map, layer_name);
 
         let tile_width = map.tile_width;
-        let tile_height = map.tile_height;
-
         let scale = TILE_SIZE_WORLD / tile_width as f32;
-
-        //let image = &self.map_tile_image;
 
         let start_column = 10;
         let start_row = 30;
         let end_column = 100; //end_column;
         let end_row = 100; //end_row;
 
-        /*if end_column > map.column_count() {
-            end_column = map.column_count();
-        }
+        let view = TileMapLayerView {
+            layer,
+            start_x: start_column,
+            end_x: end_column,
+            start_y: start_row,
+            end_y: end_row,
+        };
 
-        if end_row > map.row_count() {
-            end_row = map.row_count();
-        }*/
-
-        let layer = &map.layers[layer_idx];
-        let tile_column_count = (image.width() as usize) / (tile_width as usize);
-
-        let tile_w = tile_width as f32 / image.width() as f32;
-        let tile_h = tile_height as f32 / image.height() as f32;
-
-        for r in start_row..end_row {
-            for c in start_column..end_column {
-                let tile = layer.tiles[99 - r][c];
-                if 0 == tile {
-                    continue;
-                }
-                let tile = tile - 1; // HACK: assumes one tileset with first id=1
-
-                let x = (c - start_column) * map.tile_width as usize; // + offset_x as f32;
-                let y = (r - start_row) * map.tile_height as usize; // + offset_y as f32;
-
-                let tile_c = (tile as usize % tile_column_count) as f32;
-                let tile_r = (tile as usize / tile_column_count) as f32;
-
-                let draw_param = graphics::DrawParam::new()
-                    .src(Rect::new(tile_w * tile_c, tile_h * tile_r, tile_w, tile_h))
-                    .dest(Point2::new(x as f32 * scale, y as f32 * scale))
-                    .scale(Vector2::new(scale, -scale));
-
-                batch.add(draw_param);
-            }
+        for MapTile { tile_id, pos } in view.iter() {
+            let src = Self::tile_id_to_src_rect(tile_id, map, image);
+            batch.add(
+                graphics::DrawParam::new()
+                    .src(src)
+                    .dest(pos)
+                    .scale(Vector2::new(scale, -scale)),
+            );
         }
 
         graphics::draw(ctx, batch, graphics::DrawParam::new()).unwrap();
@@ -405,6 +481,11 @@ impl MainState {
         rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
         rigid_body.apply_force(&Force2::new(force, torque));
     }
+
+    #[allow(dead_code)]
+    fn create_wall_pieces(&mut self) {
+        let _walls = Self::get_map_layer(&self.map, "Walls");
+    }
 }
 
 /*
@@ -476,13 +557,13 @@ impl event::EventHandler for MainState {
             "Background",
         );
 
-        Self::draw_map_layer(
+        /*Self::draw_map_layer(
             &mut self.map_spritebatch,
             &self.map,
             &self.map_tile_image,
             ctx,
             "Walls",
-        );
+        );*/
 
         //Self::draw_single_image(ctx, &self.dragon, Point2::new(0.0, 0.0), 1.0, 0.0);
         Self::draw_single_image(
@@ -567,13 +648,13 @@ impl event::EventHandler for MainState {
         println!("Resized screen to {}, {}", width, height);
 
         //if self.window_settings.resize_projection {
-            let new_rect = graphics::Rect::new(
-                0.0,
-                0.0,
-                width as f32,// * self.zoom,
-                height as f32,// * self.zoom,
-            );
-            graphics::set_screen_coordinates(ctx, new_rect).unwrap();
+        let new_rect = graphics::Rect::new(
+            0.0,
+            0.0,
+            width as f32,  // * self.zoom,
+            height as f32, // * self.zoom,
+        );
+        graphics::set_screen_coordinates(ctx, new_rect).unwrap();
         //}
     }
 }
