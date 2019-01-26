@@ -22,19 +22,19 @@ use std::env;
 use std::path::{self, Path};
 use std::rc::Rc;
 
+mod characters;
 mod enemy;
 mod music;
 mod settings;
 mod tile_util;
 mod types;
 mod voice;
-mod characters;
 
 use self::tile_util::*;
 use self::types::*;
 
 use na::Isometry2;
-use ncollide2d::shape::{Cuboid, ShapeHandle};
+use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::algebra::Force2;
 //use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
 use nphysics2d::object::{BodyHandle, Material, RigidBody};
@@ -176,7 +176,7 @@ fn spawn_dozer(
 impl MainState {
     fn new(settings: settings::Settings, ctx: &mut Context) -> GameResult<MainState> {
         let characters = characters::Characters::load(ctx);
-        
+
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
         //println!("{:?}", map);
 
@@ -243,7 +243,7 @@ impl MainState {
             map_spritebatch,
         };
 
-        s.create_wall_pieces();
+        s.spawn_wall_pieces();
 
         Ok(s)
     }
@@ -369,7 +369,7 @@ impl MainState {
         }
     }
 
-    fn create_wall_pieces(&mut self) {
+    fn spawn_wall_pieces(&mut self) {
         // TODO: extents
         let view = TileMapLayerView {
             layer: Self::get_map_layer(&self.map, "Walls"),
@@ -385,8 +385,9 @@ impl MainState {
             let rb = {
                 let rad = 0.5 - COLLIDER_MARGIN;
 
-                let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
-                let inertia = geom.inertia(1.0);
+                // Sim as balls for less coupling between elements
+                let geom = ShapeHandle::new(Ball::new(rad));
+                let inertia = geom.inertia(10.0);
                 let center_of_mass = geom.center_of_mass();
 
                 let pos = Isometry2::new(pos.coords, na::zero());
@@ -494,11 +495,12 @@ impl event::EventHandler for MainState {
                 }
             }
 
+            // Dampen wall piece physics
             for wall_piece in self.wall_pieces.iter() {
                 if let Some(rb) = self.world.rigid_body_mut(wall_piece.rb) {
                     let mut vel = rb.velocity().clone();
-                    vel.linear *= 0.1;
-                    vel.angular *= 0.1;
+                    vel.linear *= 0.9;
+                    vel.angular *= 0.9;
                     rb.set_velocity(vel);
                 }
             }
