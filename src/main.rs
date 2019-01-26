@@ -6,10 +6,10 @@ extern crate toml;
 #[macro_use]
 extern crate serde_derive;
 
+use ggez::audio;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
-use ggez::audio;
 #[allow(unused_imports)]
 use ggez::graphics::{Color, Rect, Scale};
 use ggez::input::keyboard::{KeyCode, KeyMods};
@@ -204,21 +204,9 @@ impl MainState {
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
-        let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer1.ogg").unwrap();
+        let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer3.ogg").unwrap();
 
         //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
-        /*
-        let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
-        if settings.enemies {
-            
-            let dozer_0 = spawn_dozer(ctx, &mut world, engine_sound.clone(), dozer_image.clone(), Point2::new(-10.5, -2.0));
-            let dozer_1 = spawn_dozer(ctx, &mut world, engine_sound.clone(), dozer_image.clone(), Point2::new(-12.5, -0.0));
-            let dozer_2 = spawn_dozer(ctx, &mut world, engine_sound.clone(), dozer_image.clone(), Point2::new(-11.5, 2.0));
-
-            enemies.push(dozer_0);
-            enemies.push(dozer_1);
-            enemies.push(dozer_2);
-        }*/
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
@@ -294,7 +282,7 @@ impl MainState {
         s.spawn_wall_pieces();
 
         if settings.enemies {
-            s.spawn_bulldozers(ctx, 3);
+            s.spawn_bulldozers(ctx, 8);
         }
 
         Ok(s)
@@ -576,7 +564,11 @@ impl event::EventHandler for MainState {
             for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
                 if self.settings.dozer_drive && i == 0 {
                     // TODO: Player controlled hack
-                    enemy.update(enemy.positional(), Some((&self.player.input).into()), &mut self.world);
+                    enemy.update(
+                        enemy.positional(),
+                        Some((&self.player.input).into()),
+                        &mut self.world,
+                    );
                 } else {
                     enemy.update(self.player.positional, None, &mut self.world);
                 }
