@@ -1,7 +1,7 @@
 extern crate ggez;
 extern crate rand;
 
-use ggez::conf::WindowSetup;
+use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event;
 use ggez::graphics;
 #[allow(unused_imports)]
@@ -55,6 +55,7 @@ impl Default for Positional {
 struct MainState {
     a: i32,
     direction: i32,
+    splash: graphics::Image,
     dragon: graphics::Image,
     dozer: graphics::Image,
     dozer_rb: BodyHandle,
@@ -124,6 +125,7 @@ impl MainState {
             );
         }
 
+        let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
         let dragon = graphics::Image::new(ctx, "/dragon1.png").unwrap();
         let dozer = graphics::Image::new(ctx, "/dozer.png").unwrap();
 
@@ -144,6 +146,7 @@ impl MainState {
         let s = MainState {
             a: 0,
             direction: 1,
+            splash,
             dragon,
             dozer,
             dozer_rb,
@@ -309,6 +312,11 @@ impl event::EventHandler for MainState {
         //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
+        //graphics::set_screen_coordinates(ctx, Rect::new_i32(0, 0, 960, 540))
+        //.expect("Could not set logical screen coordinates before running initial state.");
+
+        Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 1.0, 0.0);
+
         self.draw_map_layer(ctx, "Background");
         self.draw_map_layer(ctx, "Walls");
 
@@ -356,6 +364,12 @@ pub fn main() -> GameResult {
         .window_setup(WindowSetup {
             title: "Hindranch v 3.74b".to_owned(),
             srgb: true,
+            ..Default::default()
+        })
+        .window_mode(WindowMode {
+            //width: 960.0,
+            //height: 540.0,
+            //hidpi: false,
             ..Default::default()
         });
     let (ctx, event_loop) = &mut cb.build()?;
