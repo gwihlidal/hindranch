@@ -1,3 +1,5 @@
 music = false
 voice = false
 sounds = true
+enemies = true
+dozer_drive = false

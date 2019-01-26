@@ -136,7 +136,10 @@ impl Characters {
                 y: rect.y as f32 / img_height,
                 h: rect.h as f32 / img_height,
             },
-            Vector2::new(1.0 / rect.w as f32, 1.0 / -rect.h as f32),
+            Vector2::new(
+                (rect.w as f32 / rect.h as f32) / rect.w as f32,
+                1.0 / -rect.h as f32,
+            ),
         )
     }
 }

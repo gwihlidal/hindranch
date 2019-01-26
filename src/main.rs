@@ -25,11 +25,14 @@ use std::rc::Rc;
 mod characters;
 mod enemy;
 mod music;
+mod player;
 mod settings;
 mod tile_util;
 mod types;
 mod voice;
 
+use self::characters::*;
+use self::player::*;
 use self::tile_util::*;
 use self::types::*;
 
@@ -87,9 +90,8 @@ struct WallPiece {
 struct MainState {
     settings: settings::Settings,
 
-    characters: characters::Characters,
-
-    player_input: PlayerInput,
+    characters: Characters,
+    player: Player,
 
     a: i32,
     direction: i32,
@@ -118,30 +120,6 @@ struct MainState {
     map_tile_image: graphics::Image,
     map_spritebatch: graphics::spritebatch::SpriteBatch,
     world: World<f32>,
-}
-
-pub struct PlayerInput {
-    pub up: bool,
-    pub down: bool,
-    pub left: bool,
-    pub right: bool,
-}
-
-impl PlayerInput {
-    pub fn new() -> PlayerInput {
-        PlayerInput {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-        }
-    }
-}
-
-impl Default for PlayerInput {
-    fn default() -> Self {
-        PlayerInput::new()
-    }
 }
 
 fn spawn_dozer(
@@ -180,7 +158,7 @@ fn spawn_dozer(
 
 impl MainState {
     fn new(settings: settings::Settings, ctx: &mut Context) -> GameResult<MainState> {
-        let characters = characters::Characters::load(ctx);
+        let characters = Characters::load(ctx);
 
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
         //println!("{:?}", map);
@@ -193,16 +171,19 @@ impl MainState {
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
 
-        let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-10.5, -2.0));
-        let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-12.5, -0.0));
-        let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-11.5, 2.0));
-
         //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
 
         let mut enemies: Vec<Box<dyn enemy::Enemy>> = Vec::new();
-        enemies.push(dozer_0);
-        enemies.push(dozer_1);
-        enemies.push(dozer_2);
+        if settings.enemies {
+            let dozer_0 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-10.5, -2.0));
+            let dozer_1 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-12.5, -0.0));
+            let dozer_2 = spawn_dozer(&mut world, dozer_image.clone(), Point2::new(-11.5, 2.0));
+
+
+            enemies.push(dozer_0);
+            enemies.push(dozer_1);
+            enemies.push(dozer_2);
+        }
 
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
@@ -221,11 +202,18 @@ impl MainState {
             music_track.play();
         }
 
+        let player = Player::new(
+            &mut world,
+            "woman_green",
+            Point2::new(0.5, 0.5),
+            &characters,
+        );
+
         let mut s = MainState {
             settings,
             characters,
 
-            player_input: Default::default(),
+            player,
             a: 0,
             direction: 1,
             splash,
@@ -380,10 +368,10 @@ impl MainState {
 
     fn handle_key(&mut self, keycode: KeyCode, value: bool) {
         match keycode {
-            KeyCode::W | KeyCode::Up => self.player_input.up = value,
-            KeyCode::A | KeyCode::Left => self.player_input.left = value,
-            KeyCode::S | KeyCode::Down => self.player_input.down = value,
-            KeyCode::D | KeyCode::Right => self.player_input.right = value,
+            KeyCode::W | KeyCode::Up => self.player.input.up = value,
+            KeyCode::A | KeyCode::Left => self.player.input.left = value,
+            KeyCode::S | KeyCode::Down => self.player.input.down = value,
+            KeyCode::D | KeyCode::Right => self.player.input.right = value,
             _ => (),
         }
     }
@@ -500,15 +488,17 @@ impl event::EventHandler for MainState {
                 println!("Average FPS: {}", timer::fps(ctx));
             }
 
+            self.player.update(&self.settings, &mut self.world);
+
             for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
-                if i == 0 {
+                if self.settings.dozer_drive && i == 0 {
                     // TODO: Player controlled hack
                     enemy.update(
                         Some(enemy::Movement {
-                            left: self.player_input.left,
-                            right: self.player_input.right,
-                            up: self.player_input.up,
-                            down: self.player_input.down,
+                            left: self.player.input.left,
+                            right: self.player.input.right,
+                            up: self.player.input.up,
+                            down: self.player.input.down,
                         }),
                         &mut self.world,
                     );
@@ -563,17 +553,7 @@ impl event::EventHandler for MainState {
         graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
         self.map_spritebatch.clear();
 
-        let woman = self.characters.get_entry("woman_green");
-        let woman_pos = Point2::new(0.5, 0.5);
-        let (woman_rect, woman_scale) = self.characters.transform(&woman.gun);
-
-        self.character_spritebatch.add(
-            graphics::DrawParam::new()
-                .src(woman_rect)
-                .dest(woman_pos - Vector2::new(0.5, 0.5))
-                .scale(woman_scale)
-                .offset(Point2::new(0.5, 0.5)),
-        );
+        self.player.draw(&mut self.character_spritebatch);
 
         graphics::draw(ctx, &self.character_spritebatch, graphics::DrawParam::new()).unwrap();
         self.character_spritebatch.clear();
@@ -607,6 +587,12 @@ impl event::EventHandler for MainState {
         }
 
         match key_code {
+            KeyCode::Key1 => self.player.set_visual(VisualState::Gun),
+            KeyCode::Key2 => self.player.set_visual(VisualState::Hold),
+            KeyCode::Key3 => self.player.set_visual(VisualState::Machine),
+            KeyCode::Key4 => self.player.set_visual(VisualState::Reload),
+            KeyCode::Key5 => self.player.set_visual(VisualState::Silencer),
+            KeyCode::Key6 => self.player.set_visual(VisualState::Stand),
             KeyCode::M => {
                 if let Some(ref mut track) = self.music_track {
                     track.stop();

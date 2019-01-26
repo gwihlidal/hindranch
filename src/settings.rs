@@ -15,4 +15,6 @@ pub struct Settings {
     pub music: bool,
     pub voice: bool,
     pub sounds: bool,
+    pub enemies: bool,
+    pub dozer_drive: bool,
 }
