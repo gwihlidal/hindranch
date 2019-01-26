@@ -28,6 +28,7 @@ mod settings;
 mod tile_util;
 mod types;
 mod voice;
+mod characters;
 
 use self::tile_util::*;
 use self::types::*;
@@ -84,6 +85,8 @@ struct WallPiece {
 
 struct MainState {
     settings: settings::Settings,
+
+    characters: characters::Characters,
 
     player_input: PlayerInput,
 
@@ -172,6 +175,8 @@ fn spawn_dozer(
 
 impl MainState {
     fn new(settings: settings::Settings, ctx: &mut Context) -> GameResult<MainState> {
+        let characters = characters::Characters::load(ctx);
+        
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
         //println!("{:?}", map);
 
@@ -212,6 +217,7 @@ impl MainState {
 
         let mut s = MainState {
             settings,
+            characters,
 
             player_input: Default::default(),
             a: 0,
