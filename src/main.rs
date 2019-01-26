@@ -318,11 +318,12 @@ impl MainState {
         let tile_width = map.tile_width;
         let scale = 1.0 / tile_width as f32;
 
-        let start_column = 10;
-        let start_row = 30;
-        let end_column = 100; //end_column;
-        let end_row = 100; //end_row;
+        let start_column = 0;
+        let start_row = 0;
+        let end_column = map.width;
+        let end_row = map.height;
 
+        // TODO: figure out the extents to draw
         let view = TileMapLayerView {
             layer,
             start_x: start_column,
@@ -376,14 +377,7 @@ impl MainState {
     }
 
     fn spawn_wall_pieces(&mut self) {
-        // TODO: extents
-        let view = TileMapLayerView {
-            layer: Self::get_map_layer(&self.map, "Walls"),
-            start_x: 10,
-            end_x: 100,
-            start_y: 30,
-            end_y: 100,
-        };
+        let view = TileMapLayerView::new(Self::get_map_layer(&self.map, "Walls"));
 
         for MapTile { tile_id, pos } in view.iter() {
             let src = Self::tile_id_to_src_rect(tile_id, &self.map, &self.map_tile_image);
