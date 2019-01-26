@@ -1,9 +1,8 @@
 #![allow(dead_code)]
 
-use crate::{BodyHandle, Force2, Point2, Positional, Vector2, World};
+use crate::{AiBehavior, BodyHandle, Force2, Point2, Positional, Vector2, World};
 
 use ggez::graphics;
-use nphysics2d::object::RigidBody;
 use std::default::Default;
 use std::rc::Rc;
 
@@ -31,10 +30,6 @@ pub trait Enemy {
     fn alive(&self) -> bool;
     fn closest_target(&self) -> Option<Point2>;
     fn positional(&self) -> Positional;
-}
-
-pub trait AiBehavior {
-    fn update(&mut self, rb: &RigidBody<f32>) -> Movement;
 }
 
 pub struct Bulldozer {

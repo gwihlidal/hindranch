@@ -18,12 +18,13 @@ use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
-use rand::Rng;
 use std::env;
 use std::path::{self, Path};
 use std::rc::Rc;
 
+mod ai;
 mod characters;
+mod consts;
 mod enemy;
 mod music;
 mod player;
@@ -33,64 +34,29 @@ mod tile_util;
 mod types;
 mod voice;
 
+use self::ai::*;
 use self::characters::*;
+use self::consts::*;
 use self::enemy::*;
 use self::player::*;
 use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
-use std::time::{Duration, Instant};
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::algebra::Force2;
 use nphysics2d::force_generator::{ForceGeneratorHandle, Spring};
 //use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
-use nphysics2d::object::{BodyHandle, Material, RigidBody};
+use nphysics2d::object::{BodyHandle, Material};
 use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
-
-const COLLIDER_MARGIN: f32 = 0.01;
-const DOZER_OUTER_RADIUS: f32 = 40.0;
 
 impl From<&PlayerInput> for Movement {
     fn from(i: &PlayerInput) -> Self {
         Self {
             forward: (if i.up { 1.0 } else { 0.0 }) + (if i.down { -1.0 } else { 0.0 }),
             right: (if i.right { 1.0 } else { 0.0 }) + (if i.left { -1.0 } else { 0.0 }),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Positional {
-    position: Point2,
-    rotation: f32,
-}
-
-impl Positional {
-    pub fn set_from_physics(&mut self, rigid_body: &RigidBody<f32>) {
-        let pos = rigid_body.position();
-        self.position = pos.translation.vector.into();
-        self.rotation = pos.rotation.angle();
-    }
-
-    // Assumes sprites face right
-    pub fn forward(&self) -> Vector2 {
-        Vector2::new(self.rotation.cos(), self.rotation.sin())
-    }
-
-    pub fn right(&self) -> Vector2 {
-        let forward = self.forward();
-        Vector2::new(forward.y, -forward.x)
-    }
-}
-
-impl Default for Positional {
-    fn default() -> Self {
-        Self {
-            position: Point2::origin(),
-            rotation: 0.0,
         }
     }
 }
@@ -141,77 +107,6 @@ struct MainState {
     map_tile_image: graphics::Image,
     map_spritebatch: graphics::spritebatch::SpriteBatch,
     world: World<f32>,
-}
-
-#[derive(Clone, Copy)]
-enum DozerState {
-    IdlingUntil(Instant),
-    Ramming,
-    RammingUntil(Instant),
-    BackingAway,
-}
-
-struct EnemyDozerBehavior {
-    state: DozerState,
-    last_vel_mag: f32,
-}
-
-impl EnemyDozerBehavior {
-    fn new() -> Self {
-        Self {
-            state: DozerState::IdlingUntil(
-                Instant::now() + Duration::from_millis(rand::thread_rng().gen_range(1000, 2000)),
-            ),
-            last_vel_mag: 0.0,
-        }
-    }
-}
-
-impl AiBehavior for EnemyDozerBehavior {
-    fn update(&mut self, rb: &RigidBody<f32>) -> Movement {
-        let vel_mag = rb.velocity().linear.norm();
-        let pos = rb.position().translation.vector;
-        let dist_to_center = pos.norm();
-        let now = Instant::now();
-        let mut rng = rand::thread_rng();
-
-        let mut movement = Movement::default();
-
-        match self.state {
-            DozerState::IdlingUntil(t) => {
-                if now > t {
-                    self.state = DozerState::Ramming;
-                }
-            }
-            DozerState::Ramming => {
-                if dist_to_center < DOZER_OUTER_RADIUS && vel_mag < self.last_vel_mag {
-                    self.state = DozerState::RammingUntil(
-                        now + Duration::from_millis(rng.gen_range(1000, 2000)),
-                    )
-                }
-
-                movement.forward = 1.0;
-            }
-            DozerState::RammingUntil(t) => {
-                if now > t {
-                    self.state = DozerState::BackingAway;
-                }
-
-                movement.forward = 1.0;
-            }
-            DozerState::BackingAway => {
-                if dist_to_center > DOZER_OUTER_RADIUS {
-                    self.state = DozerState::Ramming;
-                }
-
-                movement.forward = -1.0;
-            }
-        }
-
-        self.last_vel_mag = vel_mag;
-
-        movement
-    }
 }
 
 fn spawn_dozer(
