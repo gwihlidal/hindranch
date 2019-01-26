@@ -27,16 +27,16 @@ mod enemy;
 mod music;
 mod player;
 mod settings;
+mod sounds;
 mod tile_util;
 mod types;
 mod voice;
-mod sounds;
 
 use self::characters::*;
 use self::player::*;
+use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
-use self::sounds::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
@@ -657,6 +657,12 @@ impl event::EventHandler for MainState {
 
         timer::yield_now();
         Ok(())
+    }
+
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _xrel: f32, _yrel: f32) {
+        self.player.input.aim_pos = (self.screen_to_world * na::Vector4::new(x, y, 0.0, 1.0))
+            .xy()
+            .into();
     }
 
     fn key_down_event(

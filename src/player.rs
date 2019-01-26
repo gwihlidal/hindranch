@@ -94,12 +94,48 @@ impl Player {
 
     pub fn draw(&self, batch: &mut SpriteBatch) {
         let (rect, scale) = match self.visual {
-            VisualState::Gun => if self.alive() { self.gun } else { self.dead_gun },
-            VisualState::Hold => if self.alive() { self.hold } else { self.dead_hold },
-            VisualState::Machine => if self.alive() { self.machine } else { self.dead_machine },
-            VisualState::Reload => if self.alive() { self.reload } else { self.dead_reload },
-            VisualState::Silencer => if self.alive() { self.silencer } else { self.dead_silencer },
-            VisualState::Stand => if self.alive() { self.stand } else { self.dead_stand },
+            VisualState::Gun => {
+                if self.alive() {
+                    self.gun
+                } else {
+                    self.dead_gun
+                }
+            }
+            VisualState::Hold => {
+                if self.alive() {
+                    self.hold
+                } else {
+                    self.dead_hold
+                }
+            }
+            VisualState::Machine => {
+                if self.alive() {
+                    self.machine
+                } else {
+                    self.dead_machine
+                }
+            }
+            VisualState::Reload => {
+                if self.alive() {
+                    self.reload
+                } else {
+                    self.dead_reload
+                }
+            }
+            VisualState::Silencer => {
+                if self.alive() {
+                    self.silencer
+                } else {
+                    self.dead_silencer
+                }
+            }
+            VisualState::Stand => {
+                if self.alive() {
+                    self.stand
+                } else {
+                    self.dead_stand
+                }
+            }
         };
         batch.add(
             DrawParam::new()
@@ -131,6 +167,11 @@ impl Player {
         let rigid_body = world.rigid_body_mut(self.body_handle).unwrap();
         let pos = rigid_body.position();
         self.positional.position = pos.translation.vector.into();
+
+        let aim_rel = self.input.aim_pos - self.positional.position;
+        if aim_rel.x != 0.0 || aim_rel.y != 0.0 {
+            self.positional.rotation = (aim_rel.y).atan2(aim_rel.x);
+        };
 
         let velocity = rigid_body.velocity().linear;
 
@@ -170,6 +211,7 @@ impl Player {
 
 #[derive(Debug)]
 pub struct PlayerInput {
+    pub aim_pos: Point2,
     pub up: bool,
     pub down: bool,
     pub left: bool,
@@ -179,6 +221,7 @@ pub struct PlayerInput {
 impl PlayerInput {
     pub fn new() -> PlayerInput {
         PlayerInput {
+            aim_pos: Point2::origin(),
             up: false,
             down: false,
             left: false,
