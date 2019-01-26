@@ -349,6 +349,60 @@ impl MainState {
             _ => (),
         }
     }
+
+    fn drive_bulldozer(
+        dozer_pos: &mut Positional,
+        rigid_body: &mut RigidBody<f32>,
+        input: &PlayerInput,
+    ) {
+        dozer_pos.set_from_physics(rigid_body);
+
+        let forward = dozer_pos.forward();
+        let right = dozer_pos.right();
+
+        let velocity = rigid_body.velocity().linear;
+        let fwd_vel = Vector2::dot(&forward, &velocity);
+        let right_vel = Vector2::dot(&right, &velocity);
+
+        let spin = rigid_body.velocity().angular;
+
+        const MAX_TORQUE: f32 = 0.05;
+        const TORQUE_RATE: f32 = 0.05;
+        const MAX_SPIN: f32 = 2.0;
+
+        const MAX_FORCE: f32 = 2.0;
+        const FORCE_RATE: f32 = 1.0;
+        const MAX_VEL: f32 = 1.0;
+        const SIDEWAYS_DAMPING: f32 = 0.2;
+
+        let mut target_vel = 0.0;
+        let mut target_spin = 0.0;
+        if input.right {
+            target_spin -= 1.0;
+        }
+        if input.left {
+            target_spin += 1.0;
+        }
+        if input.up {
+            target_vel += 1.0;
+        }
+        if input.down {
+            target_vel -= 1.0;
+        }
+
+        target_spin *= MAX_SPIN;
+        target_spin -= spin;
+
+        target_vel *= MAX_VEL;
+        target_vel -= fwd_vel;
+
+        let torque = (target_spin * TORQUE_RATE).max(-MAX_TORQUE).min(MAX_TORQUE);
+        let force = forward * (target_vel * FORCE_RATE).max(-MAX_FORCE).min(MAX_FORCE);
+
+        rigid_body.activate();
+        rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
+        rigid_body.apply_force(&Force2::new(force, torque));
+    }
 }
 
 /*
@@ -388,56 +442,11 @@ impl event::EventHandler for MainState {
                 println!("Average FPS: {}", timer::fps(ctx));
             }
 
-            {
-                let rigid_body = self.world.rigid_body_mut(self.dozer_rb).unwrap();
-                self.dozer_pos.set_from_physics(rigid_body);
-
-                let forward = self.dozer_pos.forward();
-                let right = self.dozer_pos.right();
-
-                let velocity = rigid_body.velocity().linear;
-                let fwd_vel = Vector2::dot(&forward, &velocity);
-                let right_vel = Vector2::dot(&right, &velocity);
-
-                let spin = rigid_body.velocity().angular;
-
-                const MAX_TORQUE: f32 = 0.05;
-                const TORQUE_RATE: f32 = 0.05;
-                const MAX_SPIN: f32 = 2.0;
-
-                const MAX_FORCE: f32 = 2.0;
-                const FORCE_RATE: f32 = 1.0;
-                const MAX_VEL: f32 = 1.0;
-                const SIDEWAYS_DAMPING: f32 = 0.2;
-
-                let mut target_vel = 0.0;
-                let mut target_spin = 0.0;
-                if self.player_input.right {
-                    target_spin -= 1.0;
-                }
-                if self.player_input.left {
-                    target_spin += 1.0;
-                }
-                if self.player_input.up {
-                    target_vel += 1.0;
-                }
-                if self.player_input.down {
-                    target_vel -= 1.0;
-                }
-
-                target_spin *= MAX_SPIN;
-                target_spin -= spin;
-
-                target_vel *= MAX_VEL;
-                target_vel -= fwd_vel;
-
-                let torque = (target_spin * TORQUE_RATE).max(-MAX_TORQUE).min(MAX_TORQUE);
-                let force = forward * (target_vel * FORCE_RATE).max(-MAX_FORCE).min(MAX_FORCE);
-
-                rigid_body.activate();
-                rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
-                rigid_body.apply_force(&Force2::new(force, torque));
-            }
+            Self::drive_bulldozer(
+                &mut self.dozer_pos,
+                self.world.rigid_body_mut(self.dozer_rb).unwrap(),
+                &self.player_input,
+            );
 
             self.world.step();
         }
