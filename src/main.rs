@@ -39,7 +39,7 @@ use self::types::*;
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::algebra::Force2;
-use nphysics2d::force_generator::Spring;
+use nphysics2d::force_generator::{ForceGeneratorHandle, Spring};
 //use nphysics2d::joint::{CartesianConstraint, PrismaticConstraint, RevoluteConstraint};
 use nphysics2d::object::{BodyHandle, Material, RigidBody};
 use nphysics2d::volumetric::Volumetric;
@@ -84,6 +84,7 @@ impl Default for Positional {
 struct WallPiece {
     tile_snip: Rect,
     rb: BodyHandle,
+    spring: ForceGeneratorHandle,
     hp: f32,
 }
 
@@ -387,7 +388,6 @@ impl MainState {
 
                 // Sim as balls for less coupling between elements
                 let geom = ShapeHandle::new(Ball::new(rad));
-                //let geom = ShapeHandle::new(Cuboid::new(Vector2::new(rad, rad)));
                 let inertia = geom.inertia(10.0);
                 let center_of_mass = geom.center_of_mass();
 
@@ -405,7 +405,7 @@ impl MainState {
                 rb
             };
 
-            self.world.add_force_generator(Spring::new(
+            let spring = self.world.add_force_generator(Spring::new(
                 BodyHandle::ground(),
                 rb,
                 pos,
@@ -417,7 +417,8 @@ impl MainState {
             self.wall_pieces.push(WallPiece {
                 tile_snip: src,
                 rb,
-                hp: 100.0,
+                spring,
+                hp: 1.0,
             });
         }
     }
@@ -439,15 +440,27 @@ impl MainState {
                 )
             };
 
+            let color = graphics::Color {
+                r: 1.0,
+                g: wall_piece.hp,
+                b: wall_piece.hp,
+                a: 1.0,
+            };
+
             sprite_batch.add(
                 graphics::DrawParam::new()
                     .src(wall_piece.tile_snip)
                     .dest(pos - Vector2::new(0.5, 0.5))
                     .scale(Vector2::new(scale, -scale))
                     .rotation(rot)
-                    .offset(Point2::new(0.5, 0.5)),
+                    .offset(Point2::new(0.5, 0.5))
+                    .color(color),
             );
         }
+    }
+
+    fn wall_velocity_to_damage(vel: &Vector2) -> f32 {
+        (0.1 * (Vector2::norm(vel) - 5.0)).max(0.0)
     }
 }
 
@@ -515,10 +528,14 @@ impl event::EventHandler for MainState {
 
             self.update_camera(camera_positional);
 
-            // Dampen wall piece physics
-            for wall_piece in self.wall_pieces.iter() {
+            // Dampen wall piece physics and calculate damage
+            for wall_piece in self.wall_pieces.iter_mut() {
                 if let Some(rb) = self.world.rigid_body_mut(wall_piece.rb) {
                     let mut vel = rb.velocity().clone();
+
+                    wall_piece.hp =
+                        (wall_piece.hp - Self::wall_velocity_to_damage(&vel.linear)).max(0.0);
+
                     vel.linear *= 0.95;
                     vel.angular *= 0.95;
                     rb.set_velocity(vel);
@@ -526,6 +543,20 @@ impl event::EventHandler for MainState {
                     pos.rotation = nalgebra::UnitComplex::from_angle(pos.rotation.angle() * 0.95);
                     rb.set_position(pos);
                 }
+            }
+
+            let wall_pieces_to_remove: Vec<_> = self
+                .wall_pieces
+                .iter()
+                .enumerate()
+                .filter_map(|(i, wp)| if wp.hp <= 0.0 { Some(i) } else { None })
+                .collect();
+
+            for i in wall_pieces_to_remove.into_iter().rev() {
+                let wp = &self.wall_pieces[i];
+                self.world.remove_bodies(&[wp.rb]);
+                self.world.remove_force_generator(wp.spring);
+                self.wall_pieces.swap_remove(i);
             }
 
             self.world.step();
