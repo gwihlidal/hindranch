@@ -36,6 +36,15 @@ pub struct Player {
     pub dead_stand: (Rect, Vector2),
 }
 
+fn clamp_norm(v: Vector2, max_norm: f32) -> Vector2 {
+    let n = Vector2::norm(&v);
+    if n > max_norm {
+        v * (max_norm / n)
+    } else {
+        v
+    }
+}
+
 impl Player {
     pub fn new(
         world: &mut World<f32>,
@@ -122,57 +131,40 @@ impl Player {
         let rigid_body = world.rigid_body_mut(self.body_handle).unwrap();
         let pos = rigid_body.position();
         self.positional.position = pos.translation.vector.into();
-        self.positional.rotation = pos.rotation.angle();
-
-        let forward = self.positional.forward();
-        let right = self.positional.right();
 
         let velocity = rigid_body.velocity().linear;
-        let fwd_vel = Vector2::dot(&forward, &velocity);
-        let right_vel = Vector2::dot(&right, &velocity);
 
-        let spin = rigid_body.velocity().angular;
-
-        const MAX_TORQUE: f32 = 1000.0;
-        const TORQUE_RATE: f32 = 0.005;
-        const MAX_SPIN: f32 = 5.0;
-
-        const MAX_FORCE: f32 = 100.0;
+        const MAX_FORCE: f32 = 1.0;
         const FORCE_RATE: f32 = 0.2;
         const MAX_VEL: f32 = 7.0;
 
-        const SIDEWAYS_DAMPING: f32 = 0.5;
-
-        let mut target_vel = 0.0;
-        let mut target_spin = 0.0;
+        let mut target_vel = Vector2::zeros();
 
         if !settings.dozer_drive {
             if self.input.right {
-                target_spin -= 1.0;
+                target_vel.x += 1.0;
             }
             if self.input.left {
-                target_spin += 1.0;
+                target_vel.x -= 1.0;
             }
             if self.input.up {
-                target_vel += 1.0;
+                target_vel.y += 1.0;
             }
             if self.input.down {
-                target_vel -= 1.0;
+                target_vel.y -= 1.0;
             }
         }
 
-        target_spin *= MAX_SPIN;
-        target_spin -= spin;
-
         target_vel *= MAX_VEL;
-        target_vel -= fwd_vel;
+        target_vel -= velocity;
 
-        let torque = (target_spin * TORQUE_RATE).max(-MAX_TORQUE).min(MAX_TORQUE);
-        let force = forward * (target_vel * FORCE_RATE).max(-MAX_FORCE).min(MAX_FORCE);
+        let force = clamp_norm(target_vel * FORCE_RATE, MAX_FORCE);
 
         rigid_body.activate();
-        rigid_body.set_linear_velocity(velocity - right_vel * right * SIDEWAYS_DAMPING);
-        rigid_body.apply_force(&Force2::new(force, torque));
+        rigid_body.apply_force(&Force2::new(force, 0.0));
+        let mut pos = rigid_body.position();
+        pos.rotation = nalgebra::UnitComplex::from_angle(0.0);
+        rigid_body.set_position(pos);
     }
 }
 

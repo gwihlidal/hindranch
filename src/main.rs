@@ -401,7 +401,9 @@ impl MainState {
                 let rad = 0.5 - COLLIDER_MARGIN;
 
                 // Sim as balls for less coupling between elements
-                let geom = ShapeHandle::new(Ball::new(rad));
+                //let geom = ShapeHandle::new(Ball::new(rad));
+                let geom = ShapeHandle::new(Cuboid::new(Vector2::new(rad, rad)));
+
                 let inertia = geom.inertia(10.0);
                 let center_of_mass = geom.center_of_mass();
 
@@ -413,7 +415,7 @@ impl MainState {
                     geom.clone(),
                     rb,
                     Isometry2::identity(),
-                    Material::new(0.3, 0.5),
+                    Material::new(0.3, 0.0),
                 );
 
                 rb
@@ -474,7 +476,7 @@ impl MainState {
     }
 
     fn wall_velocity_to_damage(vel: &Vector2) -> f32 {
-        (0.1 * (Vector2::norm(vel) - 5.0)).max(0.0)
+        (0.1 * (Vector2::norm(vel) - 4.0)).max(0.0)
     }
 }
 
