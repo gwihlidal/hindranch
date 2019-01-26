@@ -35,6 +35,7 @@ use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
 
 const COLLIDER_MARGIN: f32 = 0.01;
+const TILE_SIZE_WORLD: f32 = 1.0;
 
 pub struct Positional {
     position: Point2,
@@ -130,7 +131,7 @@ impl MainState {
 
         let dozer_rb;
         {
-            let rad = 0.2;
+            let rad = 2.0;
 
             let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
             let inertia = geom.inertia(1.0);
@@ -150,7 +151,7 @@ impl MainState {
             dozer_rb = rb;
         }
 
-        {
+        /*{
             let rad = 0.2;
 
             let geom = ShapeHandle::new(Cuboid::new(Vector2::repeat(rad)));
@@ -167,7 +168,7 @@ impl MainState {
                 Isometry2::identity(),
                 Material::new(0.3, 0.5),
             );
-        }
+        }*/
 
         let _bulldozer_0 = enemy::Bulldozer::new(8.0, Positional::default());
         let _bulldozer_1 = enemy::Bulldozer::new(8.0, Positional::default());
@@ -264,10 +265,10 @@ impl MainState {
             .position(|layer| layer.name == layer_name)
             .unwrap();
 
-        let scale = 0.001;
-
         let tile_width = map.tile_width;
         let tile_height = map.tile_height;
+
+        let scale = TILE_SIZE_WORLD / tile_width as f32;
 
         //let image = &self.map_tile_image;
 
@@ -310,7 +311,6 @@ impl MainState {
                     .scale(Vector2::new(scale, -scale));
 
                 batch.add(draw_param);
-                //graphics::draw(ctx, image, draw_param).unwrap();
             }
         }
 
@@ -366,14 +366,16 @@ impl MainState {
 
         let spin = rigid_body.velocity().angular;
 
-        const MAX_TORQUE: f32 = 0.05;
-        const TORQUE_RATE: f32 = 0.05;
+        const MAX_TORQUE: f32 = 1000.0;
+        const TORQUE_RATE: f32 = 500.0;
         const MAX_SPIN: f32 = 2.0;
 
-        const MAX_FORCE: f32 = 2.0;
-        const FORCE_RATE: f32 = 1.0;
-        const MAX_VEL: f32 = 1.0;
-        const SIDEWAYS_DAMPING: f32 = 0.2;
+        const MAX_FORCE: f32 = 500.0;
+        const FORCE_RATE: f32 = 200.0;
+        const MAX_VEL: f32 = 10.0;
+
+        // Bulldozers technically don't strafe, but we have a need for speed.
+        const SIDEWAYS_DAMPING: f32 = 0.1;
 
         let mut target_vel = 0.0;
         let mut target_spin = 0.0;
@@ -426,7 +428,7 @@ fn calculate_torque_for_aim(aim: Vector2, rotation: f32, spin: f32) -> f32 {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.calculate_view_transform(&ctx, Point2::origin(), 1.0);
+        self.calculate_view_transform(&ctx, Point2::origin(), 0.1);
 
         const DESIRED_FPS: u32 = 60;
         //let dt = 1.0 / (DESIRED_FPS as f32);
@@ -487,7 +489,7 @@ impl event::EventHandler for MainState {
             ctx,
             &self.dozer,
             self.dozer_pos.position,
-            0.5,
+            3.0,
             self.dozer_pos.rotation,
         );
 
