@@ -18,6 +18,7 @@ use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
+use rand::Rng;
 use std::env;
 use std::path::{self, Path};
 use std::rc::Rc;
@@ -38,6 +39,7 @@ use self::player::*;
 use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
+use std::time::{Duration, Instant};
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
@@ -141,22 +143,74 @@ struct MainState {
     world: World<f32>,
 }
 
+#[derive(Clone, Copy)]
+enum DozerState {
+    IdlingUntil(Instant),
+    Ramming,
+    RammingUntil(Instant),
+    BackingAway,
+}
+
 struct EnemyDozerBehavior {
-    ramming: bool,
+    state: DozerState,
+    last_vel_mag: f32,
 }
 
 impl EnemyDozerBehavior {
     fn new() -> Self {
-        Self { ramming: false }
+        Self {
+            state: DozerState::IdlingUntil(
+                Instant::now() + Duration::from_millis(rand::thread_rng().gen_range(1000, 2000)),
+            ),
+            last_vel_mag: 0.0,
+        }
     }
 }
 
 impl AiBehavior for EnemyDozerBehavior {
-    fn update(&mut self) -> Movement {
-        Movement {
-            forward: 1.0,
-            right: 0.0,
+    fn update(&mut self, rb: &RigidBody<f32>) -> Movement {
+        let vel_mag = rb.velocity().linear.norm();
+        let pos = rb.position().translation.vector;
+        let dist_to_center = pos.norm();
+        let now = Instant::now();
+        let mut rng = rand::thread_rng();
+
+        let mut movement = Movement::default();
+
+        match self.state {
+            DozerState::IdlingUntil(t) => {
+                if now > t {
+                    self.state = DozerState::Ramming;
+                }
+            }
+            DozerState::Ramming => {
+                if dist_to_center < DOZER_OUTER_RADIUS && vel_mag < self.last_vel_mag {
+                    self.state = DozerState::RammingUntil(
+                        now + Duration::from_millis(rng.gen_range(1000, 2000)),
+                    )
+                }
+
+                movement.forward = 1.0;
+            }
+            DozerState::RammingUntil(t) => {
+                if now > t {
+                    self.state = DozerState::BackingAway;
+                }
+
+                movement.forward = 1.0;
+            }
+            DozerState::BackingAway => {
+                if dist_to_center > DOZER_OUTER_RADIUS {
+                    self.state = DozerState::Ramming;
+                }
+
+                movement.forward = -1.0;
+            }
         }
+
+        self.last_vel_mag = vel_mag;
+
+        movement
     }
 }
 
@@ -283,7 +337,7 @@ impl MainState {
         s.spawn_wall_pieces();
 
         if settings.enemies {
-            s.spawn_bulldozers(3);
+            s.spawn_bulldozers(15);
         }
 
         Ok(s)
@@ -526,7 +580,7 @@ impl MainState {
     }
 
     fn wall_velocity_to_damage(vel: &Vector2) -> f32 {
-        (0.1 * (Vector2::norm(vel) - 4.0)).max(0.0)
+        (0.1 * (vel.norm() - 4.0)).max(0.0)
     }
 
     fn px_to_world(&self, x: f32, y: f32) -> Point2 {

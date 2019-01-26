@@ -3,12 +3,23 @@
 use crate::{BodyHandle, Force2, Point2, Positional, Vector2, World};
 
 use ggez::graphics;
+use nphysics2d::object::RigidBody;
+use std::default::Default;
 use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 pub struct Movement {
     pub forward: f32,
     pub right: f32,
+}
+
+impl Default for Movement {
+    fn default() -> Self {
+        Self {
+            forward: 0.0,
+            right: 0.0,
+        }
+    }
 }
 
 pub trait Enemy {
@@ -23,7 +34,7 @@ pub trait Enemy {
 }
 
 pub trait AiBehavior {
-    fn update(&mut self) -> Movement;
+    fn update(&mut self, rb: &RigidBody<f32>) -> Movement;
 }
 
 pub struct Bulldozer {
@@ -103,7 +114,7 @@ impl Bulldozer {
 impl Enemy for Bulldozer {
     fn update(&mut self, movement: Option<Movement>, world: &mut World<f32>) {
         if let Some(ref mut behavior) = self.behavior {
-            self.movement = behavior.update();
+            self.movement = behavior.update(world.rigid_body(self.rigid_body).unwrap());
         }
 
         self.apply_physics_movement(&movement.unwrap_or(self.movement), world);
