@@ -7,6 +7,14 @@ pitch = -10.0
 rate = 0.9
 
 [[lines]]
+name = "wasted"
+text = "WASTED"
+female = false
+city17 = true
+pitch = -11.0
+rate = 0.5
+
+[[lines]]
 name = "defiance"
 text = "Try and take it from me, pigs"
 female = true
