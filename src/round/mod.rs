@@ -133,7 +133,7 @@ impl RoundPhase {
     }
 
     fn maintain_weapons(&mut self, data: &mut WorldData) {
-        data.player_weapon.update(
+        data.player.weapon.update(
             data.player.input.shoot,
             &data.player.positional,
             &mut data.bullets,
@@ -270,21 +270,18 @@ impl RoundPhase {
             data.map_spritebatch.clear();
         }
 
-        data.player.draw(&mut data.character_spritebatch);
-
-        graphics::draw(ctx, &data.character_spritebatch, graphics::DrawParam::new()).unwrap();
-        data.character_spritebatch.clear();
+        //data.player.draw(&mut data.character_spritebatch);
+        data.player.draw();
 
         for enemy in &data.enemies {
-            let positional = enemy.positional();
-            MainState::draw_single_image(
-                ctx,
-                &enemy.image(),
-                enemy.color(),
-                positional.position,
-                3.0,
-                positional.rotation,
-            );
+            //let positional = enemy.positional();
+            enemy.draw(ctx);
+        }
+
+        {
+            let character_spritebatch = &mut *data.character_spritebatch.borrow_mut();
+            graphics::draw(ctx, character_spritebatch, graphics::DrawParam::new()).unwrap();
+            character_spritebatch.clear();
         }
 
         // Reset to identity transform for text and splash screen

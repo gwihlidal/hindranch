@@ -97,13 +97,12 @@ pub struct WorldData {
     sounds: Sounds,
     characters: Characters,
     player: Player,
-    player_weapon: Weapon,
     splash: graphics::Image,
     dozer_image: Rc<graphics::Image>,
     enemies: Vec<Box<dyn Enemy>>,
     camera_pos: Point2,
     strategic_view: bool,
-    character_spritebatch: graphics::spritebatch::SpriteBatch,
+    character_spritebatch: Rc<RefCell<graphics::spritebatch::SpriteBatch>>,
 }
 
 impl WorldData {
@@ -119,21 +118,22 @@ impl WorldData {
         let characters = Characters::load(ctx);
 
         let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer_lores.png").unwrap());
-
         let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer3.ogg").unwrap();
-
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
-        let character_spritebatch =
-            graphics::spritebatch::SpriteBatch::new(characters.image.clone());
+        let character_spritebatch = Rc::new(RefCell::new(graphics::spritebatch::SpriteBatch::new(
+            characters.image.clone(),
+        )));
 
         let health = 100.0;
         let player = Player::new(
             &mut world,
             "woman_green",
             health,
+            Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
             Point2::new(0.5, 0.5),
             &characters,
+            character_spritebatch.clone(),
         );
 
         let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf").unwrap();
@@ -155,7 +155,6 @@ impl WorldData {
             sounds: Sounds::load(ctx),
             characters,
             player,
-            player_weapon: Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
             splash,
             dozer_image,
             enemies: Vec::new(),
@@ -228,6 +227,30 @@ impl SingleImageSpriteBatch {
     }
 }
 
+pub fn draw_single_image(
+    ctx: &mut Context,
+    image: &graphics::Image,
+    color: Color,
+    pos: Point2,
+    scale: f32,
+    rotation: f32,
+) {
+    let min_extent = image.width().min(image.height());
+    let half_w = 0.5 * scale / min_extent as f32;
+    let half_h = 0.5 * scale / min_extent as f32;
+    graphics::draw(
+        ctx,
+        image,
+        graphics::DrawParam::new()
+            .dest(pos - Vector2::new(0.5, 0.5))
+            .scale(Vector2::new(half_w * 2.0, half_h * -2.0))
+            .offset(Point2::new(0.5, 0.5))
+            .color(color)
+            .rotation(rotation),
+    )
+    .unwrap();
+}
+
 struct MainState {
     world_data: WorldData,
     settings: settings::Settings,
@@ -255,30 +278,6 @@ impl MainState {
     pub fn apply_view_transform(ctx: &mut Context, world_to_screen: Matrix4) {
         graphics::set_transform(ctx, world_to_screen);
         graphics::apply_transformations(ctx).unwrap();
-    }
-
-    fn draw_single_image(
-        ctx: &mut Context,
-        image: &graphics::Image,
-        color: Color,
-        pos: Point2,
-        scale: f32,
-        rotation: f32,
-    ) {
-        let min_extent = image.width().min(image.height());
-        let half_w = 0.5 * scale / min_extent as f32;
-        let half_h = 0.5 * scale / min_extent as f32;
-        graphics::draw(
-            ctx,
-            image,
-            graphics::DrawParam::new()
-                .dest(pos - Vector2::new(0.5, 0.5))
-                .scale(Vector2::new(half_w * 2.0, half_h * -2.0))
-                .offset(Point2::new(0.5, 0.5))
-                .color(color)
-                .rotation(rotation),
-        )
-        .unwrap();
     }
 
     fn spawn_wall_pieces(&mut self) {

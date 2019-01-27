@@ -2,10 +2,12 @@ use super::consts::*;
 use crate::{
     graphics::spritebatch::SpriteBatch, graphics::DrawParam, settings::Settings, Ball, BodyHandle,
     Characters, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2,
-    Volumetric, World,
+    Volumetric, Weapon, World,
 };
 use nalgebra as na;
 use ncollide2d::world::CollisionGroups;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 const COLLIDER_MARGIN: f32 = 0.01;
 
@@ -19,10 +21,12 @@ pub enum VisualState {
 }
 
 pub struct Player {
+    pub weapon: Weapon,
     pub health: f32,
     pub input: PlayerInput,
     pub body_handle: BodyHandle,
     pub visual: VisualState,
+    pub spritebatch: Rc<RefCell<SpriteBatch>>,
     pub positional: Positional,
     pub gun: (Rect, Vector2),
     pub hold: (Rect, Vector2),
@@ -52,8 +56,10 @@ impl Player {
         world: &mut World<f32>,
         name: &str,
         health: f32,
+        weapon: Weapon,
         pos: Point2,
         characters: &Characters,
+        spritebatch: Rc<RefCell<SpriteBatch>>,
     ) -> Self {
         let entry = characters.get_entry(name);
         let zombie = characters.get_entry("zombie");
@@ -80,10 +86,12 @@ impl Player {
             .set_collision_groups(collider_handle, col_group);
 
         Player {
+            weapon,
             health,
             input: PlayerInput::default(),
             body_handle: rb,
             visual: VisualState::Stand,
+            spritebatch,
             positional: Positional::default(),
             gun: characters.transform(&entry.gun),
             hold: characters.transform(&entry.hold),
@@ -100,7 +108,9 @@ impl Player {
         }
     }
 
-    pub fn draw(&self, batch: &mut SpriteBatch) {
+    pub fn draw(&self) {
+        let mut batch = self.spritebatch.borrow_mut();
+
         let (rect, scale) = match self.visual {
             VisualState::Gun => {
                 if self.alive() {
@@ -145,6 +155,7 @@ impl Player {
                 }
             }
         };
+
         batch.add(
             DrawParam::new()
                 .src(rect)

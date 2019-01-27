@@ -2,8 +2,8 @@
 #![allow(unused_imports)]
 
 use crate::{
-    exponential_distance, inverse_distance, linear_distance, AiBehavior, BodyHandle, Color,
-    Context, Force2, Point2, Positional, Vector2, World,
+    draw_single_image, exponential_distance, inverse_distance, linear_distance, AiBehavior,
+    BodyHandle, Color, Context, Force2, Player, Point2, Positional, Vector2, World,
 };
 
 use ggez::audio;
@@ -35,7 +35,7 @@ pub trait Enemy {
         world: &mut World<f32>,
     );
     fn rigid_body(&self) -> Option<BodyHandle>;
-    fn image(&self) -> Rc<graphics::Image>;
+    fn draw(&self, ctx: &mut Context);
     fn color(&self) -> Color {
         Color::new(1.0, 1.0, 1.0, 1.0)
     }
@@ -172,8 +172,18 @@ impl Enemy for Bulldozer {
         Some(self.rigid_body)
     }
 
-    fn image(&self) -> Rc<graphics::Image> {
-        self.image.clone()
+    fn draw(&self, ctx: &mut Context) {
+        draw_single_image(
+            ctx,
+            &self.image,
+            self.color(),
+            self.positional.position,
+            3.0,
+            self.positional.rotation,
+        );
+
+        // TODO
+        //self.image.clone()
     }
 
     fn color(&self) -> Color {
@@ -204,7 +214,7 @@ impl Enemy for Bulldozer {
     }
 }
 
-pub struct Sheriff {
+/*pub struct Sheriff {
     image: Rc<graphics::Image>,
     health: f32,
     positional: Positional,
@@ -222,7 +232,7 @@ impl Sheriff {
 
 impl Enemy for Sheriff {
     fn update(
-        &mut self,
+        &mut self,derefmut
         _player_pos: Positional,
         _movement: Option<Movement>,
         _world: &mut World<f32>,
@@ -234,8 +244,8 @@ impl Enemy for Sheriff {
         None
     }
 
-    fn image(&self) -> Rc<graphics::Image> {
-        self.image.clone()
+    fn draw(&self, ctx: &mut Context) {
+        //self.image.clone()
     }
 
     fn health(&self) -> f32 {
@@ -256,5 +266,65 @@ impl Enemy for Sheriff {
 
     fn positional(&self) -> Positional {
         self.positional.clone()
+    }
+}*/
+
+pub struct Swat {
+    pawn: Player,
+}
+
+impl Swat {
+    pub fn new(pawn: Player) -> Self {
+        Swat { pawn }
+    }
+}
+
+impl Enemy for Swat {
+    fn update(
+        &mut self,
+        _player_pos: Positional,
+        _movement: Option<Movement>,
+        _world: &mut World<f32>,
+    ) {
+        //
+    }
+
+    fn rigid_body(&self) -> Option<BodyHandle> {
+        None
+    }
+
+    fn draw(&self, _ctx: &mut Context) {
+        /*draw_single_image(
+            ctx,
+            &self.image,
+            enemy.color(),
+            positional.position,
+            3.0,
+            positional.rotation,
+        );*/
+        self.pawn.draw();
+
+        //self.image.clone()
+        // TODO
+    }
+
+    fn health(&self) -> f32 {
+        self.pawn.health
+    }
+
+    fn damage(&mut self, amount: f32) {
+        self.pawn.damage(amount)
+    }
+
+    fn alive(&self) -> bool {
+        self.pawn.alive()
+    }
+
+    fn closest_target(&self) -> Option<Point2> {
+        None
+    }
+
+    fn positional(&self) -> Positional {
+        self.pawn.positional
     }
 }
