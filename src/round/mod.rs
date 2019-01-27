@@ -408,6 +408,11 @@ impl RoundPhase {
             KeyCode::Key6 => data.player.set_visual(VisualState::Stand),
             KeyCode::Key7 => data.sounds.play_break1(),
             KeyCode::Key8 => data.sounds.play_break2(),
+            KeyCode::Key9 => {
+                if value {
+                    data.sounds.play_taunt()
+                }
+            }
             KeyCode::Key0 => {
                 if data.player.alive() {
                     data.player.damage(13.0);
