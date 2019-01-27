@@ -2,7 +2,7 @@
 
 use crate::{
     draw_map_layer, graphics, px_to_world, Context, KeyCode, MainState, Matrix4, MouseButton,
-    PlayerInput, Point2, Positional, RoundData, Settings, Vector2, Vector3, WorldData,
+    PlayerInput, Point2, Color, Positional, RoundData, Settings, Vector2, Vector3, WorldData,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -33,10 +33,6 @@ impl PreparePhase {
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
-            println!(
-                "STATE: Prepare - round_index: {}, last_round: {}",
-                self.round_index, self.last_round
-            );
             data.player_input = PlayerInput::default();
             self.first_update = false;
         }
@@ -63,6 +59,8 @@ impl PreparePhase {
     }
 
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
+        let window_size = graphics::drawable_size(ctx);
+
         let identity_transform = graphics::transform(ctx);
 
         // Apply our custom transform
@@ -98,6 +96,35 @@ impl PreparePhase {
         // Reset to identity transform for text and splash screen
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
+
+        let text = graphics::Text::new(("Prepare!", data.font, 96.0));
+
+        let text_width = text.width(ctx) as f32;
+        let text_height = text.height(ctx) as f32;
+
+        graphics::draw(
+            ctx,
+            &text,
+            graphics::DrawParam::new()
+                .dest(Point2::new(
+                    ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
+                    (window_size.1 as f32 - text_height - 20.0) + 4.0,
+                ))
+                .color(Color::from((0, 0, 0, 255))),
+        )
+        .unwrap();
+
+        graphics::draw(
+            ctx,
+            &text,
+            graphics::DrawParam::new()
+                .dest(Point2::new(
+                    (window_size.0 as f32 / 2.0) - (text_width / 2.0),
+                    window_size.1 as f32 - text_height - 20.0,
+                ))
+                .color(Color::from((255, 255, 255, 255))),
+        )
+        .unwrap();
     }
 
     pub fn handle_key(

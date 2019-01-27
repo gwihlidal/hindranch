@@ -23,7 +23,6 @@ impl DeadPhase {
     }
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
-            println!("STATE: Dead");
             data.player_input = PlayerInput::default();
             if settings.sounds {
                 self.sounds.play_death();

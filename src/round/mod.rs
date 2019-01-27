@@ -5,7 +5,7 @@ use super::enemy::Swat;
 use crate::{
     draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Context,
     Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, Player,
-    PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState, Weapon,
+    PlayerInput, Point2, Positional, Color, RoundData, Vector2, Vector3, VisualState, Weapon,
     WeaponConfig, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
@@ -76,15 +76,9 @@ impl RoundPhase {
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
-            println!(
-                "STATE: Round - round_index: {}, last_round: {}",
-                self.round_index, self.last_round
-            );
-
             data.player_input = PlayerInput::default();
 
             if settings.enemies {
-                println!("spawn_bulldozers");
                 self.spawn_bulldozers(data, ctx, 8);
 
                 let swat_pawn = Player::new(
@@ -262,6 +256,7 @@ impl RoundPhase {
     }
 
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
+        let window_size = graphics::drawable_size(ctx);
         let identity_transform = graphics::transform(ctx);
 
         // Apply our custom transform
@@ -323,6 +318,37 @@ impl RoundPhase {
         // When drawing via `draw_queued()`, `.offset` in `DrawParam` will be
         // in screen coordinates, and `.color` will be ignored.
         graphics::draw_queued_text(ctx, graphics::DrawParam::default()).unwrap();
+
+        //
+        let text =
+            graphics::Text::new((format!("Round {}", self.round_index + 1), data.font, 96.0));
+
+        let text_width = text.width(ctx) as f32;
+        let text_height = text.height(ctx) as f32;
+
+        graphics::draw(
+            ctx,
+            &text,
+            graphics::DrawParam::new()
+                .dest(Point2::new(
+                    ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
+                    (window_size.1 as f32 - text_height - 20.0) + 4.0,
+                ))
+                .color(Color::from((0, 0, 0, 255))),
+        )
+        .unwrap();
+
+        graphics::draw(
+            ctx,
+            &text,
+            graphics::DrawParam::new()
+                .dest(Point2::new(
+                    (window_size.0 as f32 / 2.0) - (text_width / 2.0),
+                    window_size.1 as f32 - text_height - 20.0,
+                ))
+                .color(Color::from((255, 255, 255, 255))),
+        )
+        .unwrap();
     }
 
     pub fn draw_bullets(&mut self, data: &mut WorldData, ctx: &mut Context) {
