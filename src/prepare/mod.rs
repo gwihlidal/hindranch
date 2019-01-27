@@ -2,7 +2,7 @@
 
 use crate::{
     draw_map_layer, graphics, px_to_world, Context, KeyCode, MainState, Matrix4, MouseButton,
-    PlayerInput, Point2, Positional, RoundData, Settings, Vector2, Vector3, WorldData,
+    PlayerInput, Point2, Color, Positional, RoundData, Settings, Vector2, Vector3, WorldData,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -33,10 +33,6 @@ impl PreparePhase {
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
-            println!(
-                "STATE: Prepare - round_index: {}, last_round: {}",
-                self.round_index, self.last_round
-            );
             data.player.input = PlayerInput::default();
             self.first_update = false;
         }
@@ -63,7 +59,7 @@ impl PreparePhase {
 
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         let window_size = graphics::drawable_size(ctx);
-        
+
         let identity_transform = graphics::transform(ctx);
 
         // Apply our custom transform

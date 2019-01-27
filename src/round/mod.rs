@@ -5,7 +5,7 @@ use super::enemy::Swat;
 use crate::{
     draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Context,
     Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, Player,
-    PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState, Weapon,
+    PlayerInput, Point2, Positional, Color, RoundData, Vector2, Vector3, VisualState, Weapon,
     WeaponConfig, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
@@ -76,11 +76,6 @@ impl RoundPhase {
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
-            println!(
-                "STATE: Round - round_index: {}, last_round: {}",
-                self.round_index, self.last_round
-            );
-
             data.player.input = PlayerInput::default();
 
             if settings.enemies {
@@ -324,9 +319,9 @@ impl RoundPhase {
         // in screen coordinates, and `.color` will be ignored.
         graphics::draw_queued_text(ctx, graphics::DrawParam::default()).unwrap();
 
-        ///
-        
-        let text = graphics::Text::new((format!("Round {}", self.round_index + 1), data.font, 96.0));
+        //
+        let text =
+            graphics::Text::new((format!("Round {}", self.round_index + 1), data.font, 96.0));
 
         let text_width = text.width(ctx) as f32;
         let text_height = text.height(ctx) as f32;
