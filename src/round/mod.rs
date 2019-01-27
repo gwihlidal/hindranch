@@ -105,8 +105,27 @@ impl RoundPhase {
             data.player_input = PlayerInput::default();
 
             if settings.enemies {
-                self.spawn_bulldozers(data, ctx, 3);
-                self.spawn_swat(data, ctx, 3);
+                let (dozer_count, swat_count) = match self.round_index {
+                    0 => {
+                        (settings.round1_dozers, settings.round1_swat)
+                    },
+                    1 => {
+                        (settings.round2_dozers, settings.round2_swat)
+                    },
+                    2 => {
+                        (settings.round3_dozers, settings.round3_swat)
+                    },
+                    3 => {
+                        (settings.round4_dozers, settings.round4_swat)
+                    },
+                    4 => {
+                        (settings.round5_dozers, settings.round5_swat)
+                    },
+                    _ => unimplemented!(),
+                };
+
+                self.spawn_bulldozers(data, ctx, dozer_count as usize);
+                self.spawn_swat(data, ctx, swat_count as usize);
             }
 
             self.first_update = false;
@@ -128,38 +147,21 @@ impl RoundPhase {
         data.player.set_input((&data.player_input).into());
         data.player.update(&mut data.world, &mut data.bullets);
 
-        for (i, enemy) in &mut data.enemies.iter_mut().enumerate() {
-            if settings.dozer_drive && i == 0 {
-                // TODO: Player controlled hack
-                enemy.update(
-                    settings,
-                    enemy.positional(),
-                    Some((&data.player_input).into()),
-                    &mut data.world,
-                    &mut data.bullets,
-                    &mut data.sounds,
-                );
-            } else {
-                enemy.update(
-                    settings,
-                    data.player.positional,
-                    None,
-                    &mut data.world,
-                    &mut data.bullets,
-                    &mut data.sounds,
-                );
-            }
+        for (_i, enemy) in &mut data.enemies.iter_mut().enumerate() {
+            enemy.update(
+                settings,
+                data.player.positional,
+                None,
+                &mut data.world,
+                &mut data.bullets,
+                &mut data.sounds,
+            );
         }
 
         {
-            let (camera_positional, look_ahead, stiffness) =
-                if settings.dozer_drive && data.enemies.len() > 0 {
-                    (data.enemies[0].positional(), 4.0, 0.07)
-                } else {
-                    (data.player.positional, 0.0, 0.3)
-                };
-
-            self.update_camera(data, camera_positional, look_ahead, stiffness);
+            let look_ahead = 0.0;
+            let stiffness = 0.3;
+            self.update_camera(data, data.player.positional, look_ahead, stiffness);
         }
 
         self.maintain_weapons(data);

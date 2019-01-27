@@ -28,8 +28,6 @@ impl PreparePhase {
         round_index: u32,
         last_round: bool,
         round_data: Rc<RefCell<RoundData>>,
-        crate_supplies: u32,
-        rock_supplies: u32,
     ) -> Self {
         PreparePhase {
             first_update: true,
@@ -37,14 +35,34 @@ impl PreparePhase {
             last_round,
             begin_round: false,
             round_data,
-            crate_supplies,
-            rock_supplies,
+            crate_supplies: 0,
+            rock_supplies: 0,
         }
     }
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             data.player_input = PlayerInput::default();
+            let (crate_count, rock_count) = match self.round_index {
+                0 => {
+                    (settings.round1_crates, settings.round1_rocks)
+                },
+                1 => {
+                    (settings.round2_crates, settings.round2_rocks)
+                },
+                2 => {
+                    (settings.round3_crates, settings.round3_rocks)
+                },
+                3 => {
+                    (settings.round4_crates, settings.round4_rocks)
+                },
+                4 => {
+                    (settings.round5_crates, settings.round5_rocks)
+                },
+                _ => unimplemented!(),
+            };
+            self.crate_supplies = crate_count;
+            self.rock_supplies = rock_count;
             self.first_update = false;
         }
 

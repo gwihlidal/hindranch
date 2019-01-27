@@ -481,16 +481,12 @@ impl event::EventHandler for MainState {
                     if phase.begin_game {
                         // Intro is complete; first round preparation!
                         let last_round = self.round_index + 1 == self.round_count;
-                        let crate_supplies = 8;
-                        let rock_supplies = 12;
                         let round_data = Rc::new(RefCell::new(RoundData::new(ctx)));
                         next_phase = Some(Phase::Prepare(PreparePhase::new(
                             ctx,
                             self.round_index,
                             last_round,
                             round_data,
-                            crate_supplies,
-                            rock_supplies,
                         )));
                     }
                 }
@@ -538,15 +534,11 @@ impl event::EventHandler for MainState {
                             // Next round!
                             self.round_index += 1;
                             let last_round = self.round_index + 1 == self.round_count;
-                            let crate_supplies = 8;
-                            let rock_supplies = 12;
                             next_phase = Some(Phase::Prepare(PreparePhase::new(
                                 ctx,
                                 self.round_index,
                                 last_round,
                                 phase.round_data.clone(),
-                                crate_supplies,
-                                rock_supplies,
                             )));
                         }
                     }

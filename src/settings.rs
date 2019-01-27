@@ -16,5 +16,29 @@ pub struct Settings {
     pub voice: bool,
     pub sounds: bool,
     pub enemies: bool,
-    pub dozer_drive: bool,
+
+    pub round1_dozers: u32,
+    pub round1_swat: u32,
+    pub round1_crates: u32,
+    pub round1_rocks: u32,
+
+    pub round2_dozers: u32,
+    pub round2_swat: u32,
+    pub round2_crates: u32,
+    pub round2_rocks: u32,
+
+    pub round3_dozers: u32,
+    pub round3_swat: u32,
+    pub round3_crates: u32,
+    pub round3_rocks: u32,
+
+    pub round4_dozers: u32,
+    pub round4_swat: u32,
+    pub round4_crates: u32,
+    pub round4_rocks: u32,
+
+    pub round5_dozers: u32,
+    pub round5_swat: u32,
+    pub round5_crates: u32,
+    pub round5_rocks: u32,
 }
