@@ -31,6 +31,7 @@ mod sounds;
 mod tile_util;
 mod types;
 mod voice;
+mod weapon;
 
 use self::ai::*;
 use self::characters::*;
@@ -40,6 +41,7 @@ use self::player::*;
 use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
+use self::weapon::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
@@ -70,12 +72,6 @@ struct WallPiece {
 struct SingleImageSpriteBatch {
     batch: graphics::spritebatch::SpriteBatch,
     image_dims: (u32, u32),
-}
-
-struct Bullet {
-    pos: Positional,
-    velocity: f32,
-    life_seconds: f32,
 }
 
 impl SingleImageSpriteBatch {
@@ -118,6 +114,7 @@ struct MainState {
     characters: Characters,
     bullets: Vec<Bullet>,
     player: Player,
+    player_weapon: Weapon,
 
     a: i32,
     direction: i32,
@@ -248,8 +245,9 @@ impl MainState {
             sounds: Sounds::load(ctx),
             characters,
             bullets: Vec::new(),
-
             player,
+            player_weapon: Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
+
             a: 0,
             direction: 1,
             splash,
@@ -571,13 +569,11 @@ impl event::EventHandler for MainState {
 
             self.player.update(&self.settings, &mut self.world);
 
-            if self.player.input.shoot {
-                self.bullets.push(Bullet {
-                    pos: self.player.positional,
-                    velocity: 40.0,
-                    life_seconds: 2.0,
-                });
-            }
+            self.player_weapon.update(
+                self.player.input.shoot,
+                &self.player.positional,
+                &mut self.bullets,
+            );
 
             for bullet in self.bullets.iter_mut() {
                 bullet.pos.position +=
