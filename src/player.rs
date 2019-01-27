@@ -1,8 +1,7 @@
 use super::consts::*;
 use crate::{
-    graphics::spritebatch::SpriteBatch, graphics::DrawParam, settings::Settings, Ball, BodyHandle,
-    Characters, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2,
-    Volumetric, Weapon, World,
+    graphics::spritebatch::SpriteBatch, graphics::DrawParam, Ball, BodyHandle, Characters, Force2,
+    Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2, Volumetric, Weapon, World,
 };
 use nalgebra as na;
 use ncollide2d::world::CollisionGroups;
@@ -182,7 +181,7 @@ impl Player {
         self.visual = visual;
     }
 
-    pub fn update(&mut self, settings: &Settings, world: &mut World<f32>) {
+    pub fn update(&mut self, world: &mut World<f32>) {
         let rigid_body = world.rigid_body_mut(self.body_handle).unwrap();
         let pos = rigid_body.position();
         self.positional.position = pos.translation.vector.into();
@@ -200,7 +199,8 @@ impl Player {
 
         let mut target_vel = Vector2::zeros();
 
-        if !settings.dozer_drive {
+        //if !settings.dozer_drive
+        {
             if self.input.right {
                 target_vel.x += 1.0;
             }

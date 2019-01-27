@@ -1,10 +1,12 @@
 #![allow(unused_imports)]
 
 use super::consts::*;
+use super::enemy::Swat;
 use crate::{
     draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Context,
-    Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, PlayerInput,
-    Point2, Positional, RoundData, Vector2, Vector3, VisualState, WorldData, DESIRED_FPS,
+    Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, Player,
+    PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState, Weapon,
+    WeaponConfig, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -84,6 +86,17 @@ impl RoundPhase {
             if settings.enemies {
                 println!("spawn_bulldozers");
                 self.spawn_bulldozers(data, ctx, 8);
+
+                let swat_pawn = Player::new(
+                    &mut data.world,
+                    "soldier",
+                    1.0,
+                    Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
+                    Point2::new(10.5, 0.5),
+                    &data.characters,
+                    data.character_spritebatch.clone(),
+                );
+                data.enemies.push(Box::new(Swat::new(swat_pawn)));
             }
 
             self.first_update = false;
@@ -102,7 +115,7 @@ impl RoundPhase {
             if data.strategic_view { 0.02 } else { 0.1 },
         );
 
-        data.player.update(&settings, &mut data.world);
+        data.player.update(&mut data.world);
 
         for (i, enemy) in &mut data.enemies.iter_mut().enumerate() {
             if settings.dozer_drive && i == 0 {

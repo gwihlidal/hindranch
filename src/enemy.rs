@@ -284,8 +284,9 @@ impl Enemy for Swat {
         &mut self,
         _player_pos: Positional,
         _movement: Option<Movement>,
-        _world: &mut World<f32>,
+        world: &mut World<f32>,
     ) {
+        self.pawn.update(world);
         //
     }
 
