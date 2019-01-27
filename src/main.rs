@@ -46,6 +46,7 @@ use self::consts::*;
 use self::enemy::*;
 use self::music::*;
 use self::player::*;
+use self::settings::*;
 use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
@@ -442,11 +443,21 @@ impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         while timer::check_update_time(ctx, DESIRED_FPS) {
             match self.phase {
-                Phase::Dead(ref mut phase) => phase.update(ctx),
-                Phase::Intro(ref mut phase) => phase.update(ctx),
-                Phase::Menu(ref mut phase) => phase.update(ctx),
-                Phase::Outro(ref mut phase) => phase.update(ctx),
-                Phase::Prepare(ref mut phase) => phase.update(ctx),
+                Phase::Dead(ref mut phase) => {
+                    phase.update(&self.settings, &mut self.world_data, ctx)
+                }
+                Phase::Intro(ref mut phase) => {
+                    phase.update(&self.settings, &mut self.world_data, ctx)
+                }
+                Phase::Menu(ref mut phase) => {
+                    phase.update(&self.settings, &mut self.world_data, ctx)
+                }
+                Phase::Outro(ref mut phase) => {
+                    phase.update(&self.settings, &mut self.world_data, ctx)
+                }
+                Phase::Prepare(ref mut phase) => {
+                    phase.update(&self.settings, &mut self.world_data, ctx)
+                }
                 Phase::Round(ref mut phase) => {
                     phase.update(&self.settings, &mut self.world_data, ctx)
                 }
@@ -458,12 +469,12 @@ impl event::EventHandler for MainState {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         match self.phase {
-            Phase::Dead(ref mut phase) => phase.draw(ctx),
-            Phase::Intro(ref mut phase) => phase.draw(ctx),
-            Phase::Menu(ref mut phase) => phase.draw(ctx),
-            Phase::Outro(ref mut phase) => phase.draw(ctx),
-            Phase::Prepare(ref mut phase) => phase.draw(ctx),
-            Phase::Round(ref mut phase) => phase.draw(&mut self.world_data, ctx),
+            Phase::Dead(ref mut phase) => phase.draw(&self.settings, &mut self.world_data, ctx),
+            Phase::Intro(ref mut phase) => phase.draw(&self.settings, &mut self.world_data, ctx),
+            Phase::Menu(ref mut phase) => phase.draw(&self.settings, &mut self.world_data, ctx),
+            Phase::Outro(ref mut phase) => phase.draw(&self.settings, &mut self.world_data, ctx),
+            Phase::Prepare(ref mut phase) => phase.draw(&self.settings, &mut self.world_data, ctx),
+            Phase::Round(ref mut phase) => phase.draw(&self.settings, &mut self.world_data, ctx),
         }
 
         graphics::present(ctx)?;
@@ -565,26 +576,46 @@ impl event::EventHandler for MainState {
         }
 
         match self.phase {
-            Phase::Dead(ref mut phase) => phase.handle_key(key_code, true),
-            Phase::Intro(ref mut phase) => phase.handle_key(key_code, true),
-            Phase::Menu(ref mut phase) => phase.handle_key(key_code, true),
-            Phase::Outro(ref mut phase) => phase.handle_key(key_code, true),
-            Phase::Prepare(ref mut phase) => phase.handle_key(key_code, true),
+            Phase::Dead(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, true)
+            }
+            Phase::Intro(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, true)
+            }
+            Phase::Menu(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, true)
+            }
+            Phase::Outro(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, true)
+            }
+            Phase::Prepare(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, true)
+            }
             Phase::Round(ref mut phase) => {
-                phase.handle_key(&mut self.world_data, ctx, key_code, true)
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, true)
             }
         }
     }
 
     fn key_up_event(&mut self, ctx: &mut Context, key_code: KeyCode, _key_mod: KeyMods) {
         match self.phase {
-            Phase::Dead(ref mut phase) => phase.handle_key(key_code, false),
-            Phase::Intro(ref mut phase) => phase.handle_key(key_code, false),
-            Phase::Menu(ref mut phase) => phase.handle_key(key_code, false),
-            Phase::Outro(ref mut phase) => phase.handle_key(key_code, false),
-            Phase::Prepare(ref mut phase) => phase.handle_key(key_code, false),
+            Phase::Dead(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, false)
+            }
+            Phase::Intro(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, false)
+            }
+            Phase::Menu(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, false)
+            }
+            Phase::Outro(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, false)
+            }
+            Phase::Prepare(ref mut phase) => {
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, false)
+            }
             Phase::Round(ref mut phase) => {
-                phase.handle_key(&mut self.world_data, ctx, key_code, false)
+                phase.handle_key(&self.settings, &mut self.world_data, ctx, key_code, false)
             }
         }
     }

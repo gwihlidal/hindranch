@@ -104,7 +104,7 @@ impl RoundPhase {
         data.world.step();
     }
 
-    pub fn draw(&mut self, data: &mut WorldData, ctx: &mut Context) {
+    pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         let identity_transform = graphics::transform(ctx);
 
         // Apply our custom transform
@@ -230,6 +230,7 @@ impl RoundPhase {
 
     pub fn handle_key(
         &mut self,
+        _settings: &Settings,
         data: &mut WorldData,
         ctx: &mut Context,
         keycode: KeyCode,

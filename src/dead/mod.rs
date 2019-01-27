@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Context, KeyCode, MouseButton, Sounds, WorldData};
+use crate::{graphics, Context, KeyCode, MouseButton, Settings, Sounds, WorldData};
 
 pub struct DeadPhase {
     sounds: Sounds,
@@ -16,18 +16,25 @@ impl DeadPhase {
             want_restart: false,
         }
     }
-    pub fn update(&mut self, _ctx: &mut Context) {
+    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             self.sounds.play_death();
             self.first_update = false;
         }
     }
 
-    pub fn draw(&mut self, _ctx: &mut Context) {
+    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         //
     }
 
-    pub fn handle_key(&mut self, key_code: KeyCode, value: bool) {
+    pub fn handle_key(
+        &mut self,
+        _settings: &Settings,
+        _data: &mut WorldData,
+        _ctx: &mut Context,
+        key_code: KeyCode,
+        value: bool,
+    ) {
         if key_code == KeyCode::Space && value {
             self.want_restart = true;
         }

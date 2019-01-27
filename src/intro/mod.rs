@@ -1,19 +1,27 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Context, KeyCode, MouseButton, WorldData};
+use crate::{graphics, Context, KeyCode, MouseButton, Settings, WorldData};
 
 pub struct IntroPhase {}
 
 impl IntroPhase {
-    pub fn update(&mut self, _ctx: &mut Context) {
+    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         //
     }
 
-    pub fn draw(&mut self, _ctx: &mut Context) {
+    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         //
     }
 
-    pub fn handle_key(&mut self, _key_code: KeyCode, _value: bool) {}
+    pub fn handle_key(
+        &mut self,
+        _settings: &Settings,
+        _data: &mut WorldData,
+        _ctx: &mut Context,
+        _key_code: KeyCode,
+        _value: bool,
+    ) {
+    }
 
     pub fn mouse_motion_event(
         &mut self,
