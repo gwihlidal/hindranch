@@ -1,8 +1,9 @@
 #![allow(unused_imports)]
 
 use crate::{
-    draw_map_layer, graphics, px_to_world, Color, Context, KeyCode, MainState, Matrix4,
-    MouseButton, PlayerInput, Point2, Positional, RoundData, Settings, Vector2, Vector3, WorldData,
+    draw_map_layer, draw_shadowed_text, graphics, px_to_world, Color, Context, KeyCode, MainState,
+    Matrix4, MouseButton, PlayerInput, Point2, Positional, RoundData, Settings, Vector2, Vector3,
+    WorldData,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -97,41 +98,47 @@ impl PreparePhase {
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
 
-        let text = graphics::Text::new(("Prepare!", data.font, 96.0));
+        let crates = 12;
+        let crates_text = graphics::Text::new((format!("Crates: {}", crates), data.font, 64.0));
 
+        let rocks = 6;
+        let rocks_text = graphics::Text::new((format!("Rocks: {}", rocks), data.font, 64.0));
+
+        let mut height = 0.0;
+        draw_shadowed_text(
+            ctx,
+            Point2::new(50.0, 20.0 + height),
+            &crates_text,
+            Color::from((255, 255, 255, 255)),
+        );
+        height += 20.0 + crates_text.height(ctx) as f32;
+        draw_shadowed_text(
+            ctx,
+            Point2::new(50.0, 20.0 + height),
+            &rocks_text,
+            Color::from((255, 255, 255, 255)),
+        );
+
+        let text = graphics::Text::new(("Prepare!", data.font, 96.0));
         let text_width = text.width(ctx) as f32;
         let text_height = text.height(ctx) as f32;
 
-        graphics::draw(
+        draw_shadowed_text(
             ctx,
+            Point2::new(
+                ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
+                (window_size.1 as f32 - text_height - 20.0) + 4.0,
+            ),
             &text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(
-                    ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
-                    (window_size.1 as f32 - text_height - 20.0) + 4.0,
-                ))
-                .color(Color::from((0, 0, 0, 255))),
-        )
-        .unwrap();
-
-        graphics::draw(
-            ctx,
-            &text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(
-                    (window_size.0 as f32 / 2.0) - (text_width / 2.0),
-                    window_size.1 as f32 - text_height - 20.0,
-                ))
-                .color(Color::from((255, 255, 255, 255))),
-        )
-        .unwrap();
+            Color::from((255, 255, 255, 255)),
+        );
     }
 
     pub fn handle_key(
         &mut self,
         _settings: &Settings,
         data: &mut WorldData,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         key_code: KeyCode,
         value: bool,
     ) {
@@ -140,6 +147,16 @@ impl PreparePhase {
             KeyCode::A | KeyCode::Left => data.player_input.left = value,
             KeyCode::S | KeyCode::Down => data.player_input.down = value,
             KeyCode::D | KeyCode::Right => data.player_input.right = value,
+            KeyCode::C => {
+                if value {
+                    self.place_crate(data, ctx);
+                }
+            }
+            KeyCode::R => {
+                if value {
+                    self.place_rock(data, ctx);
+                }
+            }
             KeyCode::Back => data.strategic_view = value,
             KeyCode::Space => {
                 if value {
@@ -221,5 +238,13 @@ impl PreparePhase {
             * Matrix4::new_translation(&Vector3::new(-origin.x, -origin.y, 0.0));
 
         data.screen_to_world = data.world_to_screen.try_inverse().unwrap();
+    }
+
+    pub fn place_rock(&mut self, _data: &mut WorldData, _ctx: &mut Context) {
+        //
+    }
+
+    pub fn place_crate(&mut self, _data: &mut WorldData, _ctx: &mut Context) {
+        //
     }
 }

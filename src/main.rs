@@ -223,6 +223,19 @@ struct WallPiece {
     hp: f32,
 }
 
+pub fn draw_shadowed_text(ctx: &mut Context, pos: Point2, text: &graphics::Text, color: Color) {
+    graphics::draw(
+        ctx,
+        text,
+        graphics::DrawParam::new()
+            .dest(pos + Vector2::new(4.0, 4.0))
+            .color(Color::from((0, 0, 0, 255))),
+    )
+    .unwrap();
+
+    graphics::draw(ctx, text, graphics::DrawParam::new().dest(pos).color(color)).unwrap();
+}
+
 struct SingleImageSpriteBatch {
     batch: graphics::spritebatch::SpriteBatch,
     image_dims: (u32, u32),
