@@ -194,7 +194,7 @@ impl PreparePhase {
                 }
             }
             KeyCode::Back => data.strategic_view = value,
-            KeyCode::Space => {
+            KeyCode::Tab => {
                 if value {
                     self.begin_round = true;
                 }

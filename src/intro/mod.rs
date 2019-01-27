@@ -296,10 +296,8 @@ impl IntroPhase {
         key_code: KeyCode,
         value: bool,
     ) {
-        if key_code == KeyCode::Space && value {
+        if key_code == KeyCode::Tab && value {
             self.begin_game = true;
-        } else if key_code == KeyCode::P {
-            //self.sheriff_speaking = !self.sheriff_speaking;
         }
     }
 

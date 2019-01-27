@@ -433,7 +433,7 @@ impl RoundPhase {
             KeyCode::S | KeyCode::Down => data.player_input.down = value,
             KeyCode::D | KeyCode::Right => data.player_input.right = value,
             KeyCode::Back => data.strategic_view = value,
-            KeyCode::Space => {
+            KeyCode::Tab => {
                 if value {
                     self.victory = true;
                 }
