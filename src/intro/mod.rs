@@ -1,10 +1,11 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Context, KeyCode, MouseButton, Settings, WorldData};
+use crate::{graphics, Context, KeyCode, MouseButton, Settings, VoiceQueue, WorldData};
 
 pub struct IntroPhase {
     pub first_update: bool,
     pub begin_game: bool,
+    pub voice_queue: VoiceQueue,
 }
 
 impl IntroPhase {
@@ -12,14 +13,21 @@ impl IntroPhase {
         IntroPhase {
             first_update: true,
             begin_game: false,
+            voice_queue: VoiceQueue::new(),
         }
     }
 
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Intro");
+            if settings.voice {
+                self.voice_queue.enqueue("shout", ctx);
+                self.voice_queue.enqueue("defiance", ctx);
+            }
             self.first_update = false;
         }
+
+        self.voice_queue.process();
     }
 
     pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, ctx: &mut Context) {

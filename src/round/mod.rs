@@ -53,8 +53,6 @@ impl RoundPhase {
             round_data.music_track.play();
         }
 
-        data.voice_queue.process();
-
         self.calculate_view_transform(
             data,
             &ctx,
@@ -344,16 +342,6 @@ impl RoundPhase {
                     if !data.player.alive() {
                         self.failure = true;
                     }
-                }
-            }
-            KeyCode::M => {
-                if let Some(ref mut track) = data.music_track {
-                    track.stop();
-                    data.music_track = None;
-                } else {
-                    let mut music_track = MusicTrack::new("twisted", ctx);
-                    music_track.play();
-                    data.music_track = Some(music_track);
                 }
             }
             KeyCode::W | KeyCode::Up => data.player.input.up = value,
