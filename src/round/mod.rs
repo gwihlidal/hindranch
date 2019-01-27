@@ -2,15 +2,25 @@
 
 use super::consts::*;
 use crate::{
-    draw_map_layer, graphics, px_to_world, settings::Settings, Context, KeyCode, MainState,
-    Matrix4, MouseButton, MusicTrack, Point2, Positional, RoundData, Vector2, Vector3, VisualState,
-    WorldData, DESIRED_FPS,
+    draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Context,
+    Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, Point2,
+    Positional, RoundData, Vector2, Vector3, VisualState, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use na::Isometry2;
+use nalgebra as na;
 use ncollide2d::query::Ray;
+use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use ncollide2d::world::CollisionGroups;
+use nphysics2d::algebra::Force2;
+use nphysics2d::force_generator::{ForceGeneratorHandle, Spring};
+use nphysics2d::object::{BodyHandle, Material};
+use nphysics2d::volumetric::Volumetric;
+use nphysics2d::world::World;
+
+use ggez::audio;
 
 pub struct RoundPhase {
     pub first_update: bool,
@@ -38,6 +48,30 @@ impl RoundPhase {
         }
     }
 
+    fn spawn_bulldozers(&mut self, data: &mut WorldData, ctx: &mut Context, count: usize) {
+        let a_off = rand::random::<f32>() * std::f32::consts::PI;
+
+        // Stratified circular positioning
+        for i in 0..count {
+            let amin = i as f32 / count as f32;
+            let amax = (i + 1) as f32 / count as f32;
+            let a =
+                a_off + (amin + (amax - amin) * rand::random::<f32>()) * std::f32::consts::PI * 2.0;
+
+            const SPAWN_DIST: f32 = DOZER_OUTER_RADIUS;
+
+            let dozer = spawn_dozer(
+                ctx,
+                &mut data.world,
+                data.engine_data.clone(),
+                data.dozer_image.clone(),
+                Point2::new(a.cos() * SPAWN_DIST, a.sin() * SPAWN_DIST),
+                std::f32::consts::PI + a,
+            );
+            data.enemies.push(dozer);
+        }
+    }
+
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             println!(
@@ -45,6 +79,11 @@ impl RoundPhase {
                 self.round_index, self.last_round
             );
             self.first_update = false;
+
+            if settings.enemies {
+                println!("spawn_bulldozers");
+                self.spawn_bulldozers(data, ctx, 8);
+            }
         }
 
         let round_data = self.round_data.clone();
@@ -401,4 +440,49 @@ impl RoundPhase {
     ) {
         data.player.input.shoot = false;
     }
+}
+
+fn spawn_dozer(
+    ctx: &mut Context,
+    world: &mut World<f32>,
+    engine_sound: audio::SoundData,
+    image: Rc<graphics::Image>,
+    pos: Point2,
+    rotation: f32,
+) -> Box<dyn Enemy> {
+    let size = {
+        let rad = 3.0 / 2.0;
+        let size = Vector2::new(image.width() as f32, image.height() as f32);
+        rad * size / size.x.min(size.y)
+    };
+
+    let geom = ShapeHandle::new(Cuboid::new(size));
+    let inertia = geom.inertia(1.0);
+    let center_of_mass = geom.center_of_mass();
+
+    let pos = Isometry2::new(Vector2::new(pos.x, pos.y), rotation);
+    let rb = world.add_rigid_body(pos, inertia, center_of_mass);
+
+    let collider_handle = world.add_collider(
+        COLLIDER_MARGIN,
+        geom.clone(),
+        rb,
+        Isometry2::identity(),
+        Material::new(0.3, 0.5),
+    );
+
+    let mut col_group = CollisionGroups::new();
+    col_group.set_membership(&[COLLISION_GROUP_ENEMY]);
+    world
+        .collision_world_mut()
+        .set_collision_groups(collider_handle, col_group);
+
+    Box::new(Bulldozer::new(
+        ctx,
+        engine_sound,
+        rb,
+        image.clone(),
+        Positional::default(),
+        Some(Box::new(EnemyDozerBehavior::new())),
+    ))
 }

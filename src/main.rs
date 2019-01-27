@@ -236,51 +236,6 @@ struct MainState {
     round_index: u32,
 }
 
-fn spawn_dozer(
-    ctx: &mut Context,
-    world: &mut World<f32>,
-    engine_sound: audio::SoundData,
-    image: Rc<graphics::Image>,
-    pos: Point2,
-    rotation: f32,
-) -> Box<dyn Enemy> {
-    let size = {
-        let rad = 3.0 / 2.0;
-        let size = Vector2::new(image.width() as f32, image.height() as f32);
-        rad * size / size.x.min(size.y)
-    };
-
-    let geom = ShapeHandle::new(Cuboid::new(size));
-    let inertia = geom.inertia(1.0);
-    let center_of_mass = geom.center_of_mass();
-
-    let pos = Isometry2::new(Vector2::new(pos.x, pos.y), rotation);
-    let rb = world.add_rigid_body(pos, inertia, center_of_mass);
-
-    let collider_handle = world.add_collider(
-        COLLIDER_MARGIN,
-        geom.clone(),
-        rb,
-        Isometry2::identity(),
-        Material::new(0.3, 0.5),
-    );
-
-    let mut col_group = CollisionGroups::new();
-    col_group.set_membership(&[COLLISION_GROUP_ENEMY]);
-    world
-        .collision_world_mut()
-        .set_collision_groups(collider_handle, col_group);
-
-    Box::new(Bulldozer::new(
-        ctx,
-        engine_sound,
-        rb,
-        image.clone(),
-        Positional::default(),
-        Some(Box::new(EnemyDozerBehavior::new())),
-    ))
-}
-
 impl MainState {
     fn new(settings: settings::Settings, ctx: &mut Context) -> GameResult<MainState> {
         let mut s = MainState {
@@ -293,35 +248,7 @@ impl MainState {
 
         s.spawn_wall_pieces();
 
-        if settings.enemies {
-            s.spawn_bulldozers(ctx, 8);
-        }
-
         Ok(s)
-    }
-
-    fn spawn_bulldozers(&mut self, ctx: &mut Context, count: usize) {
-        let a_off = rand::random::<f32>() * std::f32::consts::PI;
-
-        // Stratified circular positioning
-        for i in 0..count {
-            let amin = i as f32 / count as f32;
-            let amax = (i + 1) as f32 / count as f32;
-            let a =
-                a_off + (amin + (amax - amin) * rand::random::<f32>()) * std::f32::consts::PI * 2.0;
-
-            const SPAWN_DIST: f32 = DOZER_OUTER_RADIUS;
-
-            let dozer_0 = spawn_dozer(
-                ctx,
-                &mut self.world_data.world,
-                self.world_data.engine_data.clone(),
-                self.world_data.dozer_image.clone(),
-                Point2::new(a.cos() * SPAWN_DIST, a.sin() * SPAWN_DIST),
-                std::f32::consts::PI + a,
-            );
-            self.world_data.enemies.push(dozer_0);
-        }
     }
 
     /// Apply the calculated view transform to the current graphics context
