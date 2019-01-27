@@ -220,47 +220,6 @@ impl RoundPhase {
         data.bullets.retain(|b| b.life_seconds > 0.0);
     }
 
-    fn maintain_walls(&mut self, data: &mut WorldData) {
-        // Dampen wall piece physics and calculate damage
-        for wall_piece in data.wall_pieces.iter_mut() {
-            if let Some(rb) = data.world.rigid_body_mut(wall_piece.rb) {
-                let mut vel = rb.velocity().clone();
-
-                let dmg = MainState::wall_velocity_to_damage(&vel.linear);
-                wall_piece.hp = (wall_piece.hp - dmg).max(0.0);
-
-                if dmg > 0.1 {
-                    data.sounds.play_crash();
-                }
-
-                vel.linear *= 0.95;
-                vel.angular *= 0.95;
-                rb.set_velocity(vel);
-                let mut pos = rb.position().clone();
-                pos.rotation = nalgebra::UnitComplex::from_angle(pos.rotation.angle() * 0.95);
-                rb.set_position(pos);
-            }
-        }
-
-        let wall_pieces_to_remove: Vec<_> = data
-            .wall_pieces
-            .iter()
-            .enumerate()
-            .filter_map(|(i, wp)| if wp.hp <= 0.0 { Some(i) } else { None })
-            .collect();
-
-        for i in wall_pieces_to_remove.into_iter().rev() {
-            let wp = &data.wall_pieces[i];
-            data.world.remove_bodies(&[wp.rb]);
-            data.world.remove_force_generator(wp.spring);
-            data.wall_pieces.swap_remove(i);
-        }
-
-        if data.wall_pieces.is_empty() {
-            self.failure = true;
-        }
-    }
-
     fn maintain_enemies(&mut self, data: &mut WorldData) {
         let mut enemies_killed = Vec::new();
         for (i, e) in data.enemies.iter().enumerate() {

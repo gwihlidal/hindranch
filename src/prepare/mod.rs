@@ -1,14 +1,16 @@
 #![allow(unused_imports)]
 
 use crate::{
-    draw_map_layer, draw_shadowed_text, graphics, px_to_world, Color, Context, KeyCode, MainState,
-    Matrix4, MouseButton, PlayerInput, Point2, tile_id_to_src_rect, TileMapLayerView, get_map_layer, Positional, RoundData, Settings, Vector2, Vector3,
-    WorldData, Isometry2, COLLIDER_MARGIN, WallPiece, Material, ShapeHandle, Cuboid, Volumetric, CollisionGroups, GROUP_WORLD, BodyHandle, Spring,
+    draw_map_layer, draw_shadowed_text, get_map_layer, graphics, px_to_world, tile_id_to_src_rect,
+    BodyHandle, CollisionGroups, Color, Context, Cuboid, Isometry2, KeyCode, MainState, Material,
+    Matrix4, MouseButton, PlayerInput, Point2, Positional, RoundData, Settings, ShapeHandle,
+    Spring, TileMapLayerView, Vector2, Vector3, Volumetric, WallPiece, WorldData, COLLIDER_MARGIN,
+    GROUP_WORLD,
 };
 
+use nalgebra as na;
 use std::cell::RefCell;
 use std::rc::Rc;
-use nalgebra as na;
 
 pub struct PreparePhase {
     pub first_update: bool,
@@ -65,7 +67,7 @@ impl PreparePhase {
         self.update_camera(data, data.player.positional, 0.0, 0.3);
 
         data.maintain_walls();
-        
+
         data.world.step();
 
         if self.crate_supplies == 0 && self.rock_supplies == 0 {
@@ -123,8 +125,10 @@ impl PreparePhase {
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
 
-        let crates_text = graphics::Text::new((format!("Crates: {}", self.crate_supplies), data.font, 64.0));
-        let rocks_text = graphics::Text::new((format!("Rocks: {}", self.rock_supplies), data.font, 64.0));
+        let crates_text =
+            graphics::Text::new((format!("Crates: {}", self.crate_supplies), data.font, 64.0));
+        let rocks_text =
+            graphics::Text::new((format!("Rocks: {}", self.rock_supplies), data.font, 64.0));
 
         let mut height = 0.0;
         draw_shadowed_text(
@@ -135,7 +139,7 @@ impl PreparePhase {
                 Color::from((255, 255, 255, 255))
             } else {
                 Color::from((255, 0, 0, 255))
-            }
+            },
         );
         height += 20.0 + crates_text.height(ctx) as f32;
         draw_shadowed_text(
@@ -146,7 +150,7 @@ impl PreparePhase {
                 Color::from((255, 255, 255, 255))
             } else {
                 Color::from((255, 0, 0, 255))
-            }
+            },
         );
 
         let text = graphics::Text::new(("Prepare!", data.font, 96.0));
@@ -278,11 +282,7 @@ impl PreparePhase {
         data.sounds.play_break2();
 
         let tile_id = 236;
-        let src = tile_id_to_src_rect(
-            tile_id,
-            &data.map,
-            &data.map_tile_image,
-        );
+        let src = tile_id_to_src_rect(tile_id, &data.map, &data.map_tile_image);
 
         let rb = {
             let rad = 0.5 - COLLIDER_MARGIN;
@@ -295,9 +295,7 @@ impl PreparePhase {
             let center_of_mass = geom.center_of_mass();
 
             let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
-            let rb = data
-                .world
-                .add_rigid_body(pos, inertia, center_of_mass);
+            let rb = data.world.add_rigid_body(pos, inertia, center_of_mass);
 
             let collider_handle = data.world.add_collider(
                 COLLIDER_MARGIN,
@@ -340,11 +338,7 @@ impl PreparePhase {
         data.sounds.play_break1();
 
         let tile_id = 128;
-        let src = tile_id_to_src_rect(
-            tile_id,
-            &data.map,
-            &data.map_tile_image,
-        );
+        let src = tile_id_to_src_rect(tile_id, &data.map, &data.map_tile_image);
 
         let rb = {
             let rad = 0.5 - COLLIDER_MARGIN;
@@ -357,9 +351,7 @@ impl PreparePhase {
             let center_of_mass = geom.center_of_mass();
 
             let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
-            let rb = data
-                .world
-                .add_rigid_body(pos, inertia, center_of_mass);
+            let rb = data.world.add_rigid_body(pos, inertia, center_of_mass);
 
             let collider_handle = data.world.add_collider(
                 COLLIDER_MARGIN,
