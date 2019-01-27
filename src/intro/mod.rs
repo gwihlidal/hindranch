@@ -10,7 +10,7 @@ pub struct IntroPhase {
 }
 
 impl IntroPhase {
-    pub fn new(_ctx: &mut Context) -> Self {
+    pub fn new(ctx: &mut Context) -> Self {
         IntroPhase {
             first_update: true,
             begin_game: false,
