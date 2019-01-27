@@ -1,7 +1,8 @@
 #![allow(unused_imports)]
 
 use crate::{
-    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, Point2, Settings, WorldData,
+    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, PlayerInput, Point2,
+    Settings, WorldData,
 };
 
 pub struct OutroPhase {
@@ -19,10 +20,13 @@ impl OutroPhase {
         }
     }
 
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Outro");
-            self.yee_haw.play().unwrap();
+            data.player.input = PlayerInput::default();
+            if settings.sounds {
+                self.yee_haw.play().unwrap();
+            }
             self.first_update = false;
         }
     }
@@ -30,9 +34,9 @@ impl OutroPhase {
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         let window_size = graphics::drawable_size(ctx);
 
-        graphics::clear(ctx, [0.0, 0.0, 0.9, 1.0].into());
+        graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
-        let text = graphics::Text::new(("Yee-Haw!", data.font, 120.0));
+        let text = graphics::Text::new(("Yee-Haw!", data.font, 256.0));
 
         let text_width = text.width(ctx) as f32;
         let text_height = text.height(ctx) as f32;

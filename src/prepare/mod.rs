@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Context, KeyCode, MouseButton, RoundData, Settings, WorldData};
+use crate::{graphics, Context, KeyCode, MouseButton, PlayerInput, RoundData, Settings, WorldData};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -28,18 +28,19 @@ impl PreparePhase {
         }
     }
 
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!(
                 "STATE: Prepare - round_index: {}, last_round: {}",
                 self.round_index, self.last_round
             );
+            data.player.input = PlayerInput::default();
             self.first_update = false;
         }
 
         let round_data = self.round_data.clone();
         let mut round_data = round_data.borrow_mut();
-        if !round_data.music_track.playing() {
+        if settings.music && !round_data.music_track.playing() {
             round_data.music_track.play();
         }
     }

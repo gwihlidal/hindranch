@@ -136,8 +136,14 @@ impl WorldData {
             character_spritebatch.clone(),
         );
 
-        let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf").unwrap();
-        let text = graphics::Text::new(("Hello world!", font, 48.0));
+        //let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf").unwrap();
+        let font = graphics::Font::new(ctx, "/Bleeding_Cowboys.ttf").unwrap();
+        //let font = graphics::Font::new(ctx, "/fonts/RioGrande Striped.ttf").unwrap();
+        //let font = graphics::Font::new(ctx, "/fonts/RioGrande.ttf").unwrap();
+        //let font = graphics::Font::new(ctx, "/fonts/Saddlebag.ttf").unwrap();
+        //let font = graphics::Font::new(ctx, "/fonts/SHADSER.ttf").unwrap();
+
+        let text = graphics::Text::new(("Hello world!", font, 96.0));
 
         WorldData {
             world_to_screen: Matrix4::identity(),
