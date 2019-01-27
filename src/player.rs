@@ -212,6 +212,7 @@ impl Player {
 #[derive(Debug)]
 pub struct PlayerInput {
     pub aim_pos: Point2,
+    pub shoot: bool,
     pub up: bool,
     pub down: bool,
     pub left: bool,
@@ -222,6 +223,7 @@ impl PlayerInput {
     pub fn new() -> PlayerInput {
         PlayerInput {
             aim_pos: Point2::origin(),
+            shoot: false,
             up: false,
             down: false,
             left: false,

@@ -409,6 +409,15 @@ impl MainState {
         }
     }
 
+    fn draw_bullets(&mut self, ctx: &mut Context) {
+        for bullet in self.bullets.iter() {
+            self.bullet_batch
+                .add(bullet.pos.position, 1.0, bullet.pos.rotation);
+        }
+
+        self.bullet_batch.draw_and_clear(ctx);
+    }
+
     fn draw_single_image(
         ctx: &mut Context,
         image: &graphics::Image,
@@ -561,6 +570,18 @@ impl event::EventHandler for MainState {
 
             self.player.update(&self.settings, &mut self.world);
 
+            if self.player.input.shoot {
+                self.bullets.push(Bullet {
+                    pos: self.player.positional,
+                    velocity: 40.0,
+                });
+            }
+
+            for bullet in self.bullets.iter_mut() {
+                bullet.pos.position +=
+                    bullet.pos.forward() * (bullet.velocity / DESIRED_FPS as f32);
+            }
+
             for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
                 if self.settings.dozer_drive && i == 0 {
                     // TODO: Player controlled hack
@@ -632,16 +653,24 @@ impl event::EventHandler for MainState {
         //graphics::set_color(ctx, Color::from((c, c, c, 255)))?;
         graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
-        Self::draw_map_layer(
-            &mut self.map_spritebatch,
-            &self.map,
-            &self.map_tile_image,
-            "Background",
-        );
+        {
+            Self::draw_map_layer(
+                &mut self.map_spritebatch,
+                &self.map,
+                &self.map_tile_image,
+                "Background",
+            );
+            graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
+            self.map_spritebatch.clear();
+        }
 
-        Self::draw_wall_pieces(&self.wall_pieces, &self.world, &mut self.map_spritebatch);
-        graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
-        self.map_spritebatch.clear();
+        self.draw_bullets(ctx);
+
+        {
+            Self::draw_wall_pieces(&self.wall_pieces, &self.world, &mut self.map_spritebatch);
+            graphics::draw(ctx, &self.map_spritebatch, graphics::DrawParam::new()).unwrap();
+            self.map_spritebatch.clear();
+        }
 
         self.player.draw(&mut self.character_spritebatch);
 
@@ -699,6 +728,26 @@ impl event::EventHandler for MainState {
 
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _xrel: f32, _yrel: f32) {
         self.player.input.aim_pos = self.px_to_world(x, y);
+    }
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        _button: event::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) {
+        self.player.input.shoot = true;
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        _button: event::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) {
+        self.player.input.shoot = false;
     }
 
     fn key_down_event(
