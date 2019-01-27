@@ -62,6 +62,38 @@ impl RoundPhase {
 
         data.player.update(&settings, &mut data.world);
 
+        for (i, enemy) in &mut data.enemies.iter_mut().enumerate() {
+            if settings.dozer_drive && i == 0 {
+                // TODO: Player controlled hack
+                enemy.update(
+                    enemy.positional(),
+                    Some((&data.player.input).into()),
+                    &mut data.world,
+                );
+            } else {
+                enemy.update(data.player.positional, None, &mut data.world);
+            }
+        }
+
+        {
+            let (camera_positional, look_ahead, stiffness) =
+                if settings.dozer_drive && data.enemies.len() > 0 {
+                    (data.enemies[0].positional(), 4.0, 0.07)
+                } else {
+                    (data.player.positional, 0.0, 0.3)
+                };
+
+            self.update_camera(data, camera_positional, look_ahead, stiffness);
+        }
+
+        self.maintain_weapons(data);
+        self.maintain_walls(data);
+        self.maintain_enemies(data);
+
+        data.world.step();
+    }
+
+    fn maintain_weapons(&mut self, data: &mut WorldData) {
         data.player_weapon.update(
             data.player.input.shoot,
             &data.player.positional,
@@ -111,31 +143,9 @@ impl RoundPhase {
         }
 
         data.bullets.retain(|b| b.life_seconds > 0.0);
+    }
 
-        for (i, enemy) in &mut data.enemies.iter_mut().enumerate() {
-            if settings.dozer_drive && i == 0 {
-                // TODO: Player controlled hack
-                enemy.update(
-                    enemy.positional(),
-                    Some((&data.player.input).into()),
-                    &mut data.world,
-                );
-            } else {
-                enemy.update(data.player.positional, None, &mut data.world);
-            }
-        }
-
-        {
-            let (camera_positional, look_ahead, stiffness) =
-                if settings.dozer_drive && data.enemies.len() > 0 {
-                    (data.enemies[0].positional(), 4.0, 0.07)
-                } else {
-                    (data.player.positional, 0.0, 0.3)
-                };
-
-            self.update_camera(data, camera_positional, look_ahead, stiffness);
-        }
-
+    fn maintain_walls(&mut self, data: &mut WorldData) {
         // Dampen wall piece physics and calculate damage
         for wall_piece in data.wall_pieces.iter_mut() {
             if let Some(rb) = data.world.rigid_body_mut(wall_piece.rb) {
@@ -167,9 +177,9 @@ impl RoundPhase {
             data.wall_pieces.swap_remove(i);
         }
 
-        self.maintain_enemies(data);
-
-        data.world.step();
+        if data.wall_pieces.is_empty() {
+            self.failure = true;
+        }
     }
 
     fn maintain_enemies(&mut self, data: &mut WorldData) {
