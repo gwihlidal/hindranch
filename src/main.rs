@@ -75,6 +75,7 @@ struct SingleImageSpriteBatch {
 struct Bullet {
     pos: Positional,
     velocity: f32,
+    life_seconds: f32,
 }
 
 impl SingleImageSpriteBatch {
@@ -574,13 +575,17 @@ impl event::EventHandler for MainState {
                 self.bullets.push(Bullet {
                     pos: self.player.positional,
                     velocity: 40.0,
+                    life_seconds: 2.0,
                 });
             }
 
             for bullet in self.bullets.iter_mut() {
                 bullet.pos.position +=
                     bullet.pos.forward() * (bullet.velocity / DESIRED_FPS as f32);
+                bullet.life_seconds -= 1.0 / (DESIRED_FPS as f32);
             }
+
+            self.bullets.retain(|b| b.life_seconds > 0.0);
 
             for (i, enemy) in &mut self.enemies.iter_mut().enumerate() {
                 if self.settings.dozer_drive && i == 0 {
