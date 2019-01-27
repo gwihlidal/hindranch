@@ -5,25 +5,25 @@ enemies = true
 
 round1_dozers = 1
 round1_swat = 0
-round1_crates = 120
-round1_rocks = 8
+round1_crates = 8
+round1_rocks = 4
 
 round2_dozers = 3
 round2_swat = 0
 round2_crates = 12
-round2_rocks = 8
+round2_rocks = 6
 
 round3_dozers = 4
 round3_swat = 1
-round3_crates = 12
+round3_crates = 16
 round3_rocks = 8
 
 round4_dozers = 6
 round4_swat = 2
-round4_crates = 12
-round4_rocks = 8
+round4_crates = 20
+round4_rocks = 10
 
 round5_dozers = 8
 round5_swat = 4
-round5_crates = 12
-round5_rocks = 8
+round5_crates = 24
+round5_rocks = 12
