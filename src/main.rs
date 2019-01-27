@@ -132,7 +132,7 @@ impl WorldData {
             &mut world,
             "woman_green",
             health,
-            Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
+            Weapon::from_config(ctx, WeaponConfig::from_toml("resources/shotgun.toml")),
             Point2::new(0.5, 0.5),
             GROUP_PLAYER,
             &characters,

@@ -92,7 +92,7 @@ impl RoundPhase {
                     &mut data.world,
                     "soldier",
                     0.5,
-                    Weapon::from_config(WeaponConfig::from_toml("resources/swat_smg.toml")),
+                    Weapon::from_config(ctx, WeaponConfig::from_toml("resources/swat_smg.toml")),
                     Point2::new(30.0, 10.0),
                     GROUP_ENEMY,
                     &data.characters,
@@ -203,12 +203,19 @@ impl RoundPhase {
 
             if hit_anything {
                 bullet.life_seconds = 0.0;
-            }
-
-            match hit_victim {
-                BulletHitVictim::Enemy(enemy_i) => data.enemies[enemy_i].damage(bullet.damage),
-                BulletHitVictim::Player => data.player.damage(bullet.damage),
-                BulletHitVictim::None => (),
+                match hit_victim {
+                    BulletHitVictim::Enemy(enemy_i) => {
+                        data.enemies[enemy_i].damage(bullet.damage);
+                        data.sounds.play_bullet_hit();
+                    }
+                    BulletHitVictim::Player => {
+                        data.player.damage(bullet.damage);
+                        data.sounds.play_bullet_hit();
+                    }
+                    BulletHitVictim::None => {
+                        data.sounds.play_ricochet();
+                    }
+                }
             }
         }
 

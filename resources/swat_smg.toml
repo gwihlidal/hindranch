@@ -2,5 +2,6 @@ bullets_per_round = 1
 bullet_velocity = 10
 bullet_life_seconds = 2
 bullet_damage = 0.02
-fire_rate = 30
+fire_rate = 15
 spread_degrees = 20
+sound_file = "/sound/427598__michorvath__ar15-pistol-shot_clipped.ogg"

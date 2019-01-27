@@ -11,6 +11,8 @@ pub struct Sounds {
     taunts: Vec<audio::Source>,
     swat: Vec<audio::Source>,
     crash: Vec<audio::Source>,
+    ricochet: Vec<audio::Source>,
+    bullet_hit: Vec<audio::Source>,
 }
 
 impl Sounds {
@@ -49,6 +51,18 @@ impl Sounds {
         crash.push(audio::Source::new(ctx, "/sound/glass_break2.mp3").unwrap());
         crash.push(audio::Source::new(ctx, "/sound/barrel_break.wav").unwrap());
 
+        let mut ricochet: Vec<audio::Source> = Vec::new();
+        ricochet.push(audio::Source::new(ctx, "/sound/ricochet1.ogg").unwrap());
+        ricochet.push(audio::Source::new(ctx, "/sound/ricochet2.ogg").unwrap());
+        ricochet.push(audio::Source::new(ctx, "/sound/ricochet3.ogg").unwrap());
+        ricochet.push(audio::Source::new(ctx, "/sound/ricochet4.ogg").unwrap());
+
+        let mut bullet_hit: Vec<audio::Source> = Vec::new();
+        bullet_hit.push(audio::Source::new(ctx, "/sound/bullet_hit1.ogg").unwrap());
+        bullet_hit.push(audio::Source::new(ctx, "/sound/bullet_hit2.ogg").unwrap());
+        bullet_hit.push(audio::Source::new(ctx, "/sound/bullet_hit3.ogg").unwrap());
+        bullet_hit.push(audio::Source::new(ctx, "/sound/bullet_hit4.ogg").unwrap());
+
         Sounds {
             death: audio::Source::new(ctx, "/sound/death.wav").unwrap(),
             break1: audio::Source::new(ctx, "/sound/barrel_break.wav").unwrap(),
@@ -57,6 +71,8 @@ impl Sounds {
             taunts,
             swat,
             crash,
+            ricochet,
+            bullet_hit,
         }
     }
 
@@ -88,6 +104,22 @@ impl Sounds {
         snd.set_volume(1.0);
         snd.play().unwrap();
         //}
+    }
+
+    pub fn play_ricochet(&mut self) {
+        let mut rng = thread_rng();
+        let index = rng.gen_range(0, self.ricochet.len());
+        let snd = &mut self.ricochet[index as usize];
+        snd.set_volume(1.0);
+        snd.play().unwrap();
+    }
+
+    pub fn play_bullet_hit(&mut self) {
+        let mut rng = thread_rng();
+        let index = rng.gen_range(0, self.bullet_hit.len());
+        let snd = &mut self.bullet_hit[index as usize];
+        snd.set_volume(1.0);
+        snd.play().unwrap();
     }
 
     pub fn play_swat_gogogo(&mut self) {

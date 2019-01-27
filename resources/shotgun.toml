@@ -4,3 +4,4 @@ bullet_life_seconds = 1
 bullet_damage = 0.1
 fire_rate = 1.5
 spread_degrees = 20
+sound_file = "/sound/266105__marregheriti__shotgun.wav"

@@ -1,4 +1,6 @@
 use super::types::*;
+use crate::Context;
+use ggez::audio;
 use rand::Rng;
 use std::io::Read;
 
@@ -10,7 +12,7 @@ pub struct Bullet {
     pub damage: f32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct WeaponConfig {
     pub bullets_per_round: u32,
     pub bullet_velocity: f32,
@@ -18,6 +20,7 @@ pub struct WeaponConfig {
     pub bullet_damage: f32,
     pub fire_rate: f32,
     pub spread_degrees: f32,
+    pub sound_file: String,
 }
 
 impl WeaponConfig {
@@ -34,11 +37,16 @@ impl WeaponConfig {
 pub struct Weapon {
     cfg: WeaponConfig,
     cooldown: f32,
+    audio_source: audio::Source,
 }
 
 impl Weapon {
-    pub fn from_config(cfg: WeaponConfig) -> Self {
-        Self { cfg, cooldown: 0.0 }
+    pub fn from_config(ctx: &mut Context, cfg: WeaponConfig) -> Self {
+        Self {
+            cfg: cfg.clone(),
+            cooldown: 0.0,
+            audio_source: audio::Source::new(ctx, cfg.sound_file).unwrap(),
+        }
     }
 
     pub fn update(
@@ -50,6 +58,8 @@ impl Weapon {
     ) {
         self.cooldown -= 1.0 / 60.0;
         if shoot && self.cooldown <= 0.0 {
+            self.audio_source.play().unwrap();
+
             self.cooldown = 1.0 / self.cfg.fire_rate;
             let mut rng = rand::thread_rng();
             let half_spread_radians = self.cfg.spread_degrees.max(1e-5).to_radians() * 0.5;
