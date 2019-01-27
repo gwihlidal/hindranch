@@ -169,18 +169,24 @@ impl RoundPhase {
             data.wall_pieces.swap_remove(i);
         }
 
-        let mut killed_anything = false;
-        for e in &data.enemies {
+        let mut enemies_killed = Vec::new();
+        for (i, e) in data.enemies.iter().enumerate() {
             if e.health() <= 0.0 {
                 data.world.remove_bodies(&[e.rigid_body().unwrap()]);
-                killed_anything = true;
+                enemies_killed.push(i);
             }
         }
-        data.enemies.retain(|e| e.health() > 0.0);
 
-        if killed_anything {
+        for i in enemies_killed.iter().rev() {
+            data.enemies.swap_remove(*i);
+        }
+
+        if !enemies_killed.is_empty() {
             // TODO: play a happy sound!
             data.sounds.play_death();
+            if data.enemies.is_empty() {
+                self.victory = true;
+            }
         }
 
         data.world.step();
