@@ -1,0 +1,15 @@
+use crate::{graphics, Context, KeyCode};
+
+pub struct DeadPhase {}
+
+impl DeadPhase {
+    pub fn update(&mut self, ctx: &mut Context) {
+        //
+    }
+
+    pub fn draw(&mut self, ctx: &mut Context) {
+        //
+    }
+
+    pub fn handle_key(&mut self, keycode: KeyCode, value: bool) {}
+}

@@ -32,6 +32,13 @@ mod tile_util;
 mod types;
 mod voice;
 
+mod dead;
+mod intro;
+mod menu;
+mod outro;
+mod prepare;
+mod round;
+
 use self::ai::*;
 use self::characters::*;
 use self::consts::*;
@@ -41,6 +48,13 @@ use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
 
+use self::dead::*;
+use self::intro::*;
+use self::menu::*;
+use self::outro::*;
+use self::prepare::*;
+use self::round::*;
+
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::algebra::Force2;
@@ -49,6 +63,15 @@ use nphysics2d::force_generator::{ForceGeneratorHandle, Spring};
 use nphysics2d::object::{BodyHandle, Material};
 use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
+
+enum Phase {
+    Dead(DeadPhase),
+    Intro(IntroPhase),
+    Menu(MenuPhase),
+    Outro(OutroPhase),
+    Prepare(PreparePhase),
+    Round(RoundPhase),
+}
 
 impl From<&PlayerInput> for Movement {
     fn from(i: &PlayerInput) -> Self {
@@ -108,6 +131,8 @@ impl SingleImageSpriteBatch {
 
 struct MainState {
     settings: settings::Settings,
+
+    phase: Phase,
 
     engine_data: audio::SoundData,
 
@@ -238,6 +263,9 @@ impl MainState {
 
         let mut s = MainState {
             settings: settings.clone(),
+
+            phase: Phase::Round(RoundPhase::new()),
+
             font,
             text,
 
@@ -547,6 +575,15 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        match self.phase {
+            Phase::Dead(ref mut phase) => phase.update(ctx),
+            Phase::Intro(ref mut phase) => phase.update(ctx),
+            Phase::Menu(ref mut phase) => phase.update(ctx),
+            Phase::Outro(ref mut phase) => phase.update(ctx),
+            Phase::Prepare(ref mut phase) => phase.update(ctx),
+            Phase::Round(ref mut phase) => phase.update(ctx),
+        }
+
         self.calculate_view_transform(
             &ctx,
             self.camera_pos,
@@ -647,6 +684,15 @@ impl event::EventHandler for MainState {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        match self.phase {
+            Phase::Dead(ref mut phase) => phase.draw(ctx),
+            Phase::Intro(ref mut phase) => phase.draw(ctx),
+            Phase::Menu(ref mut phase) => phase.draw(ctx),
+            Phase::Outro(ref mut phase) => phase.draw(ctx),
+            Phase::Prepare(ref mut phase) => phase.draw(ctx),
+            Phase::Round(ref mut phase) => phase.draw(ctx),
+        }
+
         let identity_transform = graphics::transform(ctx);
 
         // Apply our custom transform
@@ -792,12 +838,30 @@ impl event::EventHandler for MainState {
                     self.music_track = Some(music_track);
                 }
             }
-            _ => self.handle_key(key_code, true),
+            _ => {
+                self.handle_key(key_code, true);
+                match self.phase {
+                    Phase::Dead(ref mut phase) => phase.handle_key(key_code, true),
+                    Phase::Intro(ref mut phase) => phase.handle_key(key_code, true),
+                    Phase::Menu(ref mut phase) => phase.handle_key(key_code, true),
+                    Phase::Outro(ref mut phase) => phase.handle_key(key_code, true),
+                    Phase::Prepare(ref mut phase) => phase.handle_key(key_code, true),
+                    Phase::Round(ref mut phase) => phase.handle_key(key_code, true),
+                }
+            }
         }
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, key_code: KeyCode, _key_mod: KeyMods) {
         self.handle_key(key_code, false);
+        match self.phase {
+            Phase::Dead(ref mut phase) => phase.handle_key(key_code, false),
+            Phase::Intro(ref mut phase) => phase.handle_key(key_code, false),
+            Phase::Menu(ref mut phase) => phase.handle_key(key_code, false),
+            Phase::Outro(ref mut phase) => phase.handle_key(key_code, false),
+            Phase::Prepare(ref mut phase) => phase.handle_key(key_code, false),
+            Phase::Round(ref mut phase) => phase.handle_key(key_code, false),
+        }
     }
 
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
