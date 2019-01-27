@@ -32,9 +32,9 @@ impl OutroPhase {
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         let window_size = graphics::drawable_size(ctx);
 
-        graphics::clear(ctx, [0.0, 0.0, 0.9, 1.0].into());
+        graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
-        let text = graphics::Text::new(("Yee-Haw!", data.font, 120.0));
+        let text = graphics::Text::new(("Yee-Haw!", data.font, 256.0));
 
         let text_width = text.width(ctx) as f32;
         let text_height = text.height(ctx) as f32;
