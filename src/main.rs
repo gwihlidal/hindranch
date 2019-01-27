@@ -107,7 +107,7 @@ pub struct WorldData {
 }
 
 impl WorldData {
-    pub fn new(settings: settings::Settings, ctx: &mut Context) -> Self {
+    pub fn new(_settings: settings::Settings, ctx: &mut Context) -> Self {
         let map = tiled::parse_file(&Path::new("resources/map.tmx")).unwrap();
         let map_tile_image =
             Image::new(ctx, &map.tilesets[0].images[0].source).expect("opening the tileset image");
