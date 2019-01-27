@@ -12,6 +12,10 @@ impl MusicTrack {
         }
     }
 
+    pub fn playing(&self) -> bool {
+        self.source.playing()
+    }
+
     pub fn play(&mut self) {
         if self.source.paused() {
             self.source.resume();

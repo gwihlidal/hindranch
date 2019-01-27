@@ -46,6 +46,7 @@ use self::consts::*;
 use self::enemy::*;
 use self::player::*;
 use self::sounds::*;
+use self::music::*;
 use self::tile_util::*;
 use self::types::*;
 use self::weapon::*;
@@ -261,7 +262,7 @@ impl MainState {
         let mut s = MainState {
             settings: settings.clone(),
 
-            phase: Phase::Round(RoundPhase::new()),
+            phase: Phase::Round(RoundPhase::new(ctx)),
 
             font,
             text,
