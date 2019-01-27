@@ -4,8 +4,8 @@ use crate::{
     draw_map_layer, draw_shadowed_text, get_map_layer, graphics, px_to_world, tile_id_to_src_rect,
     BodyHandle, CollisionGroups, Color, Context, Cuboid, Isometry2, KeyCode, MainState, Material,
     Matrix4, MouseButton, PlayerInput, Point2, Positional, RoundData, Settings, ShapeHandle,
-    Spring, TileMapLayerView, Vector2, Vector3, Volumetric, WallPiece, WorldData, COLLIDER_MARGIN, VisualState
-    GROUP_WORLD,
+    Spring, TileMapLayerView, Vector2, Vector3, VisualState, Volumetric, WallPiece, WorldData,
+    COLLIDER_MARGIN, GROUP_WORLD,
 };
 
 use nalgebra as na;

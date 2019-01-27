@@ -293,7 +293,7 @@ rate = 1.0
 
 [[lines]]
 name = "prepare4"
-text = "Is that all you've got? Cause I have a lot of crates!"
+text = "Is that all you've got? I have a lot more crates!"
 female = true
 pitch = -10.0
 rate = 1.0
