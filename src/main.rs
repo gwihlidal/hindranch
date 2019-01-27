@@ -71,6 +71,7 @@ use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
 
 pub const DESIRED_FPS: u32 = 60;
+pub const TIME_STEP: f32 = 1.0 / 60.0;
 
 enum Phase {
     Dead(DeadPhase),
@@ -113,7 +114,7 @@ impl WorldData {
         let map_spritebatch = graphics::spritebatch::SpriteBatch::new(map_tile_image.clone());
 
         let mut world = World::new();
-        world.set_timestep(1.0 / 60.0);
+        world.set_timestep(TIME_STEP);
 
         let characters = Characters::load(ctx);
 
@@ -168,6 +169,15 @@ impl WorldData {
             strategic_view: false,
             character_spritebatch,
         }
+    }
+
+    pub fn clear_transients(&mut self, ctx: &mut Context) {
+        for enemy in &self.enemies {
+            self.world.remove_bodies(&[enemy.rigid_body().unwrap()]);
+        }
+
+        self.bullets.clear();
+        self.enemies.clear();
     }
 }
 
@@ -466,6 +476,11 @@ impl event::EventHandler for MainState {
                                 phase.round_data.clone(),
                             )));
                         }
+                    }
+
+                    if next_phase.is_some() {
+                        // Make sure to clean up transients so things like sounds stop playing
+                        self.world_data.clear_transients(ctx);
                     }
                 }
             }

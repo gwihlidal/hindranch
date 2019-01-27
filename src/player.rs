@@ -51,6 +51,31 @@ fn clamp_norm(v: Vector2, max_norm: f32) -> Vector2 {
     }
 }
 
+pub fn add_player_rigid_body(world: &mut World<f32>, pos: Point2) -> BodyHandle {
+    let geom = ShapeHandle::new(Ball::new(0.19));
+    let inertia = geom.inertia(0.1);
+    let center_of_mass = geom.center_of_mass();
+
+    let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
+    let rb = world.add_rigid_body(pos, inertia, center_of_mass);
+
+    let collider_handle = world.add_collider(
+        COLLIDER_MARGIN,
+        geom.clone(),
+        rb,
+        Isometry2::identity(),
+        Material::new(0.0, 0.0),
+    );
+
+    let mut col_group = CollisionGroups::new();
+    col_group.set_membership(&[COLLISION_GROUP_PLAYER]);
+    world
+        .collision_world_mut()
+        .set_collision_groups(collider_handle, col_group);
+
+    rb
+}
+
 impl Player {
     pub fn new(
         world: &mut World<f32>,
@@ -64,26 +89,7 @@ impl Player {
         let entry = characters.get_entry(name);
         let zombie = characters.get_entry("zombie");
 
-        let geom = ShapeHandle::new(Ball::new(0.19));
-        let inertia = geom.inertia(0.1);
-        let center_of_mass = geom.center_of_mass();
-
-        let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
-        let rb = world.add_rigid_body(pos, inertia, center_of_mass);
-
-        let collider_handle = world.add_collider(
-            COLLIDER_MARGIN,
-            geom.clone(),
-            rb,
-            Isometry2::identity(),
-            Material::new(0.0, 0.0),
-        );
-
-        let mut col_group = CollisionGroups::new();
-        col_group.set_membership(&[COLLISION_GROUP_PLAYER]);
-        world
-            .collision_world_mut()
-            .set_collision_groups(collider_handle, col_group);
+        let rb = add_player_rigid_body(world, pos);
 
         Player {
             weapon,
