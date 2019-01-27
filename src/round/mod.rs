@@ -91,7 +91,7 @@ impl RoundPhase {
                     &mut data.world,
                     "soldier",
                     1.0,
-                    Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
+                    Weapon::from_config(WeaponConfig::from_toml("resources/swat_smg.toml")),
                     Point2::new(10.5, 0.5),
                     GROUP_ENEMY,
                     &data.characters,
@@ -361,7 +361,7 @@ impl RoundPhase {
     pub fn draw_bullets(&mut self, data: &mut WorldData, ctx: &mut Context) {
         for bullet in data.bullets.iter() {
             data.bullet_batch
-                .add(bullet.pos.position, 1.0, bullet.pos.rotation);
+                .add(bullet.pos.position, 0.5, bullet.pos.rotation);
         }
 
         data.bullet_batch.draw_and_clear(ctx);

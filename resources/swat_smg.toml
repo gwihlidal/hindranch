@@ -1,0 +1,6 @@
+bullets_per_round = 1
+bullet_velocity = 10
+bullet_life_seconds = 2
+bullet_damage = 0.02
+fire_rate = 30
+spread_degrees = 20

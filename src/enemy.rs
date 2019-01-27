@@ -18,7 +18,7 @@ use ncollide2d::world::CollisionGroups;
 use std::default::Default;
 use std::rc::Rc;
 
-const SWAT_MOVE_SPEED: f32 = 0.5;
+const SWAT_MOVE_SPEED: f32 = 0.75;
 
 pub trait Enemy {
     fn update(
@@ -284,8 +284,10 @@ impl Enemy for Swat {
             }
 
             let player_visible = self.is_player_visible(&player_pos.position, world);
+
             let offset = if player_visible {
-                Vector2::zeros()
+                //Vector2::zeros()
+                clamp_norm(w - pos, SWAT_MOVE_SPEED * 0.5)
             } else {
                 clamp_norm(w - pos, SWAT_MOVE_SPEED)
             };
