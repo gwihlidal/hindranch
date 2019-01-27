@@ -2,11 +2,13 @@
 
 use crate::{
     draw_map_layer, draw_shadowed_text, graphics, px_to_world, Color, Context, KeyCode, MainState,
-    Matrix4, MouseButton, PlayerInput, Point2, Positional, RoundData, Settings, Vector2, Vector3,
-    WorldData,
+    Matrix4, MouseButton, PlayerInput, Point2, tile_id_to_src_rect, TileMapLayerView, get_map_layer, Positional, RoundData, Settings, Vector2, Vector3,
+    WorldData, Isometry2, COLLIDER_MARGIN, WallPiece, Material, ShapeHandle, Cuboid, Volumetric, CollisionGroups, GROUP_WORLD, BodyHandle, Spring,
 };
+
 use std::cell::RefCell;
 use std::rc::Rc;
+use nalgebra as na;
 
 pub struct PreparePhase {
     pub first_update: bool,
@@ -14,6 +16,8 @@ pub struct PreparePhase {
     pub last_round: bool,
     pub begin_round: bool,
     pub round_data: Rc<RefCell<RoundData>>,
+    pub crate_supplies: u32,
+    pub rock_supplies: u32,
 }
 
 impl PreparePhase {
@@ -22,6 +26,8 @@ impl PreparePhase {
         round_index: u32,
         last_round: bool,
         round_data: Rc<RefCell<RoundData>>,
+        crate_supplies: u32,
+        rock_supplies: u32,
     ) -> Self {
         PreparePhase {
             first_update: true,
@@ -29,6 +35,8 @@ impl PreparePhase {
             last_round,
             begin_round: false,
             round_data,
+            crate_supplies,
+            rock_supplies,
         }
     }
 
@@ -56,7 +64,13 @@ impl PreparePhase {
 
         self.update_camera(data, data.player.positional, 0.0, 0.3);
 
+        data.maintain_walls();
+        
         data.world.step();
+
+        if self.crate_supplies == 0 && self.rock_supplies == 0 {
+            self.begin_round = true;
+        }
     }
 
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
@@ -86,6 +100,17 @@ impl PreparePhase {
             data.map_spritebatch.clear();
         }
 
+        {
+            draw_map_layer(
+                &mut data.map_spritebatch,
+                &data.map,
+                &data.map_tile_image,
+                "Props",
+            );
+            graphics::draw(ctx, &data.map_spritebatch, graphics::DrawParam::new()).unwrap();
+            data.map_spritebatch.clear();
+        }
+
         data.player.draw();
 
         {
@@ -98,25 +123,30 @@ impl PreparePhase {
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
 
-        let crates = 12;
-        let crates_text = graphics::Text::new((format!("Crates: {}", crates), data.font, 64.0));
-
-        let rocks = 6;
-        let rocks_text = graphics::Text::new((format!("Rocks: {}", rocks), data.font, 64.0));
+        let crates_text = graphics::Text::new((format!("Crates: {}", self.crate_supplies), data.font, 64.0));
+        let rocks_text = graphics::Text::new((format!("Rocks: {}", self.rock_supplies), data.font, 64.0));
 
         let mut height = 0.0;
         draw_shadowed_text(
             ctx,
             Point2::new(50.0, 20.0 + height),
             &crates_text,
-            Color::from((255, 255, 255, 255)),
+            if self.crate_supplies > 0 {
+                Color::from((255, 255, 255, 255))
+            } else {
+                Color::from((255, 0, 0, 255))
+            }
         );
         height += 20.0 + crates_text.height(ctx) as f32;
         draw_shadowed_text(
             ctx,
             Point2::new(50.0, 20.0 + height),
             &rocks_text,
-            Color::from((255, 255, 255, 255)),
+            if self.rock_supplies > 0 {
+                Color::from((255, 255, 255, 255))
+            } else {
+                Color::from((255, 0, 0, 255))
+            }
         );
 
         let text = graphics::Text::new(("Prepare!", data.font, 96.0));
@@ -148,13 +178,15 @@ impl PreparePhase {
             KeyCode::S | KeyCode::Down => data.player_input.down = value,
             KeyCode::D | KeyCode::Right => data.player_input.right = value,
             KeyCode::C => {
-                if value {
-                    self.place_crate(data, ctx);
+                if value && self.crate_supplies > 0 {
+                    self.place_crate(data.player.positional.position, data, ctx);
+                    self.crate_supplies -= 1;
                 }
             }
             KeyCode::R => {
-                if value {
-                    self.place_rock(data, ctx);
+                if value && self.rock_supplies > 0 {
+                    self.place_rock(data.player.positional.position, data, ctx);
+                    self.rock_supplies -= 1;
                 }
             }
             KeyCode::Back => data.strategic_view = value,
@@ -240,11 +272,127 @@ impl PreparePhase {
         data.screen_to_world = data.world_to_screen.try_inverse().unwrap();
     }
 
-    pub fn place_rock(&mut self, _data: &mut WorldData, _ctx: &mut Context) {
-        //
+    pub fn place_rock(&mut self, pos: Point2, data: &mut WorldData, _ctx: &mut Context) {
+        //let view = TileMapLayerView::new(get_map_layer(&data.map, "Props"));
+
+        data.sounds.play_break2();
+
+        let tile_id = 236;
+        let src = tile_id_to_src_rect(
+            tile_id,
+            &data.map,
+            &data.map_tile_image,
+        );
+
+        let rb = {
+            let rad = 0.5 - COLLIDER_MARGIN;
+
+            // Sim as balls for less coupling between elements
+            //let geom = ShapeHandle::new(Ball::new(rad));
+            let geom = ShapeHandle::new(Cuboid::new(Vector2::new(rad, rad)));
+
+            let inertia = geom.inertia(10.0);
+            let center_of_mass = geom.center_of_mass();
+
+            let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
+            let rb = data
+                .world
+                .add_rigid_body(pos, inertia, center_of_mass);
+
+            let collider_handle = data.world.add_collider(
+                COLLIDER_MARGIN,
+                geom.clone(),
+                rb,
+                Isometry2::identity(),
+                Material::new(0.3, 0.0),
+            );
+
+            let mut col_group = CollisionGroups::new();
+            col_group.set_membership(&[GROUP_WORLD]);
+            data.world
+                .collision_world_mut()
+                .set_collision_groups(collider_handle, col_group);
+
+            rb
+        };
+
+        let spring = data.world.add_force_generator(Spring::new(
+            BodyHandle::ground(),
+            rb,
+            pos,
+            Point2::origin(),
+            0.0,
+            100.0,
+        ));
+
+        data.wall_pieces.push(WallPiece {
+            tile_snip: src,
+            rb,
+            spring,
+            hp: 1.0,
+            placed: true,
+        });
     }
 
-    pub fn place_crate(&mut self, _data: &mut WorldData, _ctx: &mut Context) {
-        //
+    pub fn place_crate(&mut self, pos: Point2, data: &mut WorldData, _ctx: &mut Context) {
+        //let view = TileMapLayerView::new(get_map_layer(&data.map, "Props"));
+
+        data.sounds.play_break1();
+
+        let tile_id = 128;
+        let src = tile_id_to_src_rect(
+            tile_id,
+            &data.map,
+            &data.map_tile_image,
+        );
+
+        let rb = {
+            let rad = 0.5 - COLLIDER_MARGIN;
+
+            // Sim as balls for less coupling between elements
+            //let geom = ShapeHandle::new(Ball::new(rad));
+            let geom = ShapeHandle::new(Cuboid::new(Vector2::new(rad, rad)));
+
+            let inertia = geom.inertia(10.0);
+            let center_of_mass = geom.center_of_mass();
+
+            let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
+            let rb = data
+                .world
+                .add_rigid_body(pos, inertia, center_of_mass);
+
+            let collider_handle = data.world.add_collider(
+                COLLIDER_MARGIN,
+                geom.clone(),
+                rb,
+                Isometry2::identity(),
+                Material::new(0.3, 0.0),
+            );
+
+            let mut col_group = CollisionGroups::new();
+            col_group.set_membership(&[GROUP_WORLD]);
+            data.world
+                .collision_world_mut()
+                .set_collision_groups(collider_handle, col_group);
+
+            rb
+        };
+
+        let spring = data.world.add_force_generator(Spring::new(
+            BodyHandle::ground(),
+            rb,
+            pos,
+            Point2::origin(),
+            0.0,
+            100.0,
+        ));
+
+        data.wall_pieces.push(WallPiece {
+            tile_snip: src,
+            rb,
+            spring,
+            hp: 1.0,
+            placed: true,
+        });
     }
 }

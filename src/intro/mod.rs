@@ -218,6 +218,17 @@ impl IntroPhase {
             data.map_spritebatch.clear();
         }
 
+        {
+            draw_map_layer(
+                &mut data.map_spritebatch,
+                &data.map,
+                &data.map_tile_image,
+                "Props",
+            );
+            graphics::draw(ctx, &data.map_spritebatch, graphics::DrawParam::new()).unwrap();
+            data.map_spritebatch.clear();
+        }
+
         let character_spritebatch = &mut *data.character_spritebatch.borrow_mut();
 
         character_spritebatch.add(

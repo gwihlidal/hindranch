@@ -182,6 +182,39 @@ impl WorldData {
         self.bullets.clear();
         self.enemies.clear();
     }
+
+    pub fn maintain_walls(&mut self) {
+        // Dampen wall piece physics and calculate damage
+        for wall_piece in self.wall_pieces.iter_mut() {
+            if let Some(rb) = self.world.rigid_body_mut(wall_piece.rb) {
+                let mut vel = rb.velocity().clone();
+
+                wall_piece.hp =
+                    (wall_piece.hp - MainState::wall_velocity_to_damage(&vel.linear)).max(0.0);
+
+                vel.linear *= 0.95;
+                vel.angular *= 0.95;
+                rb.set_velocity(vel);
+                let mut pos = rb.position().clone();
+                pos.rotation = nalgebra::UnitComplex::from_angle(pos.rotation.angle() * 0.95);
+                rb.set_position(pos);
+            }
+        }
+
+        let wall_pieces_to_remove: Vec<_> = self
+            .wall_pieces
+            .iter()
+            .enumerate()
+            .filter_map(|(i, wp)| if wp.hp <= 0.0 { Some(i) } else { None })
+            .collect();
+
+        for i in wall_pieces_to_remove.into_iter().rev() {
+            let wp = &self.wall_pieces[i];
+            self.world.remove_bodies(&[wp.rb]);
+            self.world.remove_force_generator(wp.spring);
+            self.wall_pieces.swap_remove(i);
+        }
+    }
 }
 
 pub struct RoundData {
@@ -221,6 +254,7 @@ struct WallPiece {
     rb: BodyHandle,
     spring: ForceGeneratorHandle,
     hp: f32,
+    placed: bool,
 }
 
 pub fn draw_shadowed_text(ctx: &mut Context, pos: Point2, text: &graphics::Text, color: Color) {
@@ -380,6 +414,7 @@ impl MainState {
                 rb,
                 spring,
                 hp: 1.0,
+                placed: false,
             });
         }
     }
@@ -442,12 +477,16 @@ impl event::EventHandler for MainState {
                     if phase.begin_game {
                         // Intro is complete; first round preparation!
                         let last_round = self.round_index + 1 == self.round_count;
+                        let crate_supplies = 8;
+                        let rock_supplies = 12;
                         let round_data = Rc::new(RefCell::new(RoundData::new(ctx)));
                         next_phase = Some(Phase::Prepare(PreparePhase::new(
                             ctx,
                             self.round_index,
                             last_round,
                             round_data,
+                            crate_supplies,
+                            rock_supplies,
                         )));
                     }
                 }
@@ -495,11 +534,15 @@ impl event::EventHandler for MainState {
                             // Next round!
                             self.round_index += 1;
                             let last_round = self.round_index + 1 == self.round_count;
+                            let crate_supplies = 8;
+                            let rock_supplies = 12;
                             next_phase = Some(Phase::Prepare(PreparePhase::new(
                                 ctx,
                                 self.round_index,
                                 last_round,
                                 phase.round_data.clone(),
+                                crate_supplies,
+                                rock_supplies,
                             )));
                         }
                     }

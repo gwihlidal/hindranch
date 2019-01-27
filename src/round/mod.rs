@@ -155,10 +155,14 @@ impl RoundPhase {
         }
 
         self.maintain_weapons(data);
-        self.maintain_walls(data);
+        data.maintain_walls();
         self.maintain_enemies(data);
 
         if !data.player.alive() {
+            self.failure = true;
+        }
+
+        if data.wall_pieces.is_empty() {
             self.failure = true;
         }
 
@@ -298,13 +302,24 @@ impl RoundPhase {
             data.map_spritebatch.clear();
         }
 
-        self.draw_bullets(data, ctx);
-
         {
             MainState::draw_wall_pieces(&data.wall_pieces, &data.world, &mut data.map_spritebatch);
             graphics::draw(ctx, &data.map_spritebatch, graphics::DrawParam::new()).unwrap();
             data.map_spritebatch.clear();
         }
+
+        {
+            draw_map_layer(
+                &mut data.map_spritebatch,
+                &data.map,
+                &data.map_tile_image,
+                "Props",
+            );
+            graphics::draw(ctx, &data.map_spritebatch, graphics::DrawParam::new()).unwrap();
+            data.map_spritebatch.clear();
+        }
+
+        self.draw_bullets(data, ctx);
 
         //data.player.draw(&mut data.character_spritebatch);
         data.player.draw();
