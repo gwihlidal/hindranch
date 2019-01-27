@@ -1,4 +1,6 @@
 use super::types::*;
+use crate::{DrawParam, Image, Rect, SpriteBatch};
+use nalgebra as na;
 
 pub struct TileMapLayerView<'a> {
     pub layer: &'a tiled::Layer,
@@ -81,4 +83,69 @@ impl<'a> Iterator for TileMapLayerViewIterator<'a> {
             tile_id,
         })
     }
+}
+
+pub fn tile_id_to_src_rect(tile: u32, map: &tiled::Map, image: &Image) -> Rect {
+    let tile_width = map.tile_width;
+    let tile_height = map.tile_height;
+
+    let tile_w = tile_width as f32 / image.width() as f32;
+    let tile_h = tile_height as f32 / image.height() as f32;
+
+    let tile_column_count = (image.width() as usize) / (tile_width as usize);
+
+    let tile_c = (tile as usize % tile_column_count) as f32;
+    let tile_r = (tile as usize / tile_column_count) as f32;
+
+    Rect::new(tile_w * tile_c, tile_h * tile_r, tile_w, tile_h)
+}
+
+pub fn get_map_layer<'a>(map: &'a tiled::Map, layer_name: &str) -> &'a tiled::Layer {
+    let layer_idx = map
+        .layers
+        .iter()
+        .position(|layer| layer.name == layer_name)
+        .unwrap();
+
+    &map.layers[layer_idx]
+}
+
+// Inspired by https://github.com/FloVanGH/pg-engine/blob/master/src/drawing.rs
+pub fn draw_map_layer(batch: &mut SpriteBatch, map: &tiled::Map, image: &Image, layer_name: &str) {
+    //let map = &self.map;
+    let layer = get_map_layer(map, layer_name);
+
+    let tile_width = map.tile_width;
+    let scale = 1.0 / tile_width as f32;
+
+    let start_column = 0;
+    let start_row = 0;
+    let end_column = map.width;
+    let end_row = map.height;
+
+    // TODO: figure out the extents to draw
+    let view = TileMapLayerView {
+        layer,
+        start_x: start_column,
+        end_x: end_column,
+        start_y: start_row,
+        end_y: end_row,
+    };
+
+    for MapTile { tile_id, pos } in view.iter() {
+        let src = tile_id_to_src_rect(tile_id, map, image);
+        batch.add(
+            DrawParam::new()
+                .src(src)
+                .dest(pos - Vector2::new(0.5, 0.5))
+                .scale(Vector2::new(scale, -scale))
+                .offset(Point2::new(0.5, 0.5)),
+        );
+    }
+}
+
+pub fn px_to_world(screen_to_world: Matrix4, x: f32, y: f32) -> Point2 {
+    (screen_to_world * na::Vector4::new(x, y, 0.0, 1.0))
+        .xy()
+        .into()
 }

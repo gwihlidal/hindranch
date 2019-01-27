@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_imports)]
 
 use crate::{
     exponential_distance, inverse_distance, linear_distance, AiBehavior, BodyHandle, Context,
