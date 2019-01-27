@@ -85,7 +85,7 @@ impl IntroPhase {
         // Apply our custom transform
         MainState::apply_view_transform(ctx, data.world_to_screen);
 
-        graphics::clear(ctx, [0.1, 0.2, 0.9, 1.0].into());
+        graphics::clear(ctx, [0.1, 0.2, 0.3, 1.0].into());
 
         {
             draw_map_layer(
