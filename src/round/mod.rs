@@ -117,6 +117,7 @@ impl RoundPhase {
             if settings.dozer_drive && i == 0 {
                 // TODO: Player controlled hack
                 enemy.update(
+                    settings,
                     enemy.positional(),
                     Some((&data.player_input).into()),
                     &mut data.world,
@@ -124,6 +125,7 @@ impl RoundPhase {
                 );
             } else {
                 enemy.update(
+                    settings,
                     data.player.positional,
                     None,
                     &mut data.world,

@@ -3,7 +3,7 @@
 
 use crate::{
     draw_single_image, exponential_distance, inverse_distance, linear_distance, AiBehavior,
-    BodyHandle, Bullet, Color, Context, Force2, Movement, PawnInput, Player, Point2, Positional,
+    BodyHandle, Bullet, Color, Context, Force2, Movement, Settings, PawnInput, Player, Point2, Positional,
     Vector2, World,
 };
 
@@ -18,6 +18,7 @@ use std::rc::Rc;
 pub trait Enemy {
     fn update(
         &mut self,
+        settings: &Settings,
         player_pos: Positional,
         movement: Option<Movement>,
         world: &mut World<f32>,
@@ -121,6 +122,7 @@ impl Bulldozer {
 impl Enemy for Bulldozer {
     fn update(
         &mut self,
+        settings: &Settings,
         player_pos: Positional,
         movement: Option<Movement>,
         world: &mut World<f32>,
@@ -135,18 +137,20 @@ impl Enemy for Bulldozer {
         //self.engine_source.set_ears(na::Point3::new(player_pos.position.x, player_pos.position.y, 1.0), na::Point3::new(player_pos.position.x, player_pos.position.y, 1.0));
         //self.engine_source.set_position(na::Point3::new(self.positional.position.x, self.positional.position.y, 1.0));
 
-        let max = 1000.0;
-        let min = 4.0;
-        let roll_off = 1.5;
+        if settings.sounds {
+            let max = 1000.0;
+            let min = 4.0;
+            let roll_off = 1.5;
 
-        let ear_distance = na::distance(&player_pos.position, &self.positional.position);
-        let volume = exponential_distance(ear_distance, min, max, roll_off);
-        //println!("Volume: {}", volume);
+            let ear_distance = na::distance(&player_pos.position, &self.positional.position);
+            let volume = exponential_distance(ear_distance, min, max, roll_off);
+            //println!("Volume: {}", volume);
 
-        self.engine_source.set_volume(volume);
+            self.engine_source.set_volume(volume);
 
-        if !self.engine_source.playing() {
-            self.engine_source.play().unwrap();
+            if !self.engine_source.playing() {
+                self.engine_source.play().unwrap();
+            }
         }
 
         self.time_since_last_damage += 1.0 / 60.0;
@@ -227,6 +231,7 @@ impl Swat {
 impl Enemy for Swat {
     fn update(
         &mut self,
+        _settings: &Settings,
         _player_pos: Positional,
         _movement: Option<Movement>,
         world: &mut World<f32>,
