@@ -2,15 +2,28 @@
 
 use crate::{graphics, Context, KeyCode, MouseButton, Settings, WorldData};
 
-pub struct OutroPhase {}
+pub struct OutroPhase {
+    pub first_update: bool,
+    pub want_restart: bool,
+}
 
 impl OutroPhase {
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
-        //
+    pub fn new(ctx: &mut Context) -> Self {
+        OutroPhase {
+            first_update: true,
+            want_restart: false,
+        }
     }
 
-    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
-        //
+    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+        if self.first_update {
+            println!("STATE: Outro");
+            self.first_update = false;
+        }
+    }
+
+    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, ctx: &mut Context) {
+        graphics::clear(ctx, [0.0, 0.0, 0.9, 1.0].into());
     }
 
     pub fn handle_key(
@@ -18,9 +31,12 @@ impl OutroPhase {
         _settings: &Settings,
         _data: &mut WorldData,
         _ctx: &mut Context,
-        _key_code: KeyCode,
-        _value: bool,
+        key_code: KeyCode,
+        value: bool,
     ) {
+        if key_code == KeyCode::Space && value {
+            self.want_restart = true;
+        }
     }
 
     pub fn mouse_motion_event(

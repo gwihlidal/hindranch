@@ -16,6 +16,7 @@ use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::timer;
 use ggez::{Context, GameResult};
 use nalgebra as na;
+use std::cell::RefCell;
 use std::env;
 use std::path::{self, Path};
 use std::rc::Rc;
@@ -179,6 +180,18 @@ impl WorldData {
     }
 }
 
+pub struct RoundData {
+    music_track: MusicTrack,
+}
+
+impl RoundData {
+    pub fn new(ctx: &mut Context) -> Self {
+        RoundData {
+            music_track: MusicTrack::new("twisted", ctx),
+        }
+    }
+}
+
 impl From<&PlayerInput> for Movement {
     fn from(i: &PlayerInput) -> Self {
         Self {
@@ -233,6 +246,8 @@ struct MainState {
     world_data: WorldData,
     settings: settings::Settings,
     phase: Phase,
+    round_count: u32,
+    round_index: u32,
 }
 
 fn spawn_dozer(
@@ -285,7 +300,9 @@ impl MainState {
         let mut s = MainState {
             world_data: WorldData::new(settings.clone(), ctx),
             settings: settings.clone(),
-            phase: Phase::Round(RoundPhase::new(ctx)),
+            phase: Phase::Menu(MenuPhase::new(ctx)),
+            round_count: 5,
+            round_index: 0,
         };
 
         s.spawn_wall_pieces();
@@ -457,25 +474,86 @@ impl MainState {
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         while timer::check_update_time(ctx, DESIRED_FPS) {
+            let mut next_phase: Option<Phase> = None;
             match self.phase {
                 Phase::Dead(ref mut phase) => {
-                    phase.update(&self.settings, &mut self.world_data, ctx)
+                    phase.update(&self.settings, &mut self.world_data, ctx);
+                    if phase.want_restart {
+                        // Dead player wants to go back to the menu and try again
+                        next_phase = Some(Phase::Menu(MenuPhase::new(ctx)));
+                    }
                 }
                 Phase::Intro(ref mut phase) => {
-                    phase.update(&self.settings, &mut self.world_data, ctx)
+                    phase.update(&self.settings, &mut self.world_data, ctx);
+                    if phase.begin_game {
+                        // Intro is complete; first round preparation!
+                        let last_round = self.round_index + 1 == self.round_count;
+                        let round_data = Rc::new(RefCell::new(RoundData::new(ctx)));
+                        next_phase = Some(Phase::Prepare(PreparePhase::new(
+                            ctx,
+                            self.round_index,
+                            last_round,
+                            round_data,
+                        )));
+                    }
                 }
                 Phase::Menu(ref mut phase) => {
-                    phase.update(&self.settings, &mut self.world_data, ctx)
+                    phase.update(&self.settings, &mut self.world_data, ctx);
+                    if phase.start_game {
+                        // Reset round index
+                        self.round_index = 0;
+
+                        // Player wants to start the game; go to intro
+                        next_phase = Some(Phase::Intro(IntroPhase::new(ctx)));
+                    }
                 }
                 Phase::Outro(ref mut phase) => {
-                    phase.update(&self.settings, &mut self.world_data, ctx)
+                    phase.update(&self.settings, &mut self.world_data, ctx);
+                    if phase.want_restart {
+                        // Winning player wants to go back to the menu
+                        next_phase = Some(Phase::Menu(MenuPhase::new(ctx)));
+                    }
                 }
                 Phase::Prepare(ref mut phase) => {
-                    phase.update(&self.settings, &mut self.world_data, ctx)
+                    phase.update(&self.settings, &mut self.world_data, ctx);
+                    if phase.begin_round {
+                        let round_data = phase.round_data.clone();
+                        // Preparation is done; go to round!
+                        next_phase = Some(Phase::Round(RoundPhase::new(
+                            ctx,
+                            phase.round_index,
+                            phase.last_round,
+                            round_data,
+                        )));
+                    }
                 }
                 Phase::Round(ref mut phase) => {
-                    phase.update(&self.settings, &mut self.world_data, ctx)
+                    phase.update(&self.settings, &mut self.world_data, ctx);
+                    if phase.failure {
+                        // Player failed; go to dead phase
+                        next_phase = Some(Phase::Dead(DeadPhase::new(ctx)));
+                    } else if phase.victory {
+                        // Round was a success
+                        if phase.last_round {
+                            // Won the game!
+                            next_phase = Some(Phase::Outro(OutroPhase::new(ctx)));
+                        } else {
+                            // Next round!
+                            self.round_index += 1;
+                            let last_round = self.round_index + 1 == self.round_count;
+                            next_phase = Some(Phase::Prepare(PreparePhase::new(
+                                ctx,
+                                self.round_index,
+                                last_round,
+                                phase.round_data.clone(),
+                            )));
+                        }
+                    }
                 }
+            }
+
+            if let Some(next_phase) = next_phase {
+                self.phase = next_phase;
             }
         }
 
