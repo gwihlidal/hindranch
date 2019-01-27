@@ -19,10 +19,12 @@ impl OutroPhase {
         }
     }
 
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Outro");
-            self.yee_haw.play().unwrap();
+            if settings.sounds {
+                self.yee_haw.play().unwrap();
+            }
             self.first_update = false;
         }
     }

@@ -1,11 +1,12 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Context, KeyCode, MouseButton, Settings, VoiceQueue, WorldData};
+use crate::{graphics, Context, KeyCode, MouseButton, MusicTrack, Settings, VoiceQueue, WorldData};
 
 pub struct IntroPhase {
     pub first_update: bool,
     pub begin_game: bool,
     pub voice_queue: VoiceQueue,
+    pub music_track: MusicTrack,
 }
 
 impl IntroPhase {
@@ -14,6 +15,7 @@ impl IntroPhase {
             first_update: true,
             begin_game: false,
             voice_queue: VoiceQueue::new(),
+            music_track: MusicTrack::new("cantina", ctx),
         }
     }
 
@@ -25,6 +27,10 @@ impl IntroPhase {
                 self.voice_queue.enqueue("defiance", ctx);
             }
             self.first_update = false;
+        }
+
+        if settings.music && !self.music_track.playing() {
+            self.music_track.play();
         }
 
         self.voice_queue.process();

@@ -16,10 +16,12 @@ impl DeadPhase {
             want_restart: false,
         }
     }
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Dead");
-            self.sounds.play_death();
+            if settings.sounds {
+                self.sounds.play_death();
+            }
             self.first_update = false;
         }
     }

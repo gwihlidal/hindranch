@@ -28,7 +28,7 @@ impl PreparePhase {
         }
     }
 
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!(
                 "STATE: Prepare - round_index: {}, last_round: {}",
@@ -39,7 +39,7 @@ impl PreparePhase {
 
         let round_data = self.round_data.clone();
         let mut round_data = round_data.borrow_mut();
-        if !round_data.music_track.playing() {
+        if settings.music && !round_data.music_track.playing() {
             round_data.music_track.play();
         }
     }

@@ -13,17 +13,17 @@ impl MenuPhase {
         MenuPhase {
             first_update: true,
             start_game: false,
-            music_track: MusicTrack::new("cantina", ctx),
+            music_track: MusicTrack::new("twisted", ctx),
         }
     }
 
-    pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Menu");
             self.first_update = false;
         }
 
-        if !self.music_track.playing() {
+        if settings.music && !self.music_track.playing() {
             self.music_track.play();
         }
     }
