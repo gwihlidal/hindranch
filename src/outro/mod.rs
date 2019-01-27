@@ -8,7 +8,7 @@ pub struct OutroPhase {
 }
 
 impl OutroPhase {
-    pub fn new(ctx: &mut Context) -> Self {
+    pub fn new(_ctx: &mut Context) -> Self {
         OutroPhase {
             first_update: true,
             want_restart: false,

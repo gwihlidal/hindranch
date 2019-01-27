@@ -23,7 +23,7 @@ pub struct RoundPhase {
 
 impl RoundPhase {
     pub fn new(
-        ctx: &mut Context,
+        _ctx: &mut Context,
         round_index: u32,
         last_round: bool,
         round_data: Rc<RefCell<RoundData>>,
@@ -169,6 +169,12 @@ impl RoundPhase {
             data.wall_pieces.swap_remove(i);
         }
 
+        self.maintain_enemies(data);
+
+        data.world.step();
+    }
+
+    fn maintain_enemies(&mut self, data: &mut WorldData) {
         let mut enemies_killed = Vec::new();
         for (i, e) in data.enemies.iter().enumerate() {
             if e.health() <= 0.0 {
@@ -188,8 +194,6 @@ impl RoundPhase {
                 self.victory = true;
             }
         }
-
-        data.world.step();
     }
 
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {

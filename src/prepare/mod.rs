@@ -14,7 +14,7 @@ pub struct PreparePhase {
 
 impl PreparePhase {
     pub fn new(
-        ctx: &mut Context,
+        _ctx: &mut Context,
         round_index: u32,
         last_round: bool,
         round_data: Rc<RefCell<RoundData>>,
