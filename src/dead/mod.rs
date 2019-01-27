@@ -3,9 +3,9 @@
 use crate::{graphics, Context, KeyCode, MouseButton, Settings, Sounds, WorldData};
 
 pub struct DeadPhase {
-    sounds: Sounds,
-    first_update: bool,
-    want_restart: bool,
+    pub sounds: Sounds,
+    pub first_update: bool,
+    pub want_restart: bool,
 }
 
 impl DeadPhase {
@@ -18,13 +18,14 @@ impl DeadPhase {
     }
     pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
+            println!("STATE: Dead");
             self.sounds.play_death();
             self.first_update = false;
         }
     }
 
-    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
-        //
+    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, ctx: &mut Context) {
+        graphics::clear(ctx, [1.0, 0.1, 0.1, 1.0].into());
     }
 
     pub fn handle_key(

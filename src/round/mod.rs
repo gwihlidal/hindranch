@@ -3,27 +3,54 @@
 use super::consts::*;
 use crate::{
     draw_map_layer, graphics, px_to_world, settings::Settings, Context, KeyCode, MainState,
-    Matrix4, MouseButton, MusicTrack, Point2, Positional, Vector2, Vector3, VisualState, WorldData,
-    DESIRED_FPS,
+    Matrix4, MouseButton, MusicTrack, Point2, Positional, RoundData, Vector2, Vector3, VisualState,
+    WorldData, DESIRED_FPS,
 };
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use ncollide2d::query::Ray;
 use ncollide2d::world::CollisionGroups;
 
 pub struct RoundPhase {
-    music_track: MusicTrack,
+    pub first_update: bool,
+    pub round_index: u32,
+    pub last_round: bool,
+    pub victory: bool,
+    pub failure: bool,
+    pub round_data: Rc<RefCell<RoundData>>,
 }
 
 impl RoundPhase {
-    pub fn new(ctx: &mut Context) -> RoundPhase {
+    pub fn new(
+        ctx: &mut Context,
+        round_index: u32,
+        last_round: bool,
+        round_data: Rc<RefCell<RoundData>>,
+    ) -> RoundPhase {
         RoundPhase {
-            music_track: MusicTrack::new("twisted", ctx),
+            first_update: true,
+            round_index,
+            last_round,
+            victory: false,
+            failure: false,
+            round_data,
         }
     }
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
-        if !self.music_track.playing() {
-            self.music_track.play();
+        if self.first_update {
+            println!(
+                "STATE: Round - round_index: {}, last_round: {}",
+                self.round_index, self.last_round
+            );
+            self.first_update = false;
+        }
+
+        let round_data = self.round_data.clone();
+        let mut round_data = round_data.borrow_mut();
+        if !round_data.music_track.playing() {
+            round_data.music_track.play();
         }
 
         data.voice_queue.process();
@@ -276,8 +303,7 @@ impl RoundPhase {
                 if data.player.alive() {
                     data.player.damage(13.0);
                     if !data.player.alive() {
-                        // DEAD! :(
-                        data.sounds.play_death();
+                        self.failure = true;
                     }
                 }
             }
@@ -296,6 +322,11 @@ impl RoundPhase {
             KeyCode::S | KeyCode::Down => data.player.input.down = value,
             KeyCode::D | KeyCode::Right => data.player.input.right = value,
             KeyCode::Back => data.strategic_view = value,
+            KeyCode::Space => {
+                if value {
+                    self.victory = true;
+                }
+            }
             _ => (),
         }
     }

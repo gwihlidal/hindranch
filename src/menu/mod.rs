@@ -3,26 +3,33 @@
 use crate::{graphics, Context, KeyCode, MouseButton, MusicTrack, Settings, WorldData};
 
 pub struct MenuPhase {
-    start_game: bool,
-    music_track: MusicTrack,
+    pub first_update: bool,
+    pub start_game: bool,
+    pub music_track: MusicTrack,
 }
 
 impl MenuPhase {
     pub fn new(ctx: &mut Context) -> Self {
         MenuPhase {
+            first_update: true,
             start_game: false,
             music_track: MusicTrack::new("cantina", ctx),
         }
     }
 
     pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+        if self.first_update {
+            println!("STATE: Menu");
+            self.first_update = false;
+        }
+
         if !self.music_track.playing() {
             self.music_track.play();
         }
     }
 
-    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
-        //
+    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, ctx: &mut Context) {
+        graphics::clear(ctx, [0.1, 0.7, 0.3, 1.0].into());
     }
 
     pub fn handle_key(
