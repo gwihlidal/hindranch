@@ -239,8 +239,8 @@ impl PreparePhase {
                     self.rock_supplies -= 1;
                 }
             }
-            KeyCode::Back => data.strategic_view = value,
-            KeyCode::Tab => {
+            KeyCode::Tab => data.strategic_view = value,
+            KeyCode::Back => {
                 if value {
                     self.begin_round = true;
                 }
