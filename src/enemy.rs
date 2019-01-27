@@ -4,7 +4,7 @@
 use crate::{
     clamp_norm, draw_single_image, exponential_distance, inverse_distance, linear_distance,
     AiBehavior, BodyHandle, Bullet, Color, Context, Force2, Movement, PawnInput, Player, Point2,
-    Positional, Settings, Vector2, World,
+    Positional, Settings, Sounds, Vector2, World,
 };
 
 use super::consts::*;
@@ -30,6 +30,7 @@ pub trait Enemy {
         movement: Option<Movement>,
         world: &mut World<f32>,
         bullets_out: &mut Vec<Bullet>,
+        sounds: &mut Sounds,
     );
     fn rigid_body(&self) -> Option<BodyHandle>;
     fn draw(&self, ctx: &mut Context);
@@ -134,6 +135,7 @@ impl Enemy for Bulldozer {
         movement: Option<Movement>,
         world: &mut World<f32>,
         _bullets_out: &mut Vec<Bullet>,
+        _sounds: &mut Sounds,
     ) {
         if let Some(ref mut behavior) = self.behavior {
             self.movement = behavior.update(world.rigid_body(self.rigid_body).unwrap());
@@ -211,6 +213,7 @@ pub struct Swat {
     waypoint: Option<Point2>,
     walk_direction: f32,
     keep_direction_until: Instant,
+    next_taunt_at: Instant,
 }
 
 impl Swat {
@@ -223,6 +226,7 @@ impl Swat {
             walk_direction: if rng.gen::<bool>() { 1.0 } else { -1.0 },
             keep_direction_until: Instant::now()
                 + Duration::from_millis(rng.gen_range(4000, 20000)),
+            next_taunt_at: Instant::now() + Duration::from_millis(rng.gen_range(4000, 20000)),
         }
     }
 
@@ -289,9 +293,17 @@ impl Enemy for Swat {
         _movement: Option<Movement>,
         world: &mut World<f32>,
         bullets_out: &mut Vec<Bullet>,
+        sounds: &mut Sounds,
     ) {
         if self.waypoint.is_none() {
             self.acquire_waypoint();
+        }
+
+        let now = Instant::now();
+        if now > self.next_taunt_at {
+            let mut rng = rand::thread_rng();
+            self.next_taunt_at = Instant::now() + Duration::from_millis(rng.gen_range(4000, 20000));
+            sounds.play_swat();
         }
 
         if let Some(w) = self.waypoint {

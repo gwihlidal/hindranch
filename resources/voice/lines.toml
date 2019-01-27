@@ -222,3 +222,43 @@ text = "I'd like to see you fucking try!"
 female = true
 pitch = -10.0
 rate = 0.9
+
+[[lines]]
+name = "swat_gogogo"
+text = "Go go go!"
+female = false
+city17 = true
+pitch = -11.0
+rate = 0.7
+
+[[lines]]
+name = "swat1"
+text = "Target acquired"
+female = false
+city17 = true
+pitch = -11.0
+rate = 0.8
+
+[[lines]]
+name = "swat2"
+text = "Lock an load"
+female = false
+city17 = true
+pitch = -11.0
+rate = 0.8
+
+[[lines]]
+name = "swat3"
+text = "Enemy spotted"
+female = false
+city17 = true
+pitch = -11.0
+rate = 0.8
+
+[[lines]]
+name = "swat4"
+text = "I need reinforcements"
+female = false
+city17 = true
+pitch = -11.0
+rate = 0.8

@@ -7,7 +7,9 @@ pub struct Sounds {
     death: audio::Source,
     break1: audio::Source,
     break2: audio::Source,
+    swat_gogogo: audio::Source,
     taunts: Vec<audio::Source>,
+    swat: Vec<audio::Source>,
 }
 
 impl Sounds {
@@ -34,11 +36,20 @@ impl Sounds {
         taunts.push(audio::Source::new(ctx, "/voice/shall_die.ogg").unwrap());
         taunts.push(audio::Source::new(ctx, "/voice/groovy.ogg").unwrap());
         taunts.push(audio::Source::new(ctx, "/voice/headshot.ogg").unwrap());
+
+        let mut swat: Vec<audio::Source> = Vec::new();
+        swat.push(audio::Source::new(ctx, "/voice/swat1.ogg").unwrap());
+        swat.push(audio::Source::new(ctx, "/voice/swat2.ogg").unwrap());
+        swat.push(audio::Source::new(ctx, "/voice/swat3.ogg").unwrap());
+        swat.push(audio::Source::new(ctx, "/voice/swat4.ogg").unwrap());
+
         Sounds {
             death: audio::Source::new(ctx, "/sound/death.wav").unwrap(),
             break1: audio::Source::new(ctx, "/sound/barrel_break.wav").unwrap(),
             break2: audio::Source::new(ctx, "/sound/crate_break.wav").unwrap(),
+            swat_gogogo: audio::Source::new(ctx, "/voice/swat_gogogo.ogg").unwrap(),
             taunts,
+            swat,
         }
     }
 
@@ -50,6 +61,20 @@ impl Sounds {
         taunt.set_volume(1.0);
         taunt.play().unwrap();
         //}
+    }
+
+    pub fn play_swat(&mut self) {
+        let mut rng = thread_rng();
+        let index = rng.gen_range(0, self.swat.len());
+        let taunt = &mut self.swat[index as usize];
+        //if !taunt.playing() {
+        taunt.set_volume(1.0);
+        taunt.play().unwrap();
+        //}
+    }
+
+    pub fn play_swat_gogogo(&mut self) {
+        self.swat_gogogo.play().unwrap();
     }
 
     pub fn play_death(&mut self) {

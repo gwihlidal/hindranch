@@ -87,12 +87,13 @@ impl RoundPhase {
             if settings.enemies {
                 self.spawn_bulldozers(data, ctx, 3);
 
+                data.sounds.play_swat_gogogo();
                 let swat_pawn = Player::new(
                     &mut data.world,
                     "soldier",
                     0.5,
                     Weapon::from_config(WeaponConfig::from_toml("resources/swat_smg.toml")),
-                    Point2::new(10.5, 0.5),
+                    Point2::new(30.0, 10.0),
                     GROUP_ENEMY,
                     &data.characters,
                     data.character_spritebatch.clone(),
@@ -128,6 +129,7 @@ impl RoundPhase {
                     Some((&data.player_input).into()),
                     &mut data.world,
                     &mut data.bullets,
+                    &mut data.sounds,
                 );
             } else {
                 enemy.update(
@@ -136,6 +138,7 @@ impl RoundPhase {
                     None,
                     &mut data.world,
                     &mut data.bullets,
+                    &mut data.sounds,
                 );
             }
         }
