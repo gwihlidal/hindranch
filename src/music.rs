@@ -16,6 +16,10 @@ impl MusicTrack {
         self.source.playing()
     }
 
+    pub fn volume(&mut self, vol: f32) {
+        self.source.set_volume(vol);
+    }
+
     pub fn play(&mut self) {
         if self.source.paused() {
             self.source.resume();

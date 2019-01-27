@@ -445,7 +445,7 @@ impl event::EventHandler for MainState {
                         self.round_index = 0;
 
                         // Player wants to start the game; go to intro
-                        next_phase = Some(Phase::Intro(IntroPhase::new(ctx)));
+                        next_phase = Some(Phase::Intro(IntroPhase::new(&mut self.world_data, ctx)));
                     }
                 }
                 Phase::Outro(ref mut phase) => {

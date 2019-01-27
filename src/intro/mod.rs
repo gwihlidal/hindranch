@@ -1,10 +1,17 @@
 #![allow(unused_imports)]
 
 use crate::{
-    draw_map_layer, graphics, Characters, Color, Context, KeyCode, MainState, Matrix4, MouseButton,
-    MusicTrack, PawnInput, PlayerInput, Point2, Positional, Rect, Settings, Vector2, Vector3,
-    VoiceQueue, WorldData,
+    audio::Source, draw_map_layer, graphics, graphics::Text, Characters, Color, Context, KeyCode,
+    MainState, Matrix4, MouseButton, MusicTrack, PawnInput, PlayerInput, Point2, Positional, Rect,
+    Settings, Vector2, Vector3, VoiceQueue, WorldData,
 };
+
+pub struct IntroLine {
+    pub voice_source: Source,
+    pub voice_line: Text,
+    pub sheriff_speaking: bool,
+    pub started: bool,
+}
 
 pub struct IntroPhase {
     pub first_update: bool,
@@ -15,11 +22,12 @@ pub struct IntroPhase {
     pub sheriff_pos: Positional,
     pub player_stand: (Rect, Vector2),
     pub sheriff_stand: (Rect, Vector2),
-    pub sheriff_speaking: bool,
+    pub intro_lines: Vec<IntroLine>,
+    pub intro_line: u32,
 }
 
 impl IntroPhase {
-    pub fn new(ctx: &mut Context) -> Self {
+    pub fn new(data: &mut WorldData, ctx: &mut Context) -> Self {
         let characters = Characters::load(ctx);
 
         let player_entry = characters.get_entry("woman_green");
@@ -33,6 +41,87 @@ impl IntroPhase {
 
         let sheriff_pos = Point2::new(11.19879, 3.0724447);
         let sheriff_rot = -3.138286;
+
+        let mut lines: Vec<IntroLine> = Vec::new();
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_1.ogg").unwrap(),
+            voice_line: Text::new(("Ma'am, this is sheriff Buck.", data.font, 54.0)),
+            sheriff_speaking: true,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_2.ogg").unwrap(),
+            voice_line: Text::new((
+                "I'm here to inform you that the bank has foreclosed on your ranch.",
+                data.font,
+                54.0,
+            )),
+            sheriff_speaking: true,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_3.ogg").unwrap(),
+            voice_line: Text::new(("What in the hell?", data.font, 54.0)),
+            sheriff_speaking: false,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_4.ogg").unwrap(),
+            voice_line: Text::new((
+                "My family has lived here for generations; it's my home!",
+                data.font,
+                54.0,
+            )),
+            sheriff_speaking: false,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_5.ogg").unwrap(),
+            voice_line: Text::new(("I'm sorry, it's not your home anymore.", data.font, 54.0)),
+            sheriff_speaking: true,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_6.ogg").unwrap(),
+            voice_line: Text::new(("The hell it isn't!", data.font, 54.0)),
+            sheriff_speaking: false,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_7.ogg").unwrap(),
+            voice_line: Text::new((
+                "You think you can come on to my property and take what is mine?",
+                data.font,
+                54.0,
+            )),
+            sheriff_speaking: false,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_8.ogg").unwrap(),
+            voice_line: Text::new((
+                "Yes, you have one day until we evict you by force.",
+                data.font,
+                54.0,
+            )),
+            sheriff_speaking: true,
+            started: false,
+        });
+
+        lines.push(IntroLine {
+            voice_source: Source::new(ctx, "/voice/intro_9.ogg").unwrap(),
+            voice_line: Text::new(("I'd like to see you fucking try!", data.font, 54.0)),
+            sheriff_speaking: false,
+            started: false,
+        });
 
         IntroPhase {
             first_update: true,
@@ -49,7 +138,8 @@ impl IntroPhase {
             },
             player_stand,
             sheriff_stand,
-            sheriff_speaking: true,
+            intro_lines: lines,
+            intro_line: 0,
         }
     }
 
@@ -57,8 +147,8 @@ impl IntroPhase {
         if self.first_update {
             data.player_input = PlayerInput::default();
             if settings.voice {
-                self.voice_queue.enqueue("shout", ctx);
-                self.voice_queue.enqueue("defiance", ctx);
+                //self.voice_queue.enqueue("shout", ctx);
+                //self.voice_queue.enqueue("defiance", ctx);
             }
             self.first_update = false;
         }
@@ -67,14 +157,32 @@ impl IntroPhase {
             self.music_track.play();
         }
 
+        self.music_track.volume(0.2);
+
         self.voice_queue.process();
 
         self.calculate_view_transform(data, &ctx, data.camera_pos, 0.1);
 
-        if self.sheriff_speaking {
-            self.update_camera(data, self.sheriff_pos, 0.0, 0.3);
+        if self.intro_line < self.intro_lines.len() as u32 {
+            let sheriff_speaking = { self.intro_lines[self.intro_line as usize].sheriff_speaking };
+
+            if sheriff_speaking {
+                self.update_camera(data, self.sheriff_pos, 0.0, 0.3);
+            } else {
+                self.update_camera(data, self.player_pos, 0.0, 0.3);
+            }
+
+            let mut line = &mut self.intro_lines[self.intro_line as usize];
+            if !line.started {
+                line.voice_source.play().unwrap();
+                line.started = true;
+            } else {
+                if !line.voice_source.playing() {
+                    self.intro_line += 1;
+                }
+            }
         } else {
-            self.update_camera(data, self.player_pos, 0.0, 0.3);
+            self.begin_game = true;
         }
     }
 
@@ -137,35 +245,36 @@ impl IntroPhase {
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
 
-        let text = if self.sheriff_speaking {
-            graphics::Text::new(("SHERIFF: This is the sheriff.", data.font, 96.0))
-        } else {
-            graphics::Text::new(("PLAYER: Get the fuck out of here.", data.font, 96.0))
-        };
+        if self.intro_line < self.intro_lines.len() as u32 {
+            let line = &self.intro_lines[self.intro_line as usize];
 
-        //let text_width = text.width(ctx) as f32;
-        let text_height = text.height(ctx) as f32;
+            let text_width = line.voice_line.width(ctx) as f32;
+            let text_height = line.voice_line.height(ctx) as f32;
 
-        graphics::draw(
-            ctx,
-            &text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(
-                    24.0,
-                    (window_size.1 as f32 - text_height - 20.0) + 4.0,
-                ))
-                .color(Color::from((0, 0, 0, 255))),
-        )
-        .unwrap();
+            graphics::draw(
+                ctx,
+                &line.voice_line,
+                graphics::DrawParam::new()
+                    .dest(Point2::new(
+                        ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
+                        (window_size.1 as f32 - text_height - 20.0) + 4.0,
+                    ))
+                    .color(Color::from((0, 0, 0, 255))),
+            )
+            .unwrap();
 
-        graphics::draw(
-            ctx,
-            &text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(20.0, window_size.1 as f32 - text_height - 20.0))
-                .color(Color::from((255, 255, 255, 255))),
-        )
-        .unwrap();
+            graphics::draw(
+                ctx,
+                &line.voice_line,
+                graphics::DrawParam::new()
+                    .dest(Point2::new(
+                        (window_size.0 as f32 / 2.0) - (text_width / 2.0),
+                        window_size.1 as f32 - text_height - 20.0,
+                    ))
+                    .color(Color::from((255, 255, 255, 255))),
+            )
+            .unwrap();
+        }
     }
 
     pub fn handle_key(
@@ -179,7 +288,7 @@ impl IntroPhase {
         if key_code == KeyCode::Space && value {
             self.begin_game = true;
         } else if key_code == KeyCode::P {
-            self.sheriff_speaking = !self.sheriff_speaking;
+            //self.sheriff_speaking = !self.sheriff_speaking;
         }
     }
 

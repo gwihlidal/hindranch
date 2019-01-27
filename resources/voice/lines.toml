@@ -174,3 +174,66 @@ text = "Boom! Headshot!"
 female = true
 pitch = -10.0
 rate = 1.0
+
+[[lines]]
+name = "intro_1"
+text = "Ma'am, this is sheriff Buck."
+female = false
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_2"
+text = "I'm here to inform you that the bank has foreclosed on your ranch."
+female = false
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_3"
+text = "What in the hell?"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_4"
+text = "My family has lived here for generations; it's my home!"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_5"
+text = "I'm sorry, it's not your home anymore."
+female = false
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_6"
+text = "The hell it isn't!"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_7"
+text = "You think you can come on to my property and take what is mine?"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_8"
+text = "Yes, you have one day until we evict you by force."
+female = false
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "intro_9"
+text = "I'd like to see you fucking try!"
+female = true
+pitch = -10.0
+rate = 0.9

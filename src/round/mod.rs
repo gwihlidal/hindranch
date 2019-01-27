@@ -3,9 +3,9 @@
 use super::consts::*;
 use super::enemy::Swat;
 use crate::{
-    draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Context,
-    Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, Player,
-    PlayerInput, Point2, Positional, Color, RoundData, Vector2, Vector3, VisualState, Weapon,
+    draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Color,
+    Context, Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack,
+    Player, PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState, Weapon,
     WeaponConfig, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
