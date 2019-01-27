@@ -80,25 +80,33 @@ impl RoundPhase {
         }
     }
 
+    fn spawn_swat(&mut self, data: &mut WorldData, ctx: &mut Context, count: usize) {
+        if count > 0 {
+            data.sounds.play_swat_gogogo();
+        }
+
+        for i in 0..count {
+            let swat_pawn = Player::new(
+                &mut data.world,
+                "soldier",
+                0.5,
+                Weapon::from_config(ctx, WeaponConfig::from_toml("resources/swat_smg.toml")),
+                Point2::new(-30.0 + (i as f32 * -1.5), 10.0),
+                GROUP_ENEMY,
+                &data.characters,
+                data.character_spritebatch.clone(),
+            );
+            data.enemies.push(Box::new(Swat::new(swat_pawn)));
+        }
+    }
+
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             data.player_input = PlayerInput::default();
 
             if settings.enemies {
                 self.spawn_bulldozers(data, ctx, 3);
-
-                data.sounds.play_swat_gogogo();
-                let swat_pawn = Player::new(
-                    &mut data.world,
-                    "soldier",
-                    0.5,
-                    Weapon::from_config(ctx, WeaponConfig::from_toml("resources/swat_smg.toml")),
-                    Point2::new(30.0, 10.0),
-                    GROUP_ENEMY,
-                    &data.characters,
-                    data.character_spritebatch.clone(),
-                );
-                data.enemies.push(Box::new(Swat::new(swat_pawn)));
+                self.spawn_swat(data, ctx, 3);
             }
 
             self.first_update = false;
