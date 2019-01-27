@@ -1,7 +1,7 @@
 use super::types::*;
 use crate::{
     graphics::spritebatch::SpriteBatch, graphics::DrawParam, Ball, BodyHandle, Bullet, Characters,
-    Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2, Volumetric,
+    Color, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2, Volumetric,
     Weapon, World,
 };
 use nalgebra as na;
@@ -46,6 +46,7 @@ pub struct Player {
     pub visual: VisualState,
     pub spritebatch: Rc<RefCell<SpriteBatch>>,
     pub positional: Positional,
+    time_since_last_damage: f32,
     pub gun: (Rect, Vector2),
     pub hold: (Rect, Vector2),
     pub machine: (Rect, Vector2),
@@ -122,6 +123,7 @@ impl Player {
                 position: pos,
                 rotation: 0.0,
             },
+            time_since_last_damage: 10000.0,
             gun: characters.transform(&entry.gun),
             hold: characters.transform(&entry.hold),
             machine: characters.transform(&entry.machine),
@@ -139,6 +141,12 @@ impl Player {
 
     pub fn set_input(&mut self, input: PawnInput) {
         self.input = input;
+    }
+
+    fn color(&self) -> Color {
+        let t = self.time_since_last_damage;
+        let t = (1.0 - t * 5.0).max(0.0) * 10.0;
+        Color::new(1.0 + t, 1.0 + t, 1.0 + t, 1.0)
     }
 
     pub fn draw(&self) {
@@ -195,7 +203,8 @@ impl Player {
                 .dest(self.positional.position - Vector2::new(0.5, 0.5))
                 .scale(scale)
                 .offset(Point2::new(0.5, 0.5))
-                .rotation(self.positional.rotation),
+                .rotation(self.positional.rotation)
+                .color(self.color()),
         );
     }
 
@@ -205,6 +214,7 @@ impl Player {
 
     pub fn damage(&mut self, amount: f32) {
         self.health -= amount.min(self.health);
+        self.time_since_last_damage = 0.0;
     }
 
     pub fn alive(&self) -> bool {
@@ -249,6 +259,8 @@ impl Player {
 
         self.weapon
             .update(self.input.shoot, &self.positional, self.group, bullets_out);
+
+        self.time_since_last_damage += 1.0 / 60.0;
     }
 }
 

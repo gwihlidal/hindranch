@@ -15,8 +15,10 @@ use ggez::graphics;
 use nalgebra as na;
 use ncollide2d::query::Ray;
 use ncollide2d::world::CollisionGroups;
+use rand::Rng;
 use std::default::Default;
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 const SWAT_MOVE_SPEED: f32 = 0.75;
 
@@ -207,13 +209,20 @@ impl Enemy for Bulldozer {
 pub struct Swat {
     pawn: Player,
     waypoint: Option<Point2>,
+    walk_direction: f32,
+    keep_direction_until: Instant,
 }
 
 impl Swat {
     pub fn new(pawn: Player) -> Self {
+        let mut rng = rand::thread_rng();
+
         Swat {
             pawn,
             waypoint: None,
+            walk_direction: if rng.gen::<bool>() { 1.0 } else { -1.0 },
+            keep_direction_until: Instant::now()
+                + Duration::from_millis(rng.gen_range(4000, 20000)),
         }
     }
 
@@ -221,10 +230,18 @@ impl Swat {
         let pos = self.positional().position.coords;
         let center_dist = pos.norm();
 
+        let now = Instant::now();
+        if now > self.keep_direction_until {
+            let mut rng = rand::thread_rng();
+            self.walk_direction = if rng.gen::<bool>() { 1.0 } else { -1.0 };
+            self.keep_direction_until =
+                Instant::now() + Duration::from_millis(rng.gen_range(4000, 20000));
+        }
+
         let goal: Point2 = if center_dist < SWAT_INNER_RADIUS || center_dist > SWAT_OUTER_RADIUS {
             (pos.normalize() * (SWAT_INNER_RADIUS * 0.5 + SWAT_OUTER_RADIUS * 0.5)).into()
         } else {
-            let a = pos.y.atan2(pos.x) + 0.1 + 0.1 * rand::random::<f32>();
+            let a = pos.y.atan2(pos.x) + (0.1 + 0.1 * rand::random::<f32>()) * self.walk_direction;
             (Vector2::new(a.cos(), a.sin())
                 * (SWAT_INNER_RADIUS
                     + (SWAT_OUTER_RADIUS - SWAT_INNER_RADIUS) * rand::random::<f32>()))

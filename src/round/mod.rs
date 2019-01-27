@@ -90,7 +90,7 @@ impl RoundPhase {
                 let swat_pawn = Player::new(
                     &mut data.world,
                     "soldier",
-                    1.0,
+                    0.5,
                     Weapon::from_config(WeaponConfig::from_toml("resources/swat_smg.toml")),
                     Point2::new(10.5, 0.5),
                     GROUP_ENEMY,
