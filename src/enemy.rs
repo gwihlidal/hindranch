@@ -291,7 +291,7 @@ impl Enemy for Swat {
     }
 
     fn rigid_body(&self) -> Option<BodyHandle> {
-        None
+        Some(self.pawn.body_handle)
     }
 
     fn draw(&self, _ctx: &mut Context) {

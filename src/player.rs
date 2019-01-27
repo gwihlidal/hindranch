@@ -1,4 +1,3 @@
-use super::consts::*;
 use crate::{
     graphics::spritebatch::SpriteBatch, graphics::DrawParam, Ball, BodyHandle, Characters, Force2,
     Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2, Volumetric, Weapon, World,
@@ -57,13 +56,14 @@ impl Player {
         health: f32,
         weapon: Weapon,
         pos: Point2,
+        group: usize,
         characters: &Characters,
         spritebatch: Rc<RefCell<SpriteBatch>>,
     ) -> Self {
         let entry = characters.get_entry(name);
         let zombie = characters.get_entry("zombie");
 
-        let geom = ShapeHandle::new(Ball::new(0.19));
+        let geom = ShapeHandle::new(Ball::new(0.4));
         let inertia = geom.inertia(0.1);
         let center_of_mass = geom.center_of_mass();
 
@@ -79,7 +79,7 @@ impl Player {
         );
 
         let mut col_group = CollisionGroups::new();
-        col_group.set_membership(&[COLLISION_GROUP_PLAYER]);
+        col_group.set_membership(&[group]);
         world
             .collision_world_mut()
             .set_collision_groups(collider_handle, col_group);

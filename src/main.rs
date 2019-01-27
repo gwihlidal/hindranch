@@ -132,6 +132,7 @@ impl WorldData {
             health,
             Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
             Point2::new(0.5, 0.5),
+            GROUP_PLAYER,
             &characters,
             character_spritebatch.clone(),
         );
@@ -321,7 +322,7 @@ impl MainState {
                 );
 
                 let mut col_group = CollisionGroups::new();
-                col_group.set_membership(&[COLLISION_GROUP_WORLD]);
+                col_group.set_membership(&[GROUP_WORLD]);
                 self.world_data
                     .world
                     .collision_world_mut()

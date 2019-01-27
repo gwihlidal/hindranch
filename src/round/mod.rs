@@ -93,6 +93,7 @@ impl RoundPhase {
                     1.0,
                     Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
                     Point2::new(10.5, 0.5),
+                    GROUP_ENEMY,
                     &data.characters,
                     data.character_spritebatch.clone(),
                 );
@@ -161,7 +162,7 @@ impl RoundPhase {
 
             let mut hit_anything = false;
             let mut groups = CollisionGroups::new();
-            groups.set_blacklist(&[COLLISION_GROUP_PLAYER]);
+            groups.set_blacklist(&[GROUP_PLAYER]);
             for (other_collider, collision) in collision_world.interferences_with_ray(
                 &Ray {
                     origin: bullet.pos.position,
@@ -485,7 +486,7 @@ fn spawn_dozer(
     );
 
     let mut col_group = CollisionGroups::new();
-    col_group.set_membership(&[COLLISION_GROUP_ENEMY]);
+    col_group.set_membership(&[GROUP_ENEMY]);
     world
         .collision_world_mut()
         .set_collision_groups(collider_handle, col_group);
