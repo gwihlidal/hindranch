@@ -196,7 +196,7 @@ impl WorldData {
                     self.sounds.play_crash();
                 }
 
-                vel.linear *= 0.95;
+                vel.linear *= 0.98;
                 vel.angular *= 0.95;
                 rb.set_velocity(vel);
                 let mut pos = rb.position().clone();

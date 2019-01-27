@@ -214,6 +214,8 @@ pub struct Swat {
     walk_direction: f32,
     keep_direction_until: Instant,
     next_taunt_at: Instant,
+    avg_velocity: Vector2,
+    avg_velocity_samples: u32,
 }
 
 impl Swat {
@@ -227,6 +229,8 @@ impl Swat {
             keep_direction_until: Instant::now()
                 + Duration::from_millis(rng.gen_range(4000, 20000)),
             next_taunt_at: Instant::now() + Duration::from_millis(rng.gen_range(4000, 20000)),
+            avg_velocity: Vector2::zeros(),
+            avg_velocity_samples: 0,
         }
     }
 
@@ -295,6 +299,23 @@ impl Enemy for Swat {
         bullets_out: &mut Vec<Bullet>,
         sounds: &mut Sounds,
     ) {
+        let cur_vel = world
+            .rigid_body(self.pawn.body_handle)
+            .unwrap()
+            .velocity()
+            .linear;
+
+        self.avg_velocity = self.avg_velocity * 0.9 + cur_vel * 0.1;
+        self.avg_velocity_samples += 1;
+
+        // Some chaos. Helps getting unstuck and whatnot
+        if self.avg_velocity.norm() < 0.1 && self.avg_velocity_samples > 10 {
+            self.waypoint = None;
+            self.walk_direction *= -1.0;
+            self.avg_velocity = Vector2::zeros();
+            self.avg_velocity_samples = 0;
+        }
+
         if self.waypoint.is_none() {
             self.acquire_waypoint();
         }
