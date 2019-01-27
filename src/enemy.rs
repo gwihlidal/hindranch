@@ -155,12 +155,6 @@ impl Enemy for Bulldozer {
 
         self.engine_source.set_volume(volume);
 
-        //if self.driving {
-        //self.engine_source.set_pitch(1.0);
-        //} else {
-        //    self.engine_source.set_pitch(0.7);
-        //}
-
         if !self.engine_source.playing() {
             self.engine_source.play().unwrap();
         }
@@ -181,9 +175,6 @@ impl Enemy for Bulldozer {
             3.0,
             self.positional.rotation,
         );
-
-        // TODO
-        //self.image.clone()
     }
 
     fn color(&self) -> Color {
@@ -214,61 +205,6 @@ impl Enemy for Bulldozer {
     }
 }
 
-/*pub struct Sheriff {
-    image: Rc<graphics::Image>,
-    health: f32,
-    positional: Positional,
-}
-
-impl Sheriff {
-    pub fn new(image: Rc<graphics::Image>, health: f32, positional: Positional) -> Self {
-        Sheriff {
-            image,
-            health,
-            positional,
-        }
-    }
-}
-
-impl Enemy for Sheriff {
-    fn update(
-        &mut self,derefmut
-        _player_pos: Positional,
-        _movement: Option<Movement>,
-        _world: &mut World<f32>,
-    ) {
-        //
-    }
-
-    fn rigid_body(&self) -> Option<BodyHandle> {
-        None
-    }
-
-    fn draw(&self, ctx: &mut Context) {
-        //self.image.clone()
-    }
-
-    fn health(&self) -> f32 {
-        self.health
-    }
-
-    fn damage(&mut self, amount: f32) {
-        self.health -= amount.min(self.health);
-    }
-
-    fn alive(&self) -> bool {
-        self.health > 0.0
-    }
-
-    fn closest_target(&self) -> Option<Point2> {
-        None
-    }
-
-    fn positional(&self) -> Positional {
-        self.positional.clone()
-    }
-}*/
-
 pub struct Swat {
     pawn: Player,
 }
@@ -295,18 +231,7 @@ impl Enemy for Swat {
     }
 
     fn draw(&self, _ctx: &mut Context) {
-        /*draw_single_image(
-            ctx,
-            &self.image,
-            enemy.color(),
-            positional.position,
-            3.0,
-            positional.rotation,
-        );*/
         self.pawn.draw();
-
-        //self.image.clone()
-        // TODO
     }
 
     fn health(&self) -> f32 {
