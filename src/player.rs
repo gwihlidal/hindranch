@@ -225,8 +225,8 @@ impl Player {
 
         let velocity = rigid_body.velocity().linear;
 
-        const MAX_FORCE: f32 = 1.0;
-        const FORCE_RATE: f32 = 0.2;
+        const MAX_FORCE: f32 = 10.0;
+        const FORCE_RATE: f32 = 0.8;
         const MAX_VEL: f32 = 7.0;
 
         let mut target_vel = clamp_norm(
