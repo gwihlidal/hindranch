@@ -79,7 +79,7 @@ impl RoundPhase {
             data.player_input = PlayerInput::default();
 
             if settings.enemies {
-                //self.spawn_bulldozers(data, ctx, 8);
+                self.spawn_bulldozers(data, ctx, 3);
 
                 let swat_pawn = Player::new(
                     &mut data.world,
