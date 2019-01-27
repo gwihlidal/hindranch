@@ -19,6 +19,7 @@ struct VoiceLine {
     name: String,
     text: String,
     female: bool,
+    city17: Option<bool>,
     pitch: Option<f32>,
     gain: Option<f32>,
     rate: Option<f32>,
@@ -241,6 +242,10 @@ fn main() {
         let mut output = Command::new("ffmpeg");
         output.arg("-i");
         output.arg(wav_name);
+        if line.city17.unwrap_or_default() {
+            output.arg("-filter_complex");
+            output.arg("acrusher=bits=2.5:mode=lin:samples=4:aa=0,asetrate=24000*0.7,aresample=24000,atempo=1.429,treble=g=10");
+        }
         output.arg("-c:a");
         output.arg("libvorbis");
         output.arg("-y");

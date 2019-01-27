@@ -2,6 +2,7 @@
 name = "shout"
 text = "This is the sheriff, come outside with your hands above your head. We've got your place surrounded."
 female = false
+city17 = true
 pitch = -10.0
 rate = 0.9
 
