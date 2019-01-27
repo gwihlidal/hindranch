@@ -51,6 +51,7 @@ use self::settings::*;
 use self::sounds::*;
 use self::tile_util::*;
 use self::types::*;
+use self::voice::*;
 use self::weapon::*;
 
 use self::dead::*;
@@ -99,8 +100,6 @@ pub struct WorldData {
     player_weapon: Weapon,
     splash: graphics::Image,
     dozer_image: Rc<graphics::Image>,
-    voice_queue: voice::VoiceQueue,
-    music_track: Option<music::MusicTrack>,
     enemies: Vec<Box<dyn Enemy>>,
     camera_pos: Point2,
     strategic_view: bool,
@@ -127,17 +126,6 @@ impl WorldData {
 
         let character_spritebatch =
             graphics::spritebatch::SpriteBatch::new(characters.image.clone());
-
-        let mut voice_queue = voice::VoiceQueue::new();
-        if settings.voice {
-            voice_queue.enqueue("shout", ctx);
-            voice_queue.enqueue("defiance", ctx);
-        }
-
-        let mut music_track = music::MusicTrack::new("cantina", ctx);
-        if settings.music {
-            music_track.play();
-        }
 
         let health = 100.0;
         let player = Player::new(
@@ -170,8 +158,6 @@ impl WorldData {
             player_weapon: Weapon::from_config(WeaponConfig::from_toml("resources/shotgun.toml")),
             splash,
             dozer_image,
-            voice_queue,
-            music_track: Some(music_track),
             enemies: Vec::new(),
             camera_pos: Point2::origin(),
             strategic_view: false,

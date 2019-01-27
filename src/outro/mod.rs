@@ -1,10 +1,13 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Context, KeyCode, MouseButton, Settings, WorldData};
+use crate::{
+    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, Point2, Settings, WorldData,
+};
 
 pub struct OutroPhase {
     pub first_update: bool,
     pub want_restart: bool,
+    pub yee_haw: audio::Source,
 }
 
 impl OutroPhase {
@@ -12,18 +15,39 @@ impl OutroPhase {
         OutroPhase {
             first_update: true,
             want_restart: false,
+            yee_haw: audio::Source::new(ctx, "/sound/yee_haw.wav").unwrap(),
         }
     }
 
     pub fn update(&mut self, _settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Outro");
+            self.yee_haw.play().unwrap();
             self.first_update = false;
         }
     }
 
-    pub fn draw(&mut self, _settings: &Settings, _data: &mut WorldData, ctx: &mut Context) {
+    pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
+        let window_size = graphics::drawable_size(ctx);
+
         graphics::clear(ctx, [0.0, 0.0, 0.9, 1.0].into());
+
+        let text = graphics::Text::new(("Yee-Haw!", data.font, 120.0));
+
+        let text_width = text.width(ctx) as f32;
+        let text_height = text.height(ctx) as f32;
+
+        graphics::draw(
+            ctx,
+            &text,
+            DrawParam::new()
+                .dest(Point2::new(
+                    (window_size.0 as f32 / 2.0) - (text_width / 2.0),
+                    (window_size.1 as f32 / 2.0) - (text_height / 2.0),
+                ))
+                .color(Color::from((255, 255, 0, 255))),
+        )
+        .unwrap();
     }
 
     pub fn handle_key(

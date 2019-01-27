@@ -1,5 +1,5 @@
-music = false
-voice = false
+music = true
+voice = true
 sounds = true
 enemies = true
 dozer_drive = false
