@@ -329,7 +329,8 @@ impl PreparePhase {
 
         data.sounds.play_break2();
 
-        let tile_id = 236;
+        let mut rng = thread_rng();
+        let tile_id = 236 + rng.gen_range(0, 3);
         let src = tile_id_to_src_rect(tile_id, &data.map, &data.map_tile_image);
 
         let rb = {
