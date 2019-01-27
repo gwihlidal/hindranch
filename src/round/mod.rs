@@ -103,24 +103,15 @@ impl RoundPhase {
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             data.player_input = PlayerInput::default();
+            data.player.set_visual(VisualState::Gun);
 
             if settings.enemies {
                 let (dozer_count, swat_count) = match self.round_index {
-                    0 => {
-                        (settings.round1_dozers, settings.round1_swat)
-                    },
-                    1 => {
-                        (settings.round2_dozers, settings.round2_swat)
-                    },
-                    2 => {
-                        (settings.round3_dozers, settings.round3_swat)
-                    },
-                    3 => {
-                        (settings.round4_dozers, settings.round4_swat)
-                    },
-                    4 => {
-                        (settings.round5_dozers, settings.round5_swat)
-                    },
+                    0 => (settings.round1_dozers, settings.round1_swat),
+                    1 => (settings.round2_dozers, settings.round2_swat),
+                    2 => (settings.round3_dozers, settings.round3_swat),
+                    3 => (settings.round4_dozers, settings.round4_swat),
+                    4 => (settings.round5_dozers, settings.round5_swat),
                     _ => unimplemented!(),
                 };
 

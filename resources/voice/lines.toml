@@ -262,3 +262,38 @@ female = false
 city17 = true
 pitch = -11.0
 rate = 0.8
+
+[[lines]]
+name = "prepare0"
+text = "Let's fortify this place in case they bring equipment."
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "prepare1"
+text = "They play nasty. I better build more barricades."
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "prepare2"
+text = "Those fuckers don't learn. More defenses."
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "prepare3"
+text = "Screw those guys. Let's turn this place into a fortress."
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "prepare4"
+text = "Is that all you've got? Cause I have a lot of crates!"
+female = true
+pitch = -10.0
+rate = 1.0

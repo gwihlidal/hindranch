@@ -13,6 +13,7 @@ pub struct Sounds {
     crash: Vec<audio::Source>,
     ricochet: Vec<audio::Source>,
     bullet_hit: Vec<audio::Source>,
+    prepare: Vec<audio::Source>,
 }
 
 impl Sounds {
@@ -63,6 +64,13 @@ impl Sounds {
         bullet_hit.push(audio::Source::new(ctx, "/sound/bullet_hit3.ogg").unwrap());
         bullet_hit.push(audio::Source::new(ctx, "/sound/bullet_hit4.ogg").unwrap());
 
+        let mut prepare: Vec<audio::Source> = Vec::new();
+        prepare.push(audio::Source::new(ctx, "/voice/prepare0.ogg").unwrap());
+        prepare.push(audio::Source::new(ctx, "/voice/prepare1.ogg").unwrap());
+        prepare.push(audio::Source::new(ctx, "/voice/prepare2.ogg").unwrap());
+        prepare.push(audio::Source::new(ctx, "/voice/prepare3.ogg").unwrap());
+        prepare.push(audio::Source::new(ctx, "/voice/prepare4.ogg").unwrap());
+
         Sounds {
             death: audio::Source::new(ctx, "/sound/death.wav").unwrap(),
             break1: audio::Source::new(ctx, "/sound/barrel_break.wav").unwrap(),
@@ -73,6 +81,7 @@ impl Sounds {
             crash,
             ricochet,
             bullet_hit,
+            prepare,
         }
     }
 
@@ -120,6 +129,11 @@ impl Sounds {
         let snd = &mut self.bullet_hit[index as usize];
         snd.set_volume(1.0);
         snd.play().unwrap();
+    }
+
+    pub fn play_prepare(&mut self, idx: usize) {
+        let len = self.prepare.len();
+        self.prepare[idx.min(len - 1)].play().unwrap();
     }
 
     pub fn play_swat_gogogo(&mut self) {

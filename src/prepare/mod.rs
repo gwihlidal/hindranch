@@ -4,13 +4,14 @@ use crate::{
     draw_map_layer, draw_shadowed_text, get_map_layer, graphics, px_to_world, tile_id_to_src_rect,
     BodyHandle, CollisionGroups, Color, Context, Cuboid, Isometry2, KeyCode, MainState, Material,
     Matrix4, MouseButton, PlayerInput, Point2, Positional, RoundData, Settings, ShapeHandle,
-    Spring, TileMapLayerView, Vector2, Vector3, Volumetric, WallPiece, WorldData, COLLIDER_MARGIN,
+    Spring, TileMapLayerView, Vector2, Vector3, Volumetric, WallPiece, WorldData, COLLIDER_MARGIN, VisualState
     GROUP_WORLD,
 };
 
 use nalgebra as na;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 pub struct PreparePhase {
     pub first_update: bool,
@@ -20,6 +21,8 @@ pub struct PreparePhase {
     pub round_data: Rc<RefCell<RoundData>>,
     pub crate_supplies: u32,
     pub rock_supplies: u32,
+    pub voice_played: bool,
+    pub play_voice_at: Instant,
 }
 
 impl PreparePhase {
@@ -37,33 +40,32 @@ impl PreparePhase {
             round_data,
             crate_supplies: 0,
             rock_supplies: 0,
+            voice_played: false,
+            play_voice_at: Instant::now() + Duration::from_millis(1500),
         }
     }
 
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             data.player_input = PlayerInput::default();
+            data.player.set_visual(VisualState::Hold);
+
             let (crate_count, rock_count) = match self.round_index {
-                0 => {
-                    (settings.round1_crates, settings.round1_rocks)
-                },
-                1 => {
-                    (settings.round2_crates, settings.round2_rocks)
-                },
-                2 => {
-                    (settings.round3_crates, settings.round3_rocks)
-                },
-                3 => {
-                    (settings.round4_crates, settings.round4_rocks)
-                },
-                4 => {
-                    (settings.round5_crates, settings.round5_rocks)
-                },
+                0 => (settings.round1_crates, settings.round1_rocks),
+                1 => (settings.round2_crates, settings.round2_rocks),
+                2 => (settings.round3_crates, settings.round3_rocks),
+                3 => (settings.round4_crates, settings.round4_rocks),
+                4 => (settings.round5_crates, settings.round5_rocks),
                 _ => unimplemented!(),
             };
             self.crate_supplies = crate_count;
             self.rock_supplies = rock_count;
             self.first_update = false;
+        }
+
+        if !self.voice_played && Instant::now() >= self.play_voice_at {
+            data.sounds.play_prepare(self.round_index as usize);
+            self.voice_played = true;
         }
 
         let round_data = self.round_data.clone();
