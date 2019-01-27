@@ -3,8 +3,11 @@
 
 use crate::{
     draw_single_image, exponential_distance, inverse_distance, linear_distance, AiBehavior,
-    BodyHandle, Color, Context, Force2, Player, Point2, Positional, Vector2, World,
+    BodyHandle, Bullet, Color, Context, Force2, Movement, PawnInput, Player, Point2, Positional,
+    Vector2, World,
 };
+
+use super::consts::*;
 
 use ggez::audio;
 use ggez::graphics;
@@ -12,27 +15,13 @@ use nalgebra as na;
 use std::default::Default;
 use std::rc::Rc;
 
-#[derive(Clone, Copy)]
-pub struct Movement {
-    pub forward: f32,
-    pub right: f32,
-}
-
-impl Default for Movement {
-    fn default() -> Self {
-        Self {
-            forward: 0.0,
-            right: 0.0,
-        }
-    }
-}
-
 pub trait Enemy {
     fn update(
         &mut self,
         player_pos: Positional,
         movement: Option<Movement>,
         world: &mut World<f32>,
+        bullets_out: &mut Vec<Bullet>,
     );
     fn rigid_body(&self) -> Option<BodyHandle>;
     fn draw(&self, ctx: &mut Context);
@@ -135,6 +124,7 @@ impl Enemy for Bulldozer {
         player_pos: Positional,
         movement: Option<Movement>,
         world: &mut World<f32>,
+        _bullets_out: &mut Vec<Bullet>,
     ) {
         if let Some(ref mut behavior) = self.behavior {
             self.movement = behavior.update(world.rigid_body(self.rigid_body).unwrap());
@@ -207,11 +197,30 @@ impl Enemy for Bulldozer {
 
 pub struct Swat {
     pawn: Player,
+    waypoint: Option<Point2>,
 }
 
 impl Swat {
     pub fn new(pawn: Player) -> Self {
-        Swat { pawn }
+        Swat {
+            pawn,
+            waypoint: None,
+        }
+    }
+
+    fn acquire_waypoint(&mut self) {
+        let pos = self.positional().position.coords;
+        let center_dist = pos.norm();
+
+        let goal: Point2 = if center_dist < SWAT_INNER_RADIUS || center_dist > SWAT_OUTER_RADIUS {
+            (pos.normalize() * (SWAT_INNER_RADIUS * 0.5 + SWAT_OUTER_RADIUS * 0.5)).into()
+        } else {
+            let a = pos.y.atan2(pos.x) + 0.1;
+            (Vector2::new(a.cos(), a.sin()) * (SWAT_INNER_RADIUS * 0.5 + SWAT_OUTER_RADIUS * 0.5))
+                .into()
+        };
+
+        self.waypoint = Some(goal);
     }
 }
 
@@ -221,9 +230,29 @@ impl Enemy for Swat {
         _player_pos: Positional,
         _movement: Option<Movement>,
         world: &mut World<f32>,
+        bullets_out: &mut Vec<Bullet>,
     ) {
-        self.pawn.update(world);
-        //
+        if self.waypoint.is_none() {
+            self.acquire_waypoint();
+            println!("waypoint: {:?}", self.waypoint);
+        }
+
+        if let Some(w) = self.waypoint {
+            let pos = self.positional().position;
+            if (pos - w).norm() < 0.5 {
+                self.waypoint = None;
+            }
+
+            self.pawn.set_input(PawnInput {
+                movement: Movement {
+                    right: w.x - pos.coords.x,
+                    forward: w.y - pos.coords.y,
+                },
+                ..Default::default()
+            });
+        }
+
+        self.pawn.update(world, bullets_out);
     }
 
     fn rigid_body(&self) -> Option<BodyHandle> {

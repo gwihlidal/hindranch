@@ -23,7 +23,7 @@ impl MenuPhase {
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Menu");
-            data.player.input = PlayerInput::default();
+            data.player_input = PlayerInput::default();
             self.first_update = false;
         }
 

@@ -37,7 +37,7 @@ impl PreparePhase {
                 "STATE: Prepare - round_index: {}, last_round: {}",
                 self.round_index, self.last_round
             );
-            data.player.input = PlayerInput::default();
+            data.player_input = PlayerInput::default();
             self.first_update = false;
         }
 
@@ -54,7 +54,8 @@ impl PreparePhase {
             if data.strategic_view { 0.02 } else { 0.1 },
         );
 
-        data.player.update(&mut data.world);
+        data.player.set_input((&data.player_input).into());
+        data.player.update(&mut data.world, &mut data.bullets);
 
         self.update_camera(data, data.player.positional, 0.0, 0.3);
 
@@ -108,10 +109,10 @@ impl PreparePhase {
         value: bool,
     ) {
         match key_code {
-            KeyCode::W | KeyCode::Up => data.player.input.up = value,
-            KeyCode::A | KeyCode::Left => data.player.input.left = value,
-            KeyCode::S | KeyCode::Down => data.player.input.down = value,
-            KeyCode::D | KeyCode::Right => data.player.input.right = value,
+            KeyCode::W | KeyCode::Up => data.player_input.up = value,
+            KeyCode::A | KeyCode::Left => data.player_input.left = value,
+            KeyCode::S | KeyCode::Down => data.player_input.down = value,
+            KeyCode::D | KeyCode::Right => data.player_input.right = value,
             KeyCode::Back => data.strategic_view = value,
             KeyCode::Space => {
                 if value {
@@ -131,7 +132,7 @@ impl PreparePhase {
         _xrel: f32,
         _yrel: f32,
     ) {
-        data.player.input.aim_pos = px_to_world(data.screen_to_world, x, y);
+        data.player_input.aim_pos = px_to_world(data.screen_to_world, x, y);
     }
 
     pub fn mouse_button_down_event(

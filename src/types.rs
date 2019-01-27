@@ -6,6 +6,21 @@ pub type Vector2 = na::Vector2<f32>;
 pub type Vector3 = na::Vector3<f32>;
 pub type Matrix4 = na::Matrix4<f32>;
 
+#[derive(Clone, Copy)]
+pub struct Movement {
+    pub forward: f32,
+    pub right: f32,
+}
+
+impl Default for Movement {
+    fn default() -> Self {
+        Self {
+            forward: 0.0,
+            right: 0.0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Positional {
     pub position: Point2,

@@ -81,7 +81,7 @@ impl RoundPhase {
                 self.round_index, self.last_round
             );
 
-            data.player.input = PlayerInput::default();
+            data.player_input = PlayerInput::default();
 
             if settings.enemies {
                 println!("spawn_bulldozers");
@@ -116,18 +116,25 @@ impl RoundPhase {
             if data.strategic_view { 0.02 } else { 0.1 },
         );
 
-        data.player.update(&mut data.world);
+        data.player.set_input((&data.player_input).into());
+        data.player.update(&mut data.world, &mut data.bullets);
 
         for (i, enemy) in &mut data.enemies.iter_mut().enumerate() {
             if settings.dozer_drive && i == 0 {
                 // TODO: Player controlled hack
                 enemy.update(
                     enemy.positional(),
-                    Some((&data.player.input).into()),
+                    Some((&data.player_input).into()),
                     &mut data.world,
+                    &mut data.bullets,
                 );
             } else {
-                enemy.update(data.player.positional, None, &mut data.world);
+                enemy.update(
+                    data.player.positional,
+                    None,
+                    &mut data.world,
+                    &mut data.bullets,
+                );
             }
         }
 
@@ -150,12 +157,6 @@ impl RoundPhase {
     }
 
     fn maintain_weapons(&mut self, data: &mut WorldData) {
-        data.player.weapon.update(
-            data.player.input.shoot,
-            &data.player.positional,
-            &mut data.bullets,
-        );
-
         let collision_world = data.world.collision_world();
         for bullet in data.bullets.iter_mut() {
             let mut enemy_hit = None;
@@ -397,10 +398,10 @@ impl RoundPhase {
                     }
                 }
             }
-            KeyCode::W | KeyCode::Up => data.player.input.up = value,
-            KeyCode::A | KeyCode::Left => data.player.input.left = value,
-            KeyCode::S | KeyCode::Down => data.player.input.down = value,
-            KeyCode::D | KeyCode::Right => data.player.input.right = value,
+            KeyCode::W | KeyCode::Up => data.player_input.up = value,
+            KeyCode::A | KeyCode::Left => data.player_input.left = value,
+            KeyCode::S | KeyCode::Down => data.player_input.down = value,
+            KeyCode::D | KeyCode::Right => data.player_input.right = value,
             KeyCode::Back => data.strategic_view = value,
             KeyCode::Space => {
                 if value {
@@ -420,7 +421,7 @@ impl RoundPhase {
         _xrel: f32,
         _yrel: f32,
     ) {
-        data.player.input.aim_pos = px_to_world(data.screen_to_world, x, y);
+        data.player_input.aim_pos = px_to_world(data.screen_to_world, x, y);
     }
 
     pub fn mouse_button_down_event(
@@ -431,7 +432,7 @@ impl RoundPhase {
         _x: f32,
         _y: f32,
     ) {
-        data.player.input.shoot = true;
+        data.player_input.shoot = true;
     }
 
     pub fn mouse_button_up_event(
@@ -442,7 +443,7 @@ impl RoundPhase {
         _x: f32,
         _y: f32,
     ) {
-        data.player.input.shoot = false;
+        data.player_input.shoot = false;
     }
 }
 

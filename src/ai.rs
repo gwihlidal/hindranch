@@ -1,5 +1,4 @@
 use super::consts::*;
-use super::enemy::Movement;
 use super::types::*;
 
 use rand::Rng;

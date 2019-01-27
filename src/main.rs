@@ -98,6 +98,7 @@ pub struct WorldData {
     sounds: Sounds,
     characters: Characters,
     player: Player,
+    player_input: PlayerInput,
     splash: graphics::Image,
     dozer_image: Rc<graphics::Image>,
     enemies: Vec<Box<dyn Enemy>>,
@@ -163,6 +164,7 @@ impl WorldData {
             sounds: Sounds::load(ctx),
             characters,
             player,
+            player_input: PlayerInput::default(),
             splash,
             dozer_image,
             enemies: Vec::new(),
@@ -199,6 +201,16 @@ impl From<&PlayerInput> for Movement {
         Self {
             forward: (if i.up { 1.0 } else { 0.0 }) + (if i.down { -1.0 } else { 0.0 }),
             right: (if i.right { 1.0 } else { 0.0 }) + (if i.left { -1.0 } else { 0.0 }),
+        }
+    }
+}
+
+impl From<&PlayerInput> for PawnInput {
+    fn from(i: &PlayerInput) -> Self {
+        Self {
+            movement: i.into(),
+            shoot: i.shoot,
+            aim_pos: i.aim_pos,
         }
     }
 }

@@ -40,7 +40,7 @@ impl Weapon {
         Self { cfg, cooldown: 0.0 }
     }
 
-    pub fn update<'a>(&mut self, shoot: bool, pos: &Positional, sink: &'a mut Vec<Bullet>) {
+    pub fn update(&mut self, shoot: bool, pos: &Positional, sink: &mut Vec<Bullet>) {
         self.cooldown -= 1.0 / 60.0;
         if shoot && self.cooldown <= 0.0 {
             self.cooldown = 1.0 / self.cfg.fire_rate;

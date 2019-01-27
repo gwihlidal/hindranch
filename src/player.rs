@@ -1,6 +1,8 @@
+use super::types::*;
 use crate::{
-    graphics::spritebatch::SpriteBatch, graphics::DrawParam, Ball, BodyHandle, Characters, Force2,
-    Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2, Volumetric, Weapon, World,
+    graphics::spritebatch::SpriteBatch, graphics::DrawParam, Ball, BodyHandle, Bullet, Characters,
+    Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2, Volumetric,
+    Weapon, World,
 };
 use nalgebra as na;
 use ncollide2d::world::CollisionGroups;
@@ -18,10 +20,27 @@ pub enum VisualState {
     Stand,
 }
 
+#[derive(Clone, Copy)]
+pub struct PawnInput {
+    pub movement: Movement,
+    pub aim_pos: Point2,
+    pub shoot: bool,
+}
+
+impl Default for PawnInput {
+    fn default() -> Self {
+        Self {
+            movement: Default::default(),
+            aim_pos: Point2::origin(),
+            shoot: false,
+        }
+    }
+}
+
 pub struct Player {
     pub weapon: Weapon,
     pub health: f32,
-    pub input: PlayerInput,
+    input: PawnInput,
     pub body_handle: BodyHandle,
     pub visual: VisualState,
     pub spritebatch: Rc<RefCell<SpriteBatch>>,
@@ -93,11 +112,14 @@ impl Player {
         Player {
             weapon,
             health,
-            input: PlayerInput::default(),
+            input: PawnInput::default(),
             body_handle: rb,
             visual: VisualState::Stand,
             spritebatch,
-            positional: Positional::default(),
+            positional: Positional {
+                position: pos,
+                rotation: 0.0,
+            },
             gun: characters.transform(&entry.gun),
             hold: characters.transform(&entry.hold),
             machine: characters.transform(&entry.machine),
@@ -111,6 +133,10 @@ impl Player {
             dead_silencer: characters.transform(&zombie.silencer),
             dead_stand: characters.transform(&zombie.stand),
         }
+    }
+
+    pub fn set_input(&mut self, input: PawnInput) {
+        self.input = input;
     }
 
     pub fn draw(&self) {
@@ -187,7 +213,7 @@ impl Player {
         self.visual = visual;
     }
 
-    pub fn update(&mut self, world: &mut World<f32>) {
+    pub fn update(&mut self, world: &mut World<f32>, bullets_out: &mut Vec<Bullet>) {
         let rigid_body = world.rigid_body_mut(self.body_handle).unwrap();
         let pos = rigid_body.position();
         self.positional.position = pos.translation.vector.into();
@@ -203,23 +229,10 @@ impl Player {
         const FORCE_RATE: f32 = 0.2;
         const MAX_VEL: f32 = 7.0;
 
-        let mut target_vel = Vector2::zeros();
-
-        //if !settings.dozer_drive
-        {
-            if self.input.right {
-                target_vel.x += 1.0;
-            }
-            if self.input.left {
-                target_vel.x -= 1.0;
-            }
-            if self.input.up {
-                target_vel.y += 1.0;
-            }
-            if self.input.down {
-                target_vel.y -= 1.0;
-            }
-        }
+        let mut target_vel = clamp_norm(
+            Vector2::new(self.input.movement.right, self.input.movement.forward),
+            1.0,
+        );
 
         target_vel *= MAX_VEL;
         target_vel -= velocity;
@@ -231,6 +244,9 @@ impl Player {
         let mut pos = rigid_body.position();
         pos.rotation = nalgebra::UnitComplex::from_angle(0.0);
         rigid_body.set_position(pos);
+
+        self.weapon
+            .update(self.input.shoot, &self.positional, bullets_out);
     }
 }
 
