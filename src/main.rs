@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 extern crate ggez;
 extern crate rand;
 extern crate toml;
@@ -10,8 +8,7 @@ use ggez::audio;
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event::{self, MouseButton};
 use ggez::graphics;
-#[allow(unused_imports)]
-use ggez::graphics::{spritebatch::SpriteBatch, Color, DrawParam, Image, Rect, Scale};
+use ggez::graphics::{spritebatch::SpriteBatch, Color, DrawParam, Image, Rect};
 use ggez::input::keyboard::{KeyCode, KeyMods};
 use ggez::timer;
 use ggez::{Context, GameResult};
@@ -94,7 +91,6 @@ pub struct WorldData {
     world: World<f32>,
     engine_data: audio::SoundData,
     font: graphics::Font,
-    text: graphics::Text,
     sounds: Sounds,
     characters: Characters,
     player: Player,
@@ -146,8 +142,6 @@ impl WorldData {
         //let font = graphics::Font::new(ctx, "/fonts/Saddlebag.ttf").unwrap();
         //let font = graphics::Font::new(ctx, "/fonts/SHADSER.ttf").unwrap();
 
-        let text = graphics::Text::new(("Hello world!", font, 96.0));
-
         WorldData {
             world_to_screen: Matrix4::identity(),
             screen_to_world: Matrix4::identity(),
@@ -159,7 +153,6 @@ impl WorldData {
             wall_pieces: Vec::new(),
             world,
             font,
-            text,
             engine_data: engine_sound.clone(),
             sounds: Sounds::load(ctx),
             characters,
@@ -252,13 +245,11 @@ impl From<&PlayerInput> for PawnInput {
     }
 }
 
-#[allow(dead_code)]
 struct WallPiece {
     tile_snip: Rect,
     rb: BodyHandle,
     spring: ForceGeneratorHandle,
     hp: f32,
-    placed: bool,
 }
 
 pub fn draw_shadowed_text(ctx: &mut Context, pos: Point2, text: &graphics::Text, color: Color) {
@@ -418,7 +409,6 @@ impl MainState {
                 rb,
                 spring,
                 hp: 1.0,
-                placed: false,
             });
         }
     }

@@ -1,12 +1,10 @@
-#![allow(unused_imports)]
-
 use super::consts::*;
 use super::enemy::Swat;
 use crate::{
-    draw_map_layer, draw_shadowed_text, graphics, px_to_world, settings::Settings, AiBehavior,
-    Bulldozer, Color, Context, Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton,
-    MusicTrack, Player, PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState,
-    Weapon, WeaponConfig, WorldData, DESIRED_FPS,
+    draw_map_layer, draw_shadowed_text, graphics, px_to_world, settings::Settings, Bulldozer,
+    Color, Context, Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, Player,
+    PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState, Weapon,
+    WeaponConfig, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -14,11 +12,9 @@ use std::rc::Rc;
 use na::Isometry2;
 use nalgebra as na;
 use ncollide2d::query::Ray;
-use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
+use ncollide2d::shape::{Cuboid, ShapeHandle};
 use ncollide2d::world::CollisionGroups;
-use nphysics2d::algebra::Force2;
-use nphysics2d::force_generator::{ForceGeneratorHandle, Spring};
-use nphysics2d::object::{BodyHandle, Material};
+use nphysics2d::object::Material;
 use nphysics2d::volumetric::Volumetric;
 use nphysics2d::world::World;
 

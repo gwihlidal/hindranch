@@ -1,5 +1,4 @@
 use ggez::audio;
-use ggez::Context;
 use std::collections::VecDeque;
 
 pub struct VoiceQueue {
@@ -13,16 +12,6 @@ impl VoiceQueue {
             active: None,
             pending: VecDeque::new(),
         }
-    }
-
-    fn load_voice(&self, name: &str, ctx: &mut Context) -> audio::Source {
-        let source = audio::Source::new(ctx, format!("/voice/{}.ogg", name)).unwrap();
-        source
-    }
-
-    pub fn enqueue(&mut self, name: &str, ctx: &mut Context) {
-        let source = self.load_voice(name, ctx);
-        self.pending.push_front(source);
     }
 
     pub fn process(&mut self) {

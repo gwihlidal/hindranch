@@ -1,8 +1,6 @@
-#![allow(unused_imports)]
-
 use crate::{
-    graphics, Color, Context, KeyCode, MainState, MouseButton, MusicTrack, PlayerInput, Point2,
-    Settings, Vector2, WorldData,
+    graphics, Color, Context, KeyCode, MouseButton, MusicTrack, PlayerInput, Point2, Settings,
+    Vector2, WorldData,
 };
 
 pub struct MenuPhase {

@@ -1,7 +1,6 @@
 use ggez::audio;
 use ggez::Context;
 use rand::{thread_rng, Rng};
-//use rand::seq::SliceRandom;
 
 pub struct Sounds {
     death: audio::Source,
@@ -153,13 +152,18 @@ impl Sounds {
     }
 }
 
-pub fn inverse_distance(distance: f32, min_distance: f32, max_distance: f32, roll_off: f32) -> f32 {
+pub fn _inverse_distance(
+    distance: f32,
+    min_distance: f32,
+    max_distance: f32,
+    roll_off: f32,
+) -> f32 {
     let distance = distance.max(min_distance);
     let distance = distance.min(max_distance);
     min_distance / (min_distance + roll_off * (distance - min_distance))
 }
 
-pub fn linear_distance(distance: f32, min_distance: f32, max_distance: f32, roll_off: f32) -> f32 {
+pub fn _linear_distance(distance: f32, min_distance: f32, max_distance: f32, roll_off: f32) -> f32 {
     let distance = distance.max(min_distance);
     let distance = distance.min(max_distance);
     1.0 - roll_off * (distance - min_distance) / (max_distance - min_distance)

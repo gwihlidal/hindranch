@@ -1,5 +1,3 @@
-#![allow(unused_imports)]
-
 use crate::{
     audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, PlayerInput, Point2,
     Settings, WorldData,

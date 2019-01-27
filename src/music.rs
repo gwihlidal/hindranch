@@ -27,16 +27,4 @@ impl MusicTrack {
             self.source.play().unwrap();
         }
     }
-
-    /*pub fn pause(&mut self) {
-        if !self.source.paused() {
-            self.source.pause();
-        }
-    }*/
-
-    pub fn stop(&mut self) {
-        if self.source.playing() {
-            self.source.stop();
-        }
-    }
 }

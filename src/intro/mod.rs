@@ -1,9 +1,7 @@
-#![allow(unused_imports)]
-
 use crate::{
     audio::Source, draw_map_layer, graphics, graphics::Text, Characters, Color, Context, KeyCode,
-    MainState, Matrix4, MouseButton, MusicTrack, PawnInput, PlayerInput, Point2, Positional, Rect,
-    Settings, Vector2, Vector3, VoiceQueue, WorldData,
+    MainState, Matrix4, MouseButton, MusicTrack, PlayerInput, Point2, Positional, Rect, Settings,
+    Vector2, Vector3, VoiceQueue, WorldData,
 };
 
 pub struct IntroLine {

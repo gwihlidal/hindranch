@@ -1,13 +1,9 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
-
 use crate::{
-    clamp_norm, draw_single_image, exponential_distance, inverse_distance, linear_distance,
-    AiBehavior, BodyHandle, Bullet, Color, Context, Force2, Movement, PawnInput, Player, Point2,
-    Positional, Settings, Sounds, Vector2, World,
+    clamp_norm, draw_single_image, exponential_distance, AiBehavior, BodyHandle, Bullet, Color,
+    Context, Force2, Movement, PawnInput, Player, Point2, Positional, Settings, Sounds, Vector2,
+    World, GROUP_ENEMY, SWAT_INNER_RADIUS, SWAT_OUTER_RADIUS,
 };
 
-use super::consts::*;
 use super::player::VisualState;
 
 use ggez::audio;
@@ -16,7 +12,6 @@ use nalgebra as na;
 use ncollide2d::query::Ray;
 use ncollide2d::world::CollisionGroups;
 use rand::Rng;
-use std::default::Default;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -45,7 +40,6 @@ pub trait Enemy {
 }
 
 pub struct Bulldozer {
-    driving: bool,
     engine_source: audio::SpatialSource,
     movement: Movement,
     rigid_body: BodyHandle,
@@ -68,7 +62,6 @@ impl Bulldozer {
         let mut engine_source = audio::SpatialSource::from_data(ctx, engine_sound.clone()).unwrap();
         engine_source.set_repeat(true);
         Bulldozer {
-            driving: false,
             engine_source,
             movement: Movement {
                 forward: 0.0,

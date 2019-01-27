@@ -1,5 +1,3 @@
-#![allow(unused_imports)]
-
 use crate::{
     draw_map_layer, draw_shadowed_text, get_map_layer, graphics, px_to_world, tile_id_to_src_rect,
     BodyHandle, CollisionGroups, Color, Context, Cuboid, Isometry2, KeyCode, MainState, Material,
@@ -9,6 +7,7 @@ use crate::{
 };
 
 use nalgebra as na;
+use rand::{thread_rng, Rng};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -377,7 +376,6 @@ impl PreparePhase {
             rb,
             spring,
             hp: 1.0,
-            placed: true,
         });
     }
 
@@ -433,7 +431,6 @@ impl PreparePhase {
             rb,
             spring,
             hp: 1.0,
-            placed: true,
         });
     }
 }
