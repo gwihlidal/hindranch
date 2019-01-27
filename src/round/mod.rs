@@ -45,10 +45,12 @@ impl RoundPhase {
 
         let collision_world = data.world.collision_world();
         for bullet in data.bullets.iter_mut() {
+            let mut enemy_hit = None;
+
             let mut hit_anything = false;
             let mut groups = CollisionGroups::new();
             groups.set_blacklist(&[COLLISION_GROUP_PLAYER]);
-            for (_other_body, collision) in collision_world.interferences_with_ray(
+            for (other_collider, collision) in collision_world.interferences_with_ray(
                 &Ray {
                     origin: bullet.pos.position,
                     dir: bullet.pos.forward(),
@@ -56,6 +58,14 @@ impl RoundPhase {
                 &groups,
             ) {
                 if collision.toi < bullet.velocity / 60.0 {
+                    let other_body = data.world.collider_body_handle(other_collider.handle());
+                    for (enemy_i, enemy) in data.enemies.iter().enumerate() {
+                        if enemy.rigid_body() == other_body {
+                            enemy_hit = Some(enemy_i);
+                            //println!("Enemy hit!");
+                        }
+                    }
+
                     hit_anything = true;
                     break;
                 }
@@ -63,6 +73,10 @@ impl RoundPhase {
 
             if hit_anything {
                 bullet.life_seconds = 0.0;
+            }
+
+            if let Some(enemy_i) = enemy_hit {
+                data.enemies[enemy_i].damage(bullet.damage);
             }
         }
 
@@ -128,6 +142,20 @@ impl RoundPhase {
             data.wall_pieces.swap_remove(i);
         }
 
+        let mut killed_anything = false;
+        for e in &data.enemies {
+            if e.health() <= 0.0 {
+                data.world.remove_bodies(&[e.rigid_body().unwrap()]);
+                killed_anything = true;
+            }
+        }
+        data.enemies.retain(|e| e.health() > 0.0);
+
+        if killed_anything {
+            // TODO: play a happy sound!
+            data.sounds.play_death();
+        }
+
         data.world.step();
     }
 
@@ -168,6 +196,7 @@ impl RoundPhase {
             MainState::draw_single_image(
                 ctx,
                 &enemy.image(),
+                enemy.color(),
                 positional.position,
                 3.0,
                 positional.rotation,

@@ -275,7 +275,6 @@ fn spawn_dozer(
         engine_sound,
         rb,
         image.clone(),
-        8.0, /* health */
         Positional::default(),
         Some(Box::new(EnemyDozerBehavior::new())),
     ))
@@ -331,6 +330,7 @@ impl MainState {
     fn draw_single_image(
         ctx: &mut Context,
         image: &graphics::Image,
+        color: Color,
         pos: Point2,
         scale: f32,
         rotation: f32,
@@ -345,6 +345,7 @@ impl MainState {
                 .dest(pos - Vector2::new(0.5, 0.5))
                 .scale(Vector2::new(half_w * 2.0, half_h * -2.0))
                 .offset(Point2::new(0.5, 0.5))
+                .color(color)
                 .rotation(rotation),
         )
         .unwrap();

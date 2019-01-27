@@ -6,6 +6,7 @@ pub struct Bullet {
     pub pos: Positional,
     pub velocity: f32,
     pub life_seconds: f32,
+    pub damage: f32,
 }
 
 #[derive(Deserialize)]
@@ -13,6 +14,7 @@ pub struct WeaponConfig {
     pub bullets_per_round: u32,
     pub bullet_velocity: f32,
     pub bullet_life_seconds: f32,
+    pub bullet_damage: f32,
     pub fire_rate: f32,
     pub spread_degrees: f32,
 }
@@ -54,6 +56,7 @@ impl Weapon {
                     },
                     velocity: self.cfg.bullet_velocity,
                     life_seconds: self.cfg.bullet_life_seconds,
+                    damage: self.cfg.bullet_damage,
                 });
             }
         }

@@ -2,8 +2,8 @@
 #![allow(unused_imports)]
 
 use crate::{
-    exponential_distance, inverse_distance, linear_distance, AiBehavior, BodyHandle, Context,
-    Force2, Point2, Positional, Vector2, World,
+    exponential_distance, inverse_distance, linear_distance, AiBehavior, BodyHandle, Color,
+    Context, Force2, Point2, Positional, Vector2, World,
 };
 
 use ggez::audio;
@@ -36,6 +36,9 @@ pub trait Enemy {
     );
     fn rigid_body(&self) -> Option<BodyHandle>;
     fn image(&self) -> Rc<graphics::Image>;
+    fn color(&self) -> Color {
+        Color::new(1.0, 1.0, 1.0, 1.0)
+    }
     fn health(&self) -> f32;
     fn damage(&mut self, amount: f32);
     fn alive(&self) -> bool;
@@ -52,6 +55,7 @@ pub struct Bulldozer {
     health: f32,
     positional: Positional,
     behavior: Option<Box<dyn AiBehavior>>,
+    time_since_last_damage: f32,
 }
 
 impl Bulldozer {
@@ -60,7 +64,6 @@ impl Bulldozer {
         engine_sound: audio::SoundData,
         rigid_body: BodyHandle,
         image: Rc<graphics::Image>,
-        health: f32,
         positional: Positional,
         behavior: Option<Box<dyn AiBehavior>>,
     ) -> Self {
@@ -75,9 +78,10 @@ impl Bulldozer {
             },
             rigid_body,
             image,
-            health,
+            health: 1.0,
             positional,
             behavior,
+            time_since_last_damage: 10000.0,
         }
     }
 
@@ -160,6 +164,8 @@ impl Enemy for Bulldozer {
         if !self.engine_source.playing() {
             self.engine_source.play().unwrap();
         }
+
+        self.time_since_last_damage += 1.0 / 60.0;
     }
 
     fn rigid_body(&self) -> Option<BodyHandle> {
@@ -170,12 +176,19 @@ impl Enemy for Bulldozer {
         self.image.clone()
     }
 
+    fn color(&self) -> Color {
+        let t = self.time_since_last_damage;
+        let t = (1.0 - t * 5.0).max(0.0) * 10.0;
+        Color::new(1.0 + t, self.health + t, self.health + t, 1.0)
+    }
+
     fn health(&self) -> f32 {
         self.health
     }
 
     fn damage(&mut self, amount: f32) {
-        self.health -= amount.min(self.health);
+        self.health = (self.health - amount).max(0.0);
+        self.time_since_last_damage = 0.0;
     }
 
     fn alive(&self) -> bool {
