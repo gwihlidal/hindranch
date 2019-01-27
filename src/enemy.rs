@@ -1,12 +1,15 @@
 #![allow(dead_code)]
 
-use crate::{linear_distance, inverse_distance, exponential_distance, AiBehavior, Context, BodyHandle, Force2, Point2, Positional, Vector2, World};
+use crate::{
+    exponential_distance, inverse_distance, linear_distance, AiBehavior, BodyHandle, Context,
+    Force2, Point2, Positional, Vector2, World,
+};
 
-use ggez::graphics;
 use ggez::audio;
+use ggez::graphics;
+use nalgebra as na;
 use std::default::Default;
 use std::rc::Rc;
-use nalgebra as na;
 
 #[derive(Clone, Copy)]
 pub struct Movement {
@@ -24,7 +27,12 @@ impl Default for Movement {
 }
 
 pub trait Enemy {
-    fn update(&mut self, player_pos: Positional, movement: Option<Movement>, world: &mut World<f32>);
+    fn update(
+        &mut self,
+        player_pos: Positional,
+        movement: Option<Movement>,
+        world: &mut World<f32>,
+    );
     fn rigid_body(&self) -> Option<BodyHandle>;
     fn image(&self) -> Rc<graphics::Image>;
     fn health(&self) -> f32;
@@ -117,7 +125,12 @@ impl Bulldozer {
 }
 
 impl Enemy for Bulldozer {
-    fn update(&mut self, player_pos: Positional, movement: Option<Movement>, world: &mut World<f32>) {
+    fn update(
+        &mut self,
+        player_pos: Positional,
+        movement: Option<Movement>,
+        world: &mut World<f32>,
+    ) {
         if let Some(ref mut behavior) = self.behavior {
             self.movement = behavior.update(world.rigid_body(self.rigid_body).unwrap());
         }
@@ -130,7 +143,7 @@ impl Enemy for Bulldozer {
         let max = 1000.0;
         let min = 4.0;
         let roll_off = 1.5;
-        
+
         let ear_distance = na::distance(&player_pos.position, &self.positional.position);
         let volume = exponential_distance(ear_distance, min, max, roll_off);
         //println!("Volume: {}", volume);
@@ -138,7 +151,7 @@ impl Enemy for Bulldozer {
         self.engine_source.set_volume(volume);
 
         //if self.driving {
-            //self.engine_source.set_pitch(1.0);
+        //self.engine_source.set_pitch(1.0);
         //} else {
         //    self.engine_source.set_pitch(0.7);
         //}
@@ -194,7 +207,12 @@ impl Sheriff {
 }
 
 impl Enemy for Sheriff {
-    fn update(&mut self, _player_pos: Positional, _movement: Option<Movement>, _world: &mut World<f32>) {
+    fn update(
+        &mut self,
+        _player_pos: Positional,
+        _movement: Option<Movement>,
+        _world: &mut World<f32>,
+    ) {
         //
     }
 

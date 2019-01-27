@@ -207,8 +207,6 @@ impl MainState {
 
         let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer3.ogg").unwrap();
 
-        //let _sheriff = enemy::Sheriff::new(4.0, Positional::default());
-
         let splash = graphics::Image::new(ctx, "/splash/hindranch_0.png").unwrap();
 
         let map_spritebatch = graphics::spritebatch::SpriteBatch::new(map_tile_image.clone());
