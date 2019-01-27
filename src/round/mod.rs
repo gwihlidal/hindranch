@@ -222,8 +222,12 @@ impl RoundPhase {
             if let Some(rb) = data.world.rigid_body_mut(wall_piece.rb) {
                 let mut vel = rb.velocity().clone();
 
-                wall_piece.hp =
-                    (wall_piece.hp - MainState::wall_velocity_to_damage(&vel.linear)).max(0.0);
+                let dmg = MainState::wall_velocity_to_damage(&vel.linear);
+                wall_piece.hp = (wall_piece.hp - dmg).max(0.0);
+
+                if dmg > 0.1 {
+                    data.sounds.play_crash();
+                }
 
                 vel.linear *= 0.95;
                 vel.angular *= 0.95;
