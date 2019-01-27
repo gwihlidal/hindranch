@@ -111,7 +111,7 @@ impl MenuPhase {
         _x: f32,
         _y: f32,
     ) {
-        //
+        self.start_game = true;
     }
 
     pub fn mouse_button_up_event(
