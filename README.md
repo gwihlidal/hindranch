@@ -9,7 +9,7 @@ Global Game Jam 2019 - Theme is "Home"
 
 ## Overview
 
-The government foreclosed on your ranch, and is forcefully coming to take it from you. Fight back!
+The government foreclosed on your ranch, and they are coming to forcefully take it from you. Fight back!
 
 ## Rounds 1-5
 
@@ -60,7 +60,7 @@ Licence: CC BY (http://creativecommons.org/licenses/by/4.0/)
 "Twisted" by Kevin MacLeod (https://incompetech.com)
 Licence: CC BY (http://creativecommons.org/licenses/by/4.0/)
 
-Various misc. sounds:
+Various misc. sounds (not all used in the end):
 
 https://freesound.org/people/redafs/sounds/378011/
 https://freesound.org/people/Soughtaftersounds/sounds/145416/
@@ -76,3 +76,9 @@ https://freesound.org/people/InspectorJ/sounds/344271/
 https://freesound.org/people/FunWithSound/sounds/390706/
 https://freesound.org/people/avrahamy/sounds/141563/
 https://freesound.org/people/qubodup/sounds/187676/
+
+Sprite sheet for tile map and characters:
+https://www.kenney.nl/assets/topdown-shooter
+
+Font:
+https://www.dafont.com/bleeding-cowboys.font
