@@ -3,8 +3,8 @@
 use super::consts::*;
 use crate::{
     draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Context,
-    Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, Point2,
-    Positional, RoundData, Vector2, Vector3, VisualState, WorldData, DESIRED_FPS,
+    Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack, PlayerInput,
+    Point2, Positional, RoundData, Vector2, Vector3, VisualState, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -78,12 +78,15 @@ impl RoundPhase {
                 "STATE: Round - round_index: {}, last_round: {}",
                 self.round_index, self.last_round
             );
-            self.first_update = false;
+
+            data.player.input = PlayerInput::default();
 
             if settings.enemies {
                 println!("spawn_bulldozers");
                 self.spawn_bulldozers(data, ctx, 8);
             }
+
+            self.first_update = false;
         }
 
         let round_data = self.round_data.clone();

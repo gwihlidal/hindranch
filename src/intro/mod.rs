@@ -2,7 +2,8 @@
 
 use crate::{
     draw_map_layer, graphics, Characters, Color, Context, KeyCode, MainState, Matrix4, MouseButton,
-    MusicTrack, Point2, Positional, Rect, Settings, Vector2, Vector3, VoiceQueue, WorldData,
+    MusicTrack, PlayerInput, Point2, Positional, Rect, Settings, Vector2, Vector3, VoiceQueue,
+    WorldData,
 };
 
 pub struct IntroPhase {
@@ -55,6 +56,7 @@ impl IntroPhase {
     pub fn update(&mut self, settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Intro");
+            data.player.input = PlayerInput::default();
             if settings.voice {
                 self.voice_queue.enqueue("shout", ctx);
                 self.voice_queue.enqueue("defiance", ctx);

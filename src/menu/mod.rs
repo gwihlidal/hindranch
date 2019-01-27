@@ -1,7 +1,8 @@
 #![allow(unused_imports)]
 
 use crate::{
-    graphics, Context, KeyCode, MainState, Point2, Color, MouseButton, MusicTrack, Settings, Vector2, WorldData,
+    graphics, Color, Context, KeyCode, MainState, MouseButton, MusicTrack, PlayerInput, Point2,
+    Settings, Vector2, WorldData,
 };
 
 pub struct MenuPhase {
@@ -19,9 +20,10 @@ impl MenuPhase {
         }
     }
 
-    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Menu");
+            data.player.input = PlayerInput::default();
             self.first_update = false;
         }
 
@@ -68,7 +70,10 @@ impl MenuPhase {
             ctx,
             &text,
             graphics::DrawParam::new()
-                .dest(Point2::new((window_size.0 as f32 / 2.0) - (text_width / 2.0), window_size.1 as f32 - text_height - 20.0))
+                .dest(Point2::new(
+                    (window_size.0 as f32 / 2.0) - (text_width / 2.0),
+                    window_size.1 as f32 - text_height - 20.0,
+                ))
                 .color(Color::from((255, 255, 255, 255))),
         )
         .unwrap();

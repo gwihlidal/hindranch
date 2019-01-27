@@ -1,7 +1,8 @@
 #![allow(unused_imports)]
 
 use crate::{
-    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, Point2, Settings, WorldData,
+    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, PlayerInput, Point2,
+    Settings, WorldData,
 };
 
 pub struct OutroPhase {
@@ -19,9 +20,10 @@ impl OutroPhase {
         }
     }
 
-    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Outro");
+            data.player.input = PlayerInput::default();
             if settings.sounds {
                 self.yee_haw.play().unwrap();
             }

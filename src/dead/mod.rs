@@ -1,8 +1,8 @@
 #![allow(unused_imports)]
 
 use crate::{
-    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, Point2, Settings, Sounds,
-    WorldData,
+    audio, graphics, Color, Context, DrawParam, KeyCode, MouseButton, PlayerInput, Point2,
+    Settings, Sounds, WorldData,
 };
 
 pub struct DeadPhase {
@@ -21,9 +21,10 @@ impl DeadPhase {
             wasted: audio::Source::new(ctx, "/voice/wasted.ogg").unwrap(),
         }
     }
-    pub fn update(&mut self, settings: &Settings, _data: &mut WorldData, _ctx: &mut Context) {
+    pub fn update(&mut self, settings: &Settings, data: &mut WorldData, _ctx: &mut Context) {
         if self.first_update {
             println!("STATE: Dead");
+            data.player.input = PlayerInput::default();
             if settings.sounds {
                 self.sounds.play_death();
                 self.wasted.play().unwrap();
