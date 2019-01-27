@@ -294,7 +294,7 @@ impl IntroPhase {
         key_code: KeyCode,
         value: bool,
     ) {
-        if key_code == KeyCode::Tab && value {
+        if key_code == KeyCode::Back && value {
             self.begin_game = true;
         }
     }
