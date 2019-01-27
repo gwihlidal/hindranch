@@ -1,9 +1,11 @@
+use super::consts::*;
 use crate::{
     graphics::spritebatch::SpriteBatch, graphics::DrawParam, settings::Settings, Ball, BodyHandle,
     Characters, Force2, Isometry2, Material, Point2, Positional, Rect, ShapeHandle, Vector2,
     Volumetric, World,
 };
 use nalgebra as na;
+use ncollide2d::world::CollisionGroups;
 
 const COLLIDER_MARGIN: f32 = 0.01;
 
@@ -63,13 +65,19 @@ impl Player {
         let pos = Isometry2::new(Vector2::new(pos.x, pos.y), na::zero());
         let rb = world.add_rigid_body(pos, inertia, center_of_mass);
 
-        world.add_collider(
+        let collider_handle = world.add_collider(
             COLLIDER_MARGIN,
             geom.clone(),
             rb,
             Isometry2::identity(),
             Material::new(0.0, 0.0),
         );
+
+        let mut col_group = CollisionGroups::new();
+        col_group.set_membership(&[COLLISION_GROUP_PLAYER]);
+        world
+            .collision_world_mut()
+            .set_collision_groups(collider_handle, col_group);
 
         Player {
             health,

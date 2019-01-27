@@ -1,10 +1,14 @@
 #![allow(unused_imports)]
 
+use super::consts::*;
 use crate::{
     draw_map_layer, graphics, px_to_world, settings::Settings, Context, KeyCode, MainState,
     Matrix4, MouseButton, MusicTrack, Point2, Positional, Vector2, Vector3, VisualState, WorldData,
     DESIRED_FPS,
 };
+
+use ncollide2d::query::Ray;
+use ncollide2d::world::CollisionGroups;
 
 pub struct RoundPhase {
     music_track: MusicTrack,
@@ -38,6 +42,29 @@ impl RoundPhase {
             &data.player.positional,
             &mut data.bullets,
         );
+
+        let collision_world = data.world.collision_world();
+        for bullet in data.bullets.iter_mut() {
+            let mut hit_anything = false;
+            let mut groups = CollisionGroups::new();
+            groups.set_blacklist(&[COLLISION_GROUP_PLAYER]);
+            for (_other_body, collision) in collision_world.interferences_with_ray(
+                &Ray {
+                    origin: bullet.pos.position,
+                    dir: bullet.pos.forward(),
+                },
+                &groups,
+            ) {
+                if collision.toi < bullet.velocity / 60.0 {
+                    hit_anything = true;
+                    break;
+                }
+            }
+
+            if hit_anything {
+                bullet.life_seconds = 0.0;
+            }
+        }
 
         for bullet in data.bullets.iter_mut() {
             bullet.pos.position += bullet.pos.forward() * (bullet.velocity / DESIRED_FPS as f32);

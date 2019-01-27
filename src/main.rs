@@ -61,6 +61,7 @@ use self::round::*;
 
 use na::Isometry2;
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
+use ncollide2d::world::CollisionGroups;
 use nphysics2d::algebra::Force2;
 use nphysics2d::force_generator::{ForceGeneratorHandle, Spring};
 use nphysics2d::object::{BodyHandle, Material};
@@ -255,13 +256,19 @@ fn spawn_dozer(
     let pos = Isometry2::new(Vector2::new(pos.x, pos.y), rotation);
     let rb = world.add_rigid_body(pos, inertia, center_of_mass);
 
-    world.add_collider(
+    let collider_handle = world.add_collider(
         COLLIDER_MARGIN,
         geom.clone(),
         rb,
         Isometry2::identity(),
         Material::new(0.3, 0.5),
     );
+
+    let mut col_group = CollisionGroups::new();
+    col_group.set_membership(&[COLLISION_GROUP_ENEMY]);
+    world
+        .collision_world_mut()
+        .set_collision_groups(collider_handle, col_group);
 
     Box::new(Bulldozer::new(
         ctx,
@@ -369,13 +376,20 @@ impl MainState {
                     .world
                     .add_rigid_body(pos, inertia, center_of_mass);
 
-                self.world_data.world.add_collider(
+                let collider_handle = self.world_data.world.add_collider(
                     COLLIDER_MARGIN,
                     geom.clone(),
                     rb,
                     Isometry2::identity(),
                     Material::new(0.3, 0.0),
                 );
+
+                let mut col_group = CollisionGroups::new();
+                col_group.set_membership(&[COLLISION_GROUP_WORLD]);
+                self.world_data
+                    .world
+                    .collision_world_mut()
+                    .set_collision_groups(collider_handle, col_group);
 
                 rb
             };
