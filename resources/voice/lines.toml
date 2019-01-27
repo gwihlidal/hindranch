@@ -1,16 +1,6 @@
 [[lines]]
-name = "test1"
-text = "This is a test using a toml data file"
-female = true
-
-[[lines]]
-name = "test2"
-text = "This is another test"
-female = false
-
-[[lines]]
 name = "shout"
-text = "This is the police, get the fuck outside so we can take your ranch"
+text = "This is the sheriff, come outside with your hands above your head. We've got your place surrounded."
 female = false
 pitch = -10.0
 rate = 0.9
@@ -21,3 +11,157 @@ text = "Try and take it from me, pigs"
 female = true
 pitch = -10.0
 rate = 0.9
+
+[[lines]]
+name = "respect"
+text = "And remember, respect is everything"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "must_hurt"
+text = "Ouch, that had to hurt"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "get_some"
+text = "Come get some"
+female = true
+pitch = -10.0
+rate = 0.9
+
+[[lines]]
+name = "blow_ass"
+text = "Blow it out your ass"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "bite_dust"
+text = "Another one bites the dust"
+female = true
+pitch = -10.0
+rate = 1.1
+
+[[lines]]
+name = "off_lawn"
+text = "Get off my lawn"
+female = true
+pitch = -10.0
+rate = 1.1
+
+[[lines]]
+name = "ass_grass"
+text = "Your ass is grass, and I'm the lawnmower"
+female = true
+pitch = -10.0
+rate = 1.1
+
+[[lines]]
+name = "eat_shit"
+text = "Eat shit and die"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "get_wrecked"
+text = "Get wrecked!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "you_suck"
+text = "You guys suck!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "cake"
+text = "Yeah, piece of cake!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "what_mess"
+text = "Haaaaaaa, what a mess!"
+female = true
+pitch = -10.0
+rate = 1.1
+
+[[lines]]
+name = "want_some"
+text = "Who wants some?"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "piss_off"
+text = "You're pissing me off!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "country_justice"
+text = "Did someone order some good old country justice?"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "rip_em"
+text = "Gonna rip 'em a new one!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "swallow_soul"
+text = "I'll swallow your soul!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "boomstick"
+text = "This... is my boomstick!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "hail_king"
+text = "Hail to the king, baby."
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "shall_die"
+text = "You shall die!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "groovy"
+text = "Grewwwww veeeee!"
+female = true
+pitch = -10.0
+rate = 1.0
+
+[[lines]]
+name = "headshot"
+text = "Boom! Headshot!"
+female = true
+pitch = -10.0
+rate = 1.0
