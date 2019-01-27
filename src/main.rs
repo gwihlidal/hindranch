@@ -116,7 +116,7 @@ impl WorldData {
 
         let characters = Characters::load(ctx);
 
-        let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer.png").unwrap());
+        let dozer_image = Rc::new(graphics::Image::new(ctx, "/dozer_lores.png").unwrap());
 
         let engine_sound = audio::SoundData::new(ctx, "/sound/bulldozer3.ogg").unwrap();
 
