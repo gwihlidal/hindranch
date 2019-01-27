@@ -1,6 +1,9 @@
 #![allow(unused_imports)]
 
-use crate::{graphics, Rect, Color, Vector2, Vector3, Matrix4, Positional, MainState, draw_map_layer, Context, Characters, KeyCode, Point2, MouseButton, MusicTrack, Settings, VoiceQueue, WorldData};
+use crate::{
+    draw_map_layer, graphics, Characters, Color, Context, KeyCode, MainState, Matrix4, MouseButton,
+    MusicTrack, Point2, Positional, Rect, Settings, Vector2, Vector3, VoiceQueue, WorldData,
+};
 
 pub struct IntroPhase {
     pub first_update: bool,
@@ -65,12 +68,7 @@ impl IntroPhase {
 
         self.voice_queue.process();
 
-        self.calculate_view_transform(
-            data,
-            &ctx,
-            data.camera_pos,
-            0.1,
-        );
+        self.calculate_view_transform(data, &ctx, data.camera_pos, 0.1);
 
         if self.sheriff_speaking {
             self.update_camera(data, self.sheriff_pos, 0.0, 0.3);
@@ -81,12 +79,12 @@ impl IntroPhase {
 
     pub fn draw(&mut self, _settings: &Settings, data: &mut WorldData, ctx: &mut Context) {
         let window_size = graphics::drawable_size(ctx);
-        
+
         let identity_transform = graphics::transform(ctx);
 
         // Apply our custom transform
         MainState::apply_view_transform(ctx, data.world_to_screen);
-        
+
         graphics::clear(ctx, [0.1, 0.2, 0.9, 1.0].into());
 
         {
@@ -128,7 +126,7 @@ impl IntroPhase {
                 .offset(Point2::new(0.5, 0.5))
                 .rotation(self.sheriff_pos.rotation),
         );
-        
+
         graphics::draw(ctx, &data.character_spritebatch, graphics::DrawParam::new()).unwrap();
         data.character_spritebatch.clear();
 
@@ -150,7 +148,8 @@ impl IntroPhase {
             &text,
             graphics::DrawParam::new()
                 .dest(Point2::new(
-                    24.0, (window_size.1 as f32 - text_height - 20.0) + 4.0,
+                    24.0,
+                    (window_size.1 as f32 - text_height - 20.0) + 4.0,
                 ))
                 .color(Color::from((0, 0, 0, 255))),
         )
@@ -160,9 +159,7 @@ impl IntroPhase {
             ctx,
             &text,
             graphics::DrawParam::new()
-                .dest(Point2::new(
-                    20.0, window_size.1 as f32 - text_height - 20.0,
-                ))
+                .dest(Point2::new(20.0, window_size.1 as f32 - text_height - 20.0))
                 .color(Color::from((255, 255, 255, 255))),
         )
         .unwrap();
