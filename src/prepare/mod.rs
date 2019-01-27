@@ -138,7 +138,7 @@ impl PreparePhase {
         &mut self,
         _settings: &Settings,
         data: &mut WorldData,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         key_code: KeyCode,
         value: bool,
     ) {
@@ -147,6 +147,16 @@ impl PreparePhase {
             KeyCode::A | KeyCode::Left => data.player_input.left = value,
             KeyCode::S | KeyCode::Down => data.player_input.down = value,
             KeyCode::D | KeyCode::Right => data.player_input.right = value,
+            KeyCode::C => {
+                if value {
+                    self.place_crate(data, ctx);
+                }
+            }
+            KeyCode::R => {
+                if value {
+                    self.place_rock(data, ctx);
+                }
+            }
             KeyCode::Back => data.strategic_view = value,
             KeyCode::Space => {
                 if value {
@@ -228,5 +238,13 @@ impl PreparePhase {
             * Matrix4::new_translation(&Vector3::new(-origin.x, -origin.y, 0.0));
 
         data.screen_to_world = data.world_to_screen.try_inverse().unwrap();
+    }
+
+    pub fn place_rock(&mut self, _data: &mut WorldData, _ctx: &mut Context) {
+        //
+    }
+
+    pub fn place_crate(&mut self, _data: &mut WorldData, _ctx: &mut Context) {
+        //
     }
 }
