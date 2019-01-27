@@ -137,9 +137,9 @@ impl IntroPhase {
         graphics::apply_transformations(ctx).unwrap();
 
         let text = if self.sheriff_speaking {
-            graphics::Text::new(("SHERIFF: This is the sheriff.", data.font, 48.0))
+            graphics::Text::new(("SHERIFF: This is the sheriff.", data.font, 96.0))
         } else {
-            graphics::Text::new(("PLAYER: Get the fuck out of here.", data.font, 48.0))
+            graphics::Text::new(("PLAYER: Get the fuck out of here.", data.font, 96.0))
         };
 
         //let text_width = text.width(ctx) as f32;
@@ -150,9 +150,20 @@ impl IntroPhase {
             &text,
             graphics::DrawParam::new()
                 .dest(Point2::new(
+                    24.0, (window_size.1 as f32 - text_height - 20.0) + 4.0,
+                ))
+                .color(Color::from((0, 0, 0, 255))),
+        )
+        .unwrap();
+
+        graphics::draw(
+            ctx,
+            &text,
+            graphics::DrawParam::new()
+                .dest(Point2::new(
                     20.0, window_size.1 as f32 - text_height - 20.0,
                 ))
-                .color(Color::from((255, 255, 0, 255))),
+                .color(Color::from((255, 255, 255, 255))),
         )
         .unwrap();
     }
