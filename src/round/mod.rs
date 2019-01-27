@@ -305,8 +305,6 @@ impl RoundPhase {
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
 
-        //Self::draw_single_image(ctx, &self.splash, Point2::new(0.0, 0.0), 2.0, 0.0);
-
         let text2 = graphics::Text::new((
             format!("Health: {:.0}", data.player.health()),
             data.font,
@@ -324,14 +322,6 @@ impl RoundPhase {
         // When drawing via `draw_queued()`, `.offset` in `DrawParam` will be
         // in screen coordinates, and `.color` will be ignored.
         graphics::draw_queued_text(ctx, graphics::DrawParam::default()).unwrap();
-
-        /*graphics::draw(
-            ctx,
-            &self.text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(10.0, 10.0))
-                .color(Color::from((0, 0, 0, 255))),
-        )?;*/
     }
 
     pub fn draw_bullets(&mut self, data: &mut WorldData, ctx: &mut Context) {
