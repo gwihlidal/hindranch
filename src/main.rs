@@ -137,7 +137,7 @@ impl WorldData {
         );
 
         //let font = graphics::Font::new(ctx, "/DejaVuSerif.ttf").unwrap();
-        let font = graphics::Font::new(ctx, "/fonts/Bleeding_Cowboys.ttf").unwrap();
+        let font = graphics::Font::new(ctx, "/Bleeding_Cowboys.ttf").unwrap();
         //let font = graphics::Font::new(ctx, "/fonts/RioGrande Striped.ttf").unwrap();
         //let font = graphics::Font::new(ctx, "/fonts/RioGrande.ttf").unwrap();
         //let font = graphics::Font::new(ctx, "/fonts/Saddlebag.ttf").unwrap();
