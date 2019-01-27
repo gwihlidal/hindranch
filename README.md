@@ -43,7 +43,7 @@ Here is what to expect from each round, but also have fun customizing it with `s
 
 ## GGJ 2019 Diversifiers
 
-We decided to incorporate the following diversifer challenges into the game:
+We decided to incorporate the following diversifier challenges into the game:
 
 - "Mind Over Matter" - Add a voice over narration to the gameplay
   - Extensive use of text to speech using Google WaveNet
