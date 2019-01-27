@@ -201,13 +201,41 @@ impl PreparePhase {
             KeyCode::D | KeyCode::Right => data.player_input.right = value,
             KeyCode::C => {
                 if value && self.crate_supplies > 0 {
-                    self.place_crate(data.player.positional.position, data, ctx);
+                    let player_velocity = data
+                        .world
+                        .rigid_body(data.player.body_handle)
+                        .unwrap()
+                        .velocity()
+                        .linear;
+
+                    // Try to place behind player
+                    let place_offset = if player_velocity.norm() > 1e-5 {
+                        player_velocity.normalize() * -0.5
+                    } else {
+                        Vector2::zeros()
+                    };
+
+                    self.place_crate(data.player.positional.position + place_offset, data, ctx);
                     self.crate_supplies -= 1;
                 }
             }
             KeyCode::R => {
                 if value && self.rock_supplies > 0 {
-                    self.place_rock(data.player.positional.position, data, ctx);
+                    let player_velocity = data
+                        .world
+                        .rigid_body(data.player.body_handle)
+                        .unwrap()
+                        .velocity()
+                        .linear;
+
+                    // Try to place behind player
+                    let place_offset = if player_velocity.norm() > 1e-5 {
+                        player_velocity.normalize() * -0.5
+                    } else {
+                        Vector2::zeros()
+                    };
+
+                    self.place_rock(data.player.positional.position + place_offset, data, ctx);
                     self.rock_supplies -= 1;
                 }
             }

@@ -104,7 +104,7 @@ impl Bulldozer {
 
         const MAX_FORCE: f32 = 500.0;
         const FORCE_RATE: f32 = 200.0;
-        const MAX_VEL: f32 = 15.0;
+        const MAX_VEL: f32 = 12.0;
 
         // Bulldozers technically don't strafe, but we have a need for speed.
         const SIDEWAYS_DAMPING: f32 = 0.1;
