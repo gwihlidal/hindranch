@@ -127,7 +127,7 @@ impl WorldData {
             characters.image.clone(),
         )));
 
-        let health = 100.0;
+        let health = 1.0;
         let player = Player::new(
             &mut world,
             "woman_green",

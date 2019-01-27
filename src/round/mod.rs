@@ -33,6 +33,12 @@ pub struct RoundPhase {
     pub round_data: Rc<RefCell<RoundData>>,
 }
 
+enum BulletHitVictim {
+    Enemy(usize),
+    Player,
+    None,
+}
+
 impl RoundPhase {
     pub fn new(
         _ctx: &mut Context,
@@ -149,13 +155,17 @@ impl RoundPhase {
         self.maintain_walls(data);
         self.maintain_enemies(data);
 
+        if !data.player.alive() {
+            self.failure = true;
+        }
+
         data.world.step();
     }
 
     fn maintain_weapons(&mut self, data: &mut WorldData) {
         let collision_world = data.world.collision_world();
         for bullet in data.bullets.iter_mut() {
-            let mut enemy_hit = None;
+            let mut hit_victim = BulletHitVictim::None;
 
             let mut hit_anything = false;
             let mut groups = CollisionGroups::new();
@@ -169,10 +179,13 @@ impl RoundPhase {
             ) {
                 if collision.toi < bullet.velocity / 60.0 {
                     let other_body = data.world.collider_body_handle(other_collider.handle());
-                    for (enemy_i, enemy) in data.enemies.iter().enumerate() {
-                        if enemy.rigid_body() == other_body {
-                            enemy_hit = Some(enemy_i);
-                            //println!("Enemy hit!");
+                    if other_body == Some(data.player.body_handle) {
+                        hit_victim = BulletHitVictim::Player;
+                    } else {
+                        for (enemy_i, enemy) in data.enemies.iter().enumerate() {
+                            if enemy.rigid_body() == other_body {
+                                hit_victim = BulletHitVictim::Enemy(enemy_i);
+                            }
                         }
                     }
 
@@ -185,8 +198,10 @@ impl RoundPhase {
                 bullet.life_seconds = 0.0;
             }
 
-            if let Some(enemy_i) = enemy_hit {
-                data.enemies[enemy_i].damage(bullet.damage);
+            match hit_victim {
+                BulletHitVictim::Enemy(enemy_i) => data.enemies[enemy_i].damage(bullet.damage),
+                BulletHitVictim::Player => data.player.damage(bullet.damage),
+                BulletHitVictim::None => (),
             }
         }
 
@@ -304,7 +319,7 @@ impl RoundPhase {
         graphics::apply_transformations(ctx).unwrap();
 
         let health_text = graphics::Text::new((
-            format!("Health: {:.0}", data.player.health()),
+            format!("Health: {:.0}", data.player.health() * 100.0),
             data.font,
             64.0,
         ));
@@ -416,9 +431,6 @@ impl RoundPhase {
             KeyCode::Key0 => {
                 if data.player.alive() {
                     data.player.damage(13.0);
-                    if !data.player.alive() {
-                        self.failure = true;
-                    }
                 }
             }
             KeyCode::W | KeyCode::Up => data.player_input.up = value,
