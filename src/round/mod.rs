@@ -3,10 +3,10 @@
 use super::consts::*;
 use super::enemy::Swat;
 use crate::{
-    draw_map_layer, graphics, px_to_world, settings::Settings, AiBehavior, Bulldozer, Color,
-    Context, Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton, MusicTrack,
-    Player, PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState, Weapon,
-    WeaponConfig, WorldData, DESIRED_FPS,
+    draw_map_layer, draw_shadowed_text, graphics, px_to_world, settings::Settings, AiBehavior,
+    Bulldozer, Color, Context, Enemy, EnemyDozerBehavior, KeyCode, MainState, Matrix4, MouseButton,
+    MusicTrack, Player, PlayerInput, Point2, Positional, RoundData, Vector2, Vector3, VisualState,
+    Weapon, WeaponConfig, WorldData, DESIRED_FPS,
 };
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -301,54 +301,44 @@ impl RoundPhase {
         graphics::set_transform(ctx, identity_transform);
         graphics::apply_transformations(ctx).unwrap();
 
-        let text2 = graphics::Text::new((
+        let health_text = graphics::Text::new((
             format!("Health: {:.0}", data.player.health()),
             data.font,
-            48.0,
+            64.0,
         ));
 
+        let enemies_text =
+            graphics::Text::new((format!("Enemies: {}", data.enemies.len()), data.font, 64.0));
+
         let mut height = 0.0;
-        //for (_key, text) in &self.texts {
-        graphics::queue_text(ctx, &data.text, Point2::new(20.0, 20.0 + height), None);
-        height += 20.0 + data.text.height(ctx) as f32;
+        draw_shadowed_text(
+            ctx,
+            Point2::new(50.0, 20.0 + height),
+            &health_text,
+            Color::from((255, 255, 255, 255)),
+        );
+        height += 20.0 + health_text.height(ctx) as f32;
+        draw_shadowed_text(
+            ctx,
+            Point2::new(50.0, 20.0 + height),
+            &enemies_text,
+            Color::from((255, 255, 255, 255)),
+        );
 
-        graphics::queue_text(ctx, &text2, Point2::new(20.0, 20.0 + height), None);
-        //height += 20.0 + text2.height(ctx) as f32;
-        //}
-        // When drawing via `draw_queued()`, `.offset` in `DrawParam` will be
-        // in screen coordinates, and `.color` will be ignored.
-        graphics::draw_queued_text(ctx, graphics::DrawParam::default()).unwrap();
-
-        //
         let text =
             graphics::Text::new((format!("Round {}", self.round_index + 1), data.font, 96.0));
-
         let text_width = text.width(ctx) as f32;
         let text_height = text.height(ctx) as f32;
 
-        graphics::draw(
+        draw_shadowed_text(
             ctx,
+            Point2::new(
+                ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
+                (window_size.1 as f32 - text_height - 20.0) + 4.0,
+            ),
             &text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(
-                    ((window_size.0 as f32 / 2.0) - (text_width / 2.0)) + 4.0,
-                    (window_size.1 as f32 - text_height - 20.0) + 4.0,
-                ))
-                .color(Color::from((0, 0, 0, 255))),
-        )
-        .unwrap();
-
-        graphics::draw(
-            ctx,
-            &text,
-            graphics::DrawParam::new()
-                .dest(Point2::new(
-                    (window_size.0 as f32 / 2.0) - (text_width / 2.0),
-                    window_size.1 as f32 - text_height - 20.0,
-                ))
-                .color(Color::from((255, 255, 255, 255))),
-        )
-        .unwrap();
+            Color::from((255, 255, 255, 255)),
+        );
     }
 
     pub fn draw_bullets(&mut self, data: &mut WorldData, ctx: &mut Context) {
