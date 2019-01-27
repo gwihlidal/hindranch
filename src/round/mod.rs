@@ -264,8 +264,7 @@ impl RoundPhase {
         }
 
         if !enemies_killed.is_empty() {
-            // TODO: play a happy sound!
-            data.sounds.play_death();
+            data.sounds.play_taunt();
             if data.enemies.is_empty() {
                 self.victory = true;
             }
