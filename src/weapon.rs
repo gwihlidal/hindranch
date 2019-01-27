@@ -4,6 +4,7 @@ use std::io::Read;
 
 pub struct Bullet {
     pub pos: Positional,
+    pub allegiance: usize,
     pub velocity: f32,
     pub life_seconds: f32,
     pub damage: f32,
@@ -40,7 +41,13 @@ impl Weapon {
         Self { cfg, cooldown: 0.0 }
     }
 
-    pub fn update(&mut self, shoot: bool, pos: &Positional, sink: &mut Vec<Bullet>) {
+    pub fn update(
+        &mut self,
+        shoot: bool,
+        pos: &Positional,
+        allegiance: usize,
+        sink: &mut Vec<Bullet>,
+    ) {
         self.cooldown -= 1.0 / 60.0;
         if shoot && self.cooldown <= 0.0 {
             self.cooldown = 1.0 / self.cfg.fire_rate;
@@ -57,6 +64,7 @@ impl Weapon {
                     velocity: self.cfg.bullet_velocity,
                     life_seconds: self.cfg.bullet_life_seconds,
                     damage: self.cfg.bullet_damage,
+                    allegiance,
                 });
             }
         }

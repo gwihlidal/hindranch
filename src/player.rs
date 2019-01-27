@@ -41,6 +41,7 @@ pub struct Player {
     pub weapon: Weapon,
     pub health: f32,
     input: PawnInput,
+    group: usize,
     pub body_handle: BodyHandle,
     pub visual: VisualState,
     pub spritebatch: Rc<RefCell<SpriteBatch>>,
@@ -59,7 +60,7 @@ pub struct Player {
     pub dead_stand: (Rect, Vector2),
 }
 
-fn clamp_norm(v: Vector2, max_norm: f32) -> Vector2 {
+pub fn clamp_norm(v: Vector2, max_norm: f32) -> Vector2 {
     let n = Vector2::norm(&v);
     if n > max_norm {
         v * (max_norm / n)
@@ -112,6 +113,7 @@ impl Player {
         Player {
             weapon,
             health,
+            group,
             input: PawnInput::default(),
             body_handle: rb,
             visual: VisualState::Stand,
@@ -246,7 +248,7 @@ impl Player {
         rigid_body.set_position(pos);
 
         self.weapon
-            .update(self.input.shoot, &self.positional, bullets_out);
+            .update(self.input.shoot, &self.positional, self.group, bullets_out);
     }
 }
 

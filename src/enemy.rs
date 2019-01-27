@@ -2,18 +2,23 @@
 #![allow(unused_imports)]
 
 use crate::{
-    draw_single_image, exponential_distance, inverse_distance, linear_distance, AiBehavior,
-    BodyHandle, Bullet, Color, Context, Force2, Movement, PawnInput, Player, Point2, Positional,
-    Vector2, World,
+    clamp_norm, draw_single_image, exponential_distance, inverse_distance, linear_distance,
+    AiBehavior, BodyHandle, Bullet, Color, Context, Force2, Movement, PawnInput, Player, Point2,
+    Positional, Vector2, World,
 };
 
 use super::consts::*;
+use super::player::VisualState;
 
 use ggez::audio;
 use ggez::graphics;
 use nalgebra as na;
+use ncollide2d::query::Ray;
+use ncollide2d::world::CollisionGroups;
 use std::default::Default;
 use std::rc::Rc;
+
+const SWAT_MOVE_SPEED: f32 = 0.5;
 
 pub trait Enemy {
     fn update(
@@ -215,26 +220,56 @@ impl Swat {
         let goal: Point2 = if center_dist < SWAT_INNER_RADIUS || center_dist > SWAT_OUTER_RADIUS {
             (pos.normalize() * (SWAT_INNER_RADIUS * 0.5 + SWAT_OUTER_RADIUS * 0.5)).into()
         } else {
-            let a = pos.y.atan2(pos.x) + 0.1;
-            (Vector2::new(a.cos(), a.sin()) * (SWAT_INNER_RADIUS * 0.5 + SWAT_OUTER_RADIUS * 0.5))
-                .into()
+            let a = pos.y.atan2(pos.x) + 0.1 + 0.1 * rand::random::<f32>();
+            (Vector2::new(a.cos(), a.sin())
+                * (SWAT_INNER_RADIUS
+                    + (SWAT_OUTER_RADIUS - SWAT_INNER_RADIUS) * rand::random::<f32>()))
+            .into()
         };
 
         self.waypoint = Some(goal);
     }
 }
 
+impl Swat {
+    fn is_player_visible(&self, player_pos: &Point2, world: &World<f32>) -> bool {
+        let collision_world = world.collision_world();
+        let swat_pos = self.positional().position;
+
+        let mut groups = CollisionGroups::new();
+        groups.set_blacklist(&[GROUP_ENEMY]);
+
+        let offset = player_pos - swat_pos;
+        let offset_len = offset.norm();
+
+        let ray = Ray {
+            origin: swat_pos,
+            dir: offset * (1.0 / offset_len),
+        };
+
+        let min_toi = collision_world
+            .interferences_with_ray(&ray, &groups)
+            .map(|(_, collision)| collision.toi)
+            .min_by(|a, b| a.partial_cmp(b).unwrap());
+
+        if let Some(min_toi) = min_toi {
+            (min_toi - offset_len).abs() < 0.5
+        } else {
+            false
+        }
+    }
+}
+
 impl Enemy for Swat {
     fn update(
         &mut self,
-        _player_pos: Positional,
+        player_pos: Positional,
         _movement: Option<Movement>,
         world: &mut World<f32>,
         bullets_out: &mut Vec<Bullet>,
     ) {
         if self.waypoint.is_none() {
             self.acquire_waypoint();
-            println!("waypoint: {:?}", self.waypoint);
         }
 
         if let Some(w) = self.waypoint {
@@ -243,15 +278,28 @@ impl Enemy for Swat {
                 self.waypoint = None;
             }
 
+            let player_visible = self.is_player_visible(&player_pos.position, world);
+            let offset = if player_visible {
+                Vector2::zeros()
+            } else {
+                clamp_norm(w - pos, SWAT_MOVE_SPEED)
+            };
+
             self.pawn.set_input(PawnInput {
                 movement: Movement {
-                    right: w.x - pos.coords.x,
-                    forward: w.y - pos.coords.y,
+                    right: offset.x,
+                    forward: offset.y,
                 },
-                ..Default::default()
+                shoot: player_visible,
+                aim_pos: if player_visible {
+                    player_pos.position
+                } else {
+                    Point2::origin()
+                },
             });
         }
 
+        self.pawn.set_visual(VisualState::Gun);
         self.pawn.update(world, bullets_out);
     }
 

@@ -79,7 +79,7 @@ impl RoundPhase {
             data.player_input = PlayerInput::default();
 
             if settings.enemies {
-                self.spawn_bulldozers(data, ctx, 8);
+                //self.spawn_bulldozers(data, ctx, 8);
 
                 let swat_pawn = Player::new(
                     &mut data.world,
@@ -157,7 +157,7 @@ impl RoundPhase {
 
             let mut hit_anything = false;
             let mut groups = CollisionGroups::new();
-            groups.set_blacklist(&[GROUP_PLAYER]);
+            groups.set_blacklist(&[bullet.allegiance]);
             for (other_collider, collision) in collision_world.interferences_with_ray(
                 &Ray {
                     origin: bullet.pos.position,
