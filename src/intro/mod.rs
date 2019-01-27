@@ -111,7 +111,9 @@ impl IntroPhase {
             data.map_spritebatch.clear();
         }
 
-        data.character_spritebatch.add(
+        let character_spritebatch = &mut *data.character_spritebatch.borrow_mut();
+
+        character_spritebatch.add(
             graphics::DrawParam::new()
                 .src(self.player_stand.0)
                 .dest(self.player_pos.position - Vector2::new(0.5, 0.5))
@@ -120,7 +122,7 @@ impl IntroPhase {
                 .rotation(self.player_pos.rotation),
         );
 
-        data.character_spritebatch.add(
+        character_spritebatch.add(
             graphics::DrawParam::new()
                 .src(self.sheriff_stand.0)
                 .dest(self.sheriff_pos.position - Vector2::new(0.5, 0.5))
@@ -129,8 +131,8 @@ impl IntroPhase {
                 .rotation(self.sheriff_pos.rotation),
         );
 
-        graphics::draw(ctx, &data.character_spritebatch, graphics::DrawParam::new()).unwrap();
-        data.character_spritebatch.clear();
+        graphics::draw(ctx, character_spritebatch, graphics::DrawParam::new()).unwrap();
+        character_spritebatch.clear();
 
         // Reset to identity transform for text and splash screen
         graphics::set_transform(ctx, identity_transform);
