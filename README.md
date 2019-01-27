@@ -9,7 +9,37 @@ Global Game Jam 2019 - Theme is "Home"
 
 ## Overview
 
-TODO
+The government foreclosed on your ranch, and is forcefully coming to take it from you. Fight back!
+
+## Rounds 1-5
+
+Here is what to expect from each round, but also have fun customizing it with `settings.toml`.
+
+- Round 1
+  - Attacking - Bulldozer x1
+  - Attacking - SWAT x0
+  - Defensive - Crates x8
+  - Defensive - Rocks x4
+- Round 2
+  - Attacking - Bulldozer x3
+  - Attacking - SWAT x0
+  - Defensive - Crates x12
+  - Defensive - Rocks x6
+- Round 3
+  - Attacking - SWAT x1
+  - Attacking - Bulldozer x4
+  - Defensive - Crates x16
+  - Defensive - Rocks x8
+- Round 4
+  - Attacking - SWAT x2
+  - Attacking - Bulldozer x6
+  - Defensive - Crates x20
+  - Defensive - Rocks x10
+- Round 5
+  - Attacking - SWAT x4
+  - Attacking - Bulldozer x8
+  - Defensive - Crates x24
+  - Defensive - Rocks x12
 
 ## GGJ 2019 Diversifiers
 
