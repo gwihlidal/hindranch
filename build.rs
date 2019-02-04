@@ -210,6 +210,10 @@ fn load_lines() -> Vec<VoiceLine> {
     Vec::new()
 }
 
+#[cfg(not(feature = "wavenet"))]
+fn main() {}
+
+#[cfg(feature = "wavenet")]
 fn main() {
     //println!("cargo:rerun-if-changed=./resources/voice");
 
